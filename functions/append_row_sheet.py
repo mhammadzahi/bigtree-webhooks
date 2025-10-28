@@ -15,7 +15,6 @@ def init_sheets_service():
     try:
         creds = None
 
-        # Load saved credentials
         if os.path.exists(TOKEN_FILE):
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
 
@@ -26,12 +25,14 @@ def init_sheets_service():
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
                 creds = flow.run_local_server(port=0)
+
             # Save the credentials for next run
             with open(TOKEN_FILE, "w") as token:
                 token.write(creds.to_json())
 
         service = build("sheets", "v4", credentials=creds)
         return service
+
     except Exception as e:
         print(f"An error occurred during sheet service initialization: {e}")
         return None
@@ -59,8 +60,7 @@ def append_row(sheet_id: str, sheet_name: str, row_data: list):
                 valueInputOption="RAW",
                 insertDataOption="INSERT_ROWS",
                 body=value_range_body
-            )
-            .execute()
+            ).execute()
         )
 
         updated_rows = result.get("updates", {}).get("updatedRows", 0)
@@ -80,9 +80,3 @@ def append_row(sheet_id: str, sheet_name: str, row_data: list):
         return False
 
 
-
-# if __name__ == "__main__":
-#     SHEET_ID = ""
-#     SHEET_NAME = "Sheet1"
-#     row = ["John Doe", "john@example.com", "Subscribed"]
-#     append_row(SHEET_ID, SHEET_NAME, row)

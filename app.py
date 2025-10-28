@@ -18,9 +18,9 @@ app = FastAPI()
 class EmailWebhook(BaseModel):
     email: EmailStr
 
-@app.post("/bigtree-newsletter-email-webhook-v2-1-prod-webhook")
+
+@app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
 async def webhook_1(payload: EmailWebhook):
-    # FastAPI automatically parses and validates JSON into the Pydantic model
     email = payload.email
     row = ["No Name", email, "Subscribed"]
     
@@ -31,7 +31,10 @@ async def webhook_1(payload: EmailWebhook):
     return JSONResponse(status_code=200, content={"status": "success", "email_received": email})
 
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World, BT Newsletter Email Webhook is running!"}
+
 if __name__ == "__main__":
     uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True)
     #uvicorn.run(app, host="0.0.0.0", port=8001)
-
