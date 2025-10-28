@@ -28,7 +28,7 @@ async def webhook_1(payload: EmailWebhook):
     if not success:
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
 
-    return JSONResponse(status_code=200, content={"status": "success", "email_received": email})
+    return JSONResponse(status_code=200)
 
 
 @app.get("/")
@@ -36,5 +36,5 @@ async def root():
     return {"message": "Hello World, BT Newsletter Email Webhook is running!"}
 
 if __name__ == "__main__":
-    #uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True)
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    #uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
+    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
