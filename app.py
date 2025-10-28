@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Response, status, Form
 from fastapi.responses import JSONResponse
+from fastapi import Request
 from pydantic import BaseModel, EmailStr
 from functions.append_row_sheet import append_row
 import uvicorn, os
@@ -14,16 +15,14 @@ SHEET_NAME = "Sheet1"
 app = FastAPI()
 
 
-
-from fastapi import Request
-# Make sure you import Request
-
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
 async def webhook_1(request: Request):
     form_data = await request.form()
     print(form_data)
-
-    email = form_data.get("email")
+    
+    # Change "email" to "Email" to match your form data
+    email = form_data.get("Email")
+    print(f"Extracted email: {email}")
     
     if not email:
         return JSONResponse(status_code=400, content={"status": "fail", "detail": "Email field missing"})
@@ -36,7 +35,6 @@ async def webhook_1(request: Request):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
 
     return {"status": "success"}
-
 
 
 
