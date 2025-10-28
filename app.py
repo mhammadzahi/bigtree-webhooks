@@ -1,11 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 from functions.append_row_sheet import append_row
 import uvicorn, os
+
 from dotenv import load_dotenv
-
-
 load_dotenv()
 
 SHEET_ID = os.getenv("SHEET_ID")
@@ -28,7 +27,8 @@ async def webhook_1(payload: EmailWebhook):
     if not success:
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
 
-    return JSONResponse(status_code=200)
+    return Response(status_code=status.HTTP_200_OK)
+
 
 
 @app.get("/")
