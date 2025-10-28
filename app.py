@@ -14,8 +14,21 @@ SHEET_NAME = "Sheet1"
 app = FastAPI()
 
 
+
+from fastapi import Request
+# Make sure you import Request
+
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
-async def webhook_1(email: str = Form(...)):
+async def webhook_1(request: Request):
+    form_data = await request.form()
+    print(form_data)
+
+    email = form_data.get("email")
+    
+    if not email:
+        return JSONResponse(status_code=400, content={"status": "fail", "detail": "Email field missing"})
+
+    # --- Your existing code ---
     row = ["No Name", email, "Subscribed"]
     
     success = append_row(SHEET_ID, SHEET_NAME, row)
@@ -23,6 +36,22 @@ async def webhook_1(email: str = Form(...)):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
 
     return {"status": "success"}
+
+
+
+
+
+# @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
+# async def webhook_1(email: str = Form(...)):
+#     row = ["No Name", email, "Subscribed"]
+    
+#     success = append_row(SHEET_ID, SHEET_NAME, row)
+#     if not success:
+#         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
+
+#     return {"status": "success"}
+
+
 
 
 
