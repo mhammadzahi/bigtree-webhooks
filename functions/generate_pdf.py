@@ -1,7 +1,7 @@
 import time
 from playwright.sync_api import sync_playwright, Error
 
-def generate_pdf(url, output_path):
+def create_pdf_from_url(url, output_path):
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
