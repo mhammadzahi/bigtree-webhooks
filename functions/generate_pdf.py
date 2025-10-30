@@ -1,8 +1,8 @@
-import time, random
-from playwright.sync_api import sync_playwright
+import time
+from playwright.sync_api import sync_playwright, Error
 
-def generate_pdf(url):
-    output_path = random
+def generate_pdf(url, output_path):
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -45,11 +45,3 @@ def generate_pdf(url):
         finally:
             browser.close()
 
-
-
-# # --- USAGE ---
-# site_url = 'https://yallaiot.com/product/black-water/'
-# pdf_output = 'elementor-page-improved.pdf'
-# download_elementor_page_as_pdf(site_url, pdf_output)
-
-# print(f"PDF saved to {pdf_output}")
