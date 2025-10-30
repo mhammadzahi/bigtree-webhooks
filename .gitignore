@@ -3,7 +3,7 @@ token.json
 
 *.json
 
-
+*.pdf
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

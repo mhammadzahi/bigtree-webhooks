@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Response, status
+from fastapi import FastAPI, Response, status, Request
 from fastapi.responses import JSONResponse
-from fastapi import Request
 from pydantic import BaseModel, EmailStr, ValidationError
+
 from functions.append_row_sheet import append_row
+from functions.generate_pdf import 
+
 import uvicorn, os
 
 from dotenv import load_dotenv
@@ -49,19 +51,10 @@ async def webhook_1(request: Request):
 
 
 
-# class EmailWebhook(BaseModel):
-#     email: EmailStr
+@app.post("/bigtree-pdf-downloader")
+async def webhook_2(request: Request):
+    form_data = await request.form()
 
-# @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
-# async def webhook_1(payload: EmailWebhook):
-#     email = payload.email
-#     row = ["No Name", email, "Subscribed"]
-    
-#     success = append_row(SHEET_ID, SHEET_NAME, row)
-#     if not success:
-#         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
-
-#     return Response(status_code=status.HTTP_200_OK)
 
 
 
