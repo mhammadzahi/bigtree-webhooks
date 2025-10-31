@@ -48,7 +48,6 @@ async def webhook_1(request: Request):
     return Response(status_code=status.HTTP_200_OK)
 
 
-
 @app.get("/")
 async def root():
     return {"app": "BT", "version": "1.2.1"}
