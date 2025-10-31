@@ -2,8 +2,8 @@ token.json
 
 
 *.json
+*.docx
 
-*.pdf
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
