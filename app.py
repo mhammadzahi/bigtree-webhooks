@@ -14,6 +14,8 @@ SHEET_NAME = "Sheet1"
 
 app = FastAPI()
 
+class ProductId(BaseModel):
+    product_id: int
 
 class EmailWebhook(BaseModel):
     Email: EmailStr
@@ -49,16 +51,28 @@ async def webhook_1(request: Request):
 
 
 
-
-
 @app.post("/bt-product-specsheet")
 async def webhook_2(request: Request):
+    payload = await request.json()
+    print(f"Received payload: {payload}")
 
+    try:
+        validated_data = ProductId.model_validate(payload)
+        product_id = validated_data.product_id
+
+    except ValidationError as e:
+        print(f"Validation Error: {e}")
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_id field"})
+
+    print(f"Extracted product_id: {product_id}")
+    print('Type:', type(product_id))
+
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @app.get("/")
 async def root():
-    return {"app": "BT", "version": "1.2.1"}
+    return {"app": "BT", "version": "1.2.2"}
 
 if __name__ == "__main__":
     #uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
