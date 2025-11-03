@@ -2,6 +2,7 @@ from docxtpl import DocxTemplate
 from docx2pdf import convert
 import os
 
+
 def fill_and_convert_template(template_path, output_docx, output_pdf, context_data):
     # Load the template
     doc = DocxTemplate(template_path)
@@ -25,7 +26,6 @@ def generate_specsheet_pdf(product):
         'product_sku': product.get('sku', 'N/A'),
         'product_price': product.get('price', 'N/A'),
         'product_description': product.get('description', 'N/A')
-        # Add more fields as needed
     }
 
     fill_and_convert_template(template_path, output_docx, output_pdf, context_data)

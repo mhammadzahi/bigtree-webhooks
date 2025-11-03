@@ -7,7 +7,6 @@ from googleapiclient.errors import HttpError
 
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-
 CLIENT_SECRETS_FILE = "main-credentials.json"
 TOKEN_FILE = "token.json"
 
@@ -38,7 +37,7 @@ def init_sheets_service():
         return None
 
 
-def append_row(sheet_id: str, sheet_name: str, row_data: list):
+def append_row(sheet_id: str, sheet_name: str, row_data: list) -> bool:
     try:
         if not isinstance(row_data, list):
             raise ValueError("row_data must be a list")
@@ -78,5 +77,4 @@ def append_row(sheet_id: str, sheet_name: str, row_data: list):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return False
-
 

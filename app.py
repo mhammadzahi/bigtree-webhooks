@@ -1,7 +1,5 @@
-from fastapi import FastAPI, Response, status
-from fastapi.responses import JSONResponse
-from fastapi import Request
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Response, status, Request
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
@@ -12,10 +10,6 @@ import uvicorn, os
 
 from dotenv import load_dotenv
 load_dotenv()
-
-SHEET_ID = os.getenv("SHEET_ID")
-SHEET_NAME = "Sheet1"
-
 
 app = FastAPI(title="BT Webhooks API", version="1.2.2", description="API for handling BigTree webhooks")
 
@@ -38,7 +32,6 @@ class EmailWebhook(BaseModel):
 @app.post("/bt-product-specsheet")
 async def webhook_2(request: Request):
     payload = await request.json()
-    #print(f"Received payload: {payload}")
 
     try:
         validated_data = ProductId.model_validate(payload)
@@ -60,15 +53,13 @@ async def webhook_2(request: Request):
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
     file_path = generate_specsheet_pdf(product)
-    
+
     # return Response(status_code=status.HTTP_200_OK)
     return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
     
 
 
-
-
-
+SHEET_ID = os.getenv("SHEET_ID")
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
 async def webhook_1(request: Request):
     form_data = await request.form()
@@ -92,7 +83,7 @@ async def webhook_1(request: Request):
     print(f"Extracted email: {email}")
 
     row = ["No Name", email, "Subscribed"]
-    success = append_row(SHEET_ID, SHEET_NAME, row)
+    success = append_row(SHEET_ID, "Sheet1", row)
     if not success:
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
 
