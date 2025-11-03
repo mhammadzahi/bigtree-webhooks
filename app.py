@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, ValidationError
 from functions.append_row_sheet import append_row
 from functions.product_api import get_product
+from functions.specsheet_generator import generate_specsheet_pdf
 import uvicorn, os
 
 from dotenv import load_dotenv
@@ -16,8 +17,7 @@ SHEET_ID = os.getenv("SHEET_ID")
 SHEET_NAME = "Sheet1"
 
 
-app = FastAPI()
-
+app = FastAPI(title="BT Webhooks API", version="1.2.2", description="API for handling BigTree webhooks")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,8 +35,6 @@ class EmailWebhook(BaseModel):
     Email: EmailStr
 
 
-
-
 @app.post("/bt-product-specsheet")
 async def webhook_2(request: Request):
     payload = await request.json()
@@ -47,7 +45,7 @@ async def webhook_2(request: Request):
         product_id = validated_data.product_id
 
     except ValidationError as e:
-        print(f"Validation Error: {e}")
+        # print(f"Validation Error: {e}")
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_id field"})
 
 
@@ -61,12 +59,11 @@ async def webhook_2(request: Request):
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-    #print(product) # OK
-    #file_path = f"/specsheets/{product_id}_specsheet.pdf"
-
-    file_path = "files/sample_specsheet.pdf"  # Placeholder path for testing
-    return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
+    file_path = generate_specsheet_pdf(product)
+    
     # return Response(status_code=status.HTTP_200_OK)
+    return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
+    
 
 
 
