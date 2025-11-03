@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from fastapi import Request
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel, EmailStr, ValidationError
 from functions.append_row_sheet import append_row
 import uvicorn, os
@@ -13,6 +15,16 @@ SHEET_NAME = "Sheet1"
 
 
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],  # Or ["POST"] if you want to be strict
+    allow_headers=["*"],  # Or ["Content-Type"]
+)
+
 
 class ProductId(BaseModel):
     product_id: int
