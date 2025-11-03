@@ -85,11 +85,11 @@ async def webhook_2(request: Request):
         product_id=product_id
     )
 
-    if not product::
+    if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
     print(product)
-    
+
     return Response(status_code=status.HTTP_200_OK)
 
 
