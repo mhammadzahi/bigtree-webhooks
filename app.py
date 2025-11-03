@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
 from functions.append_row_sheet import append_row
+from functions.product_api import get_product
 import uvicorn, os
 
 from dotenv import load_dotenv
@@ -66,7 +67,7 @@ async def webhook_1(request: Request):
 @app.post("/bt-product-specsheet")
 async def webhook_2(request: Request):
     payload = await request.json()
-    print(f"Received payload: {payload}")
+    #print(f"Received payload: {payload}")
 
     try:
         validated_data = ProductId.model_validate(payload)
@@ -76,9 +77,19 @@ async def webhook_2(request: Request):
         print(f"Validation Error: {e}")
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_id field"})
 
-    print(f"Extracted product_id: {product_id}")
-    print('Type:', type(product_id))
 
+    product = get_product(
+        store_url= os.getenv("WC_STORE_URL"),
+        consumer_key=os.getenv("WC_CONSUMER_KEY"),
+        consumer_secret=os.getenv("WC_CONSUMER_SECRET"),
+        product_id=product_id
+    )
+
+    if not product::
+        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+
+    print(product)
+    
     return Response(status_code=status.HTTP_200_OK)
 
 
