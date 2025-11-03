@@ -52,10 +52,15 @@ async def webhook_2(request: Request):
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
+    if product:
+        with open('product_data.json', 'w') as f:
+            json.dump(product, f, indent=2)
+        print("Product data saved to product_data.json")
+
     file_path = generate_specsheet_pdf(product)
 
-    # return Response(status_code=status.HTTP_200_OK)
-    return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
+    return Response(status_code=status.HTTP_200_OK)
+    #return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
     
 
 
@@ -70,10 +75,10 @@ async def webhook_1(request: Request):
         #    We convert the form_data to a dict and pass it to the model.
         #    This will check if "Email" exists AND if it's a valid email.
         validated_data = EmailWebhook.model_validate(dict(form_data))
-        
+
         # 3. Get the validated email from the model
         email = validated_data.Email 
-        
+
     except ValidationError as e:
         # If validation fails (missing field or bad email),
         # return a 422 Unprocessable Entity error.
@@ -88,7 +93,6 @@ async def webhook_1(request: Request):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
 
     return Response(status_code=status.HTTP_200_OK)
-
 
 
 
