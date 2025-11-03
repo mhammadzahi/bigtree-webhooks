@@ -7,6 +7,7 @@ from functions.append_row_sheet import append_row
 from functions.product_api import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
 import uvicorn, os
+import json
 
 from dotenv import load_dotenv
 load_dotenv()
