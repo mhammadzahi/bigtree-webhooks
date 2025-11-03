@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse
 from fastapi import Request
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
@@ -33,6 +34,44 @@ class ProductId(BaseModel):
 class EmailWebhook(BaseModel):
     Email: EmailStr
 
+
+
+
+@app.post("/bt-product-specsheet")
+async def webhook_2(request: Request):
+    payload = await request.json()
+    #print(f"Received payload: {payload}")
+
+    try:
+        validated_data = ProductId.model_validate(payload)
+        product_id = validated_data.product_id
+
+    except ValidationError as e:
+        print(f"Validation Error: {e}")
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_id field"})
+
+
+    product = get_product(
+        store_url= os.getenv("WC_STORE_URL"),
+        consumer_key=os.getenv("WC_CONSUMER_KEY"),
+        consumer_secret=os.getenv("WC_CONSUMER_SECRET"),
+        product_id=product_id
+    )
+
+    if not product:
+        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+
+    #print(product) # OK
+    #file_path = f"/specsheets/{product_id}_specsheet.pdf"
+
+    file_path = "files/sample_specsheet.pdf"  # Placeholder path for testing
+    return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
+    # return Response(status_code=status.HTTP_200_OK)
+
+
+
+
+
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
 async def webhook_1(request: Request):
     form_data = await request.form()
@@ -63,36 +102,6 @@ async def webhook_1(request: Request):
     return Response(status_code=status.HTTP_200_OK)
 
 
-
-
-
-@app.post("/bt-product-specsheet")
-async def webhook_2(request: Request):
-    payload = await request.json()
-    #print(f"Received payload: {payload}")
-
-    try:
-        validated_data = ProductId.model_validate(payload)
-        product_id = validated_data.product_id
-
-    except ValidationError as e:
-        print(f"Validation Error: {e}")
-        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_id field"})
-
-
-    product = get_product(
-        store_url= os.getenv("WC_STORE_URL"),
-        consumer_key=os.getenv("WC_CONSUMER_KEY"),
-        consumer_secret=os.getenv("WC_CONSUMER_SECRET"),
-        product_id=product_id
-    )
-
-    if not product:
-        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
-
-    print(product)
-
-    return Response(status_code=status.HTTP_200_OK)
 
 
 @app.get("/")
