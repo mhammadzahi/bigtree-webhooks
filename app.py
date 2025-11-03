@@ -48,6 +48,14 @@ async def webhook_1(request: Request):
     return Response(status_code=status.HTTP_200_OK)
 
 
+
+
+
+@app.post("/bt-product-specsheet")
+async def webhook_2(request: Request):
+
+
+
 @app.get("/")
 async def root():
     return {"app": "BT", "version": "1.2.1"}
