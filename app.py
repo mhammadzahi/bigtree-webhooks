@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Response, status, Request
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
@@ -11,7 +12,7 @@ import uvicorn, os, json
 from dotenv import load_dotenv
 load_dotenv()
 
-app = FastAPI(title="BT Webhooks API", version="1.2.2", description="API for handling BigTree webhooks")
+app = FastAPI(title="BT Webhooks API", version="0.2.2", description="API for handling BigTree webhooks")
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,7 +31,7 @@ class EmailWebhook(BaseModel):
 
 
 @app.post("/bt-product-specsheet")
-async def webhook_2(request: Request):
+async def webhook_2(request: Request, background_tasks: BackgroundTasks):
     payload = await request.json()
 
     try:
@@ -52,16 +53,16 @@ async def webhook_2(request: Request):
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-    if product:
-        with open(f'product_{product["id"]}_data.json', 'w') as f:
-            json.dump(product, f, indent=2)
-
-        print(f"Product data saved to product_{product['id']}_data.json")
+    
+    # with open(f'product_{product["id"]}_data.json', 'w') as f:
+    #     json.dump(product, f, indent=2)
+    # print(f"Product data saved to product_{product['id']}_data.json")
 
     file_path = generate_specsheet_pdf(product)
+    background_tasks.add_task(os.remove, file_path)
 
     #return Response(status_code=status.HTTP_200_OK)
-    return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
+    return FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
     
 
 
@@ -101,8 +102,8 @@ async def webhook_1(request: Request):
 
 @app.get("/")
 async def root():
-    return {"app": "BT", "version": "1.2.2"}
+    return {"app": "BT", "version": "0.2.2"}
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
-    #uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
+    # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
+    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode

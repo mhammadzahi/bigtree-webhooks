@@ -71,14 +71,15 @@ def generate_specsheet_pdf(product):
     if images and images[0].get('src'):
         try:
             image_url = images[0].get('src')
-            print(f"Downloading image from: {image_url}")
+            # print(f"Downloading image from: {image_url}")
             response = requests.get(image_url, timeout=10, verify=True)
             response.raise_for_status()
             
             # Create InlineImage from downloaded image
             image_stream = BytesIO(response.content)
             image_placeholder = InlineImage(doc, image_stream, width=Mm(100))
-            print("Image downloaded and processed successfully")
+            # print("Image downloaded and processed successfully")
+
         except Exception as e:
             print(f"Error downloading image: {e}")
             # Try without SSL verification as fallback
