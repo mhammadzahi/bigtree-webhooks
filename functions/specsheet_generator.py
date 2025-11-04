@@ -1,14 +1,38 @@
 from docxtpl import DocxTemplate
-from docx2pdf import convert
 import os
+import subprocess
+import platform
 
 
 def fill_and_convert_template(template_path, output_docx, output_pdf, context_data):
     doc = DocxTemplate(template_path)
     doc.render(context_data)
     doc.save(output_docx)
-    convert(output_docx, output_pdf)
-    os.remove(output_docx)
+    
+    # Convert DOCX to PDF using platform-appropriate method
+    if platform.system() == 'Linux':
+        # Use LibreOffice for Linux
+        try:
+            subprocess.run([
+                'libreoffice',
+                '--headless',
+                '--convert-to', 'pdf',
+                '--outdir', os.path.dirname(output_pdf),
+                output_docx
+            ], check=True, capture_output=True)
+        except FileNotFoundError:
+            raise RuntimeError("LibreOffice is not installed. Please install it using: sudo apt-get install libreoffice")
+    else:
+        # Use docx2pdf for Windows/macOS
+        try:
+            from docx2pdf import convert
+            convert(output_docx, output_pdf)
+        except ImportError:
+            raise RuntimeError("docx2pdf is not installed. Please install it using: pip install docx2pdf")
+    
+    # Clean up the temporary DOCX file
+    if os.path.exists(output_docx):
+        os.remove(output_docx)
 
 
 def generate_specsheet_pdf(product):
