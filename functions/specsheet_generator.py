@@ -2,6 +2,7 @@ from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches, Mm
 import subprocess, re, os, requests, platform
 from io import BytesIO
+from PIL import Image
 
 
 
@@ -75,9 +76,31 @@ def generate_specsheet_pdf(product):
             response = requests.get(image_url, timeout=10, verify=True)
             response.raise_for_status()
             
-            # Create InlineImage from downloaded image
+            # Create InlineImage from downloaded image with height limit
             image_stream = BytesIO(response.content)
-            image_placeholder = InlineImage(doc, image_stream, width=Mm(100))
+            
+            # Open image to get dimensions
+            img = Image.open(image_stream)
+            img_width, img_height = img.size
+
+            # Calculate dimensions to limit height to 300px while maintaining aspect ratio
+            max_height_px = 300
+            if img_height > max_height_px:
+                # Scale down proportionally
+                scale_factor = max_height_px / img_height
+                new_height_px = max_height_px
+            else:
+                # Use original size if already smaller than 500px
+                new_height_px = img_height
+            
+            # Convert pixels to inches (96 DPI standard)
+            new_height_inches = new_height_px / 96
+            
+            # Reset stream position for InlineImage
+            image_stream.seek(0)
+            
+            # Create InlineImage with calculated height (using height parameter maintains aspect ratio)
+            image_placeholder = InlineImage(doc, image_stream, height=Inches(new_height_inches))
             # print("Image downloaded and processed successfully")
 
         except Exception as e:
@@ -87,7 +110,25 @@ def generate_specsheet_pdf(product):
                 response = requests.get(image_url, timeout=10, verify=False)
                 response.raise_for_status()
                 image_stream = BytesIO(response.content)
-                image_placeholder = InlineImage(doc, image_stream, width=Mm(100))
+                
+                # Open image to get dimensions
+                img = Image.open(image_stream)
+                img_width, img_height = img.size
+                
+                # Calculate dimensions to limit height to 500px while maintaining aspect ratio
+                max_height_px = 500
+                if img_height > max_height_px:
+                    new_height_px = max_height_px
+                else:
+                    new_height_px = img_height
+                
+                # Convert pixels to inches
+                new_height_inches = new_height_px / 96
+                
+                # Reset stream position
+                image_stream.seek(0)
+                
+                image_placeholder = InlineImage(doc, image_stream, height=Inches(new_height_inches))
                 print("Image downloaded successfully (without SSL verification)")
             except Exception as e2:
                 print(f"Image download failed completely: {e2}")

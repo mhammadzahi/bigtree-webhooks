@@ -59,7 +59,7 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
     # print(f"Product data saved to product_{product['id']}_data.json")
 
     file_path = generate_specsheet_pdf(product)
-    #background_tasks.add_task(os.remove, file_path)
+    background_tasks.add_task(os.remove, file_path)
 
     #return Response(status_code=status.HTTP_200_OK)
     return FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
