@@ -1,38 +1,35 @@
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, InlineImage
+from docx.shared import Inches, Mm
 import os
 import subprocess
-import platform
+import requests
+from io import BytesIO
+import re
 
 
-def fill_and_convert_template(template_path, output_docx, output_pdf, context_data):
-    doc = DocxTemplate(template_path)
-    doc.render(context_data)
-    doc.save(output_docx)
+def strip_html_tags(text):
+    """Remove HTML tags from text and clean up formatting"""
+    if not text:
+        return ''
+    # Remove HTML tags but preserve line breaks
+    clean = re.sub(r'<br\s*/?>', '\n', text)  # Convert <br> to newlines
+    clean = re.sub(r'</p>\s*<p>', '\n\n', clean)  # Convert paragraph breaks to double newlines
+    clean = re.sub(r'<[^>]+>', '', clean)  # Remove all other HTML tags
+    # Replace HTML entities
+    clean = clean.replace('&nbsp;', ' ')
+    clean = clean.replace('&amp;', '&')
+    clean = clean.replace('&lt;', '<')
+    clean = clean.replace('&gt;', '>')
+    # Clean up \r\n to just \n
+    clean = clean.replace('\\r\\n', '\n')
+    clean = clean.replace('\r\n', '\n')
+    clean = clean.replace('\\n', '\n')
+    # Clean up multiple spaces but preserve newlines
+    clean = re.sub(r' +', ' ', clean)
+    # Remove excessive newlines (more than 2)
+    clean = re.sub(r'\n{3,}', '\n\n', clean)
     
-    # Convert DOCX to PDF using platform-appropriate method
-    if platform.system() == 'Linux':
-        # Use LibreOffice for Linux
-        try:
-            subprocess.run([
-                'libreoffice',
-                '--headless',
-                '--convert-to', 'pdf',
-                '--outdir', os.path.dirname(output_pdf),
-                output_docx
-            ], check=True, capture_output=True)
-        except FileNotFoundError:
-            raise RuntimeError("LibreOffice is not installed. Please install it using: sudo apt-get install libreoffice")
-    else:
-        # Use docx2pdf for Windows/macOS
-        try:
-            from docx2pdf import convert
-            convert(output_docx, output_pdf)
-        except ImportError:
-            raise RuntimeError("docx2pdf is not installed. Please install it using: pip install docx2pdf")
-    
-    # Clean up the temporary DOCX file
-    if os.path.exists(output_docx):
-        os.remove(output_docx)
+    return clean.strip()
 
 
 def generate_specsheet_pdf(product):
@@ -41,11 +38,17 @@ def generate_specsheet_pdf(product):
     output_pdf = f'files/temp/{product["id"]}_specsheet.pdf'
 
     # Helper function to extract meta data by key
-    def get_meta_value(meta_data, key):
+    def get_meta_value(meta_data, key, clean_html=False):
         for item in meta_data:
             if item.get('key') == key:
-                return item.get('value', 'n/a')
-        return 'n/a'
+                value = item.get('value', '')
+                # Return the value as-is, even if it's "n/a"
+                result = value if value else 'N/A'
+                # Clean HTML if requested
+                if clean_html and result != 'N/A':
+                    result = strip_html_tags(result)
+                return result
+        return 'N/A'
     
     # Helper function to extract attribute options
     def get_attribute_options(attributes, attr_name):
@@ -62,20 +65,54 @@ def generate_specsheet_pdf(product):
     brands = product.get('brands', [])
     images = product.get('images', [])
     
+    # Load the template to create InlineImage
+    doc = DocxTemplate(template_path)
+    
+    # Download and prepare image
+    image_placeholder = None
+    if images and images[0].get('src'):
+        try:
+            image_url = images[0].get('src')
+            print(f"Downloading image from: {image_url}")
+            response = requests.get(image_url, timeout=10, verify=True)
+            response.raise_for_status()
+            
+            # Create InlineImage from downloaded image
+            image_stream = BytesIO(response.content)
+            image_placeholder = InlineImage(doc, image_stream, width=Mm(100))
+            print("Image downloaded and processed successfully")
+        except Exception as e:
+            print(f"Error downloading image: {e}")
+            # Try without SSL verification as fallback
+            try:
+                response = requests.get(image_url, timeout=10, verify=False)
+                response.raise_for_status()
+                image_stream = BytesIO(response.content)
+                image_placeholder = InlineImage(doc, image_stream, width=Mm(100))
+                print("Image downloaded successfully (without SSL verification)")
+            except Exception as e2:
+                print(f"Image download failed completely: {e2}")
+                image_placeholder = ""  # Empty string instead of text
+    else:
+        image_placeholder = ""  # Empty string if no image
+    
     # Build comprehensive context data
     context_data = {
-        # Basic Information
+        # Basic Information (matching template placeholders)
+        'prdct_name': product.get('name', 'N/A'),
         'product_name': product.get('name', 'N/A'),
         'product_sku': product.get('sku', 'N/A'),
         'product_price': product.get('price', 'N/A'),
-        'product_description': product.get('description', 'N/A'),
-        'short_description': product.get('short_description', 'N/A'),
+        'prdct_description': strip_html_tags(product.get('description', 'N/A')),
+        'product_description': strip_html_tags(product.get('description', 'N/A')),
+        'short_description': strip_html_tags(product.get('short_description', 'N/A')),
         
-        # Categories and Brand
+        # Categories and Brand (matching template placeholders)
+        'prdct_category': categories[0].get('name', 'N/A') if categories else 'N/A',
         'category': categories[0].get('name', 'N/A') if categories else 'N/A',
         'brand': brands[0].get('name', 'N/A') if brands else get_meta_value(meta_data, 'brand'),
         
-        # Product Specifications from meta_data
+        # Product Specifications from meta_data - DETAIL section
         'type': get_meta_value(meta_data, 'type'),
         'width': get_meta_value(meta_data, 'width'),
         'length': get_meta_value(meta_data, 'length'),
@@ -83,21 +120,22 @@ def generate_specsheet_pdf(product):
         'thickness': get_meta_value(meta_data, 'thickness'),
         'weight': get_meta_value(meta_data, 'weight'),
         'composition': get_meta_value(meta_data, 'composition'),
+        'backing': get_meta_value(meta_data, 'backing'),
         'pattern': get_meta_value(meta_data, 'pattern'),
         'repeat': get_meta_value(meta_data, 'repeat'),
         'color': get_meta_value(meta_data, 'color'),
         'origin': get_meta_value(meta_data, 'origin'),
         
-        # Product Usage
+        # Product Usage - PRODUCT USAGE section
         'application': get_meta_value(meta_data, 'application'),
         'environment': get_meta_value(meta_data, 'environment'),
-        'project': get_meta_value(meta_data, 'project'),
+        'project': get_meta_value(meta_data, 'project', clean_html=True),
         
-        # Performance & Durability
+        # Performance & Durability - TECHNICAL DATA section
         'durability': get_meta_value(meta_data, 'durability'),
         'piling': get_meta_value(meta_data, 'piling'),
         'color_resistance': get_meta_value(meta_data, 'color_resistance'),
-        'color_fastness': get_meta_value(meta_data, 'color_fastness'),
+        'color_fastness': get_meta_value(meta_data, 'color_fastness', clean_html=True),
         'seam_slippage': get_meta_value(meta_data, 'seam_slippage'),
         'shrinkage_wet': get_meta_value(meta_data, 'shrinkage_wet'),
         
@@ -109,28 +147,43 @@ def generate_specsheet_pdf(product):
         'antibacterial': get_meta_value(meta_data, 'antibacterial'),
         'other_certifications': get_meta_value(meta_data, 'other_certifications'),
         
-        # Care & Ordering
-        'maintenance_care': get_meta_value(meta_data, 'maintenance_&_care'),
+        # Care & Ordering - MAINTENANCE & CARE and KEY FACTS sections
+        'maintenance_care': get_meta_value(meta_data, 'maintenance_&_care', clean_html=True),
         'warranty': get_meta_value(meta_data, 'warranty'),
         'minimum_order_quantity': get_meta_value(meta_data, 'minimum_order_quantity'),
         'lead_time': get_meta_value(meta_data, 'lead_time'),
         'price_tier': get_meta_value(meta_data, 'price_tier'),
         'note': get_meta_value(meta_data, 'note'),
         
-        # Attributes (alternative source)
-        'product_type_attr': get_attribute_options(attributes, 'Product Type'),
-        'color_attr': get_attribute_options(attributes, 'Color'),
-        'composition_attr': get_attribute_options(attributes, 'Composition'),
-        'application_attr': get_attribute_options(attributes, 'Application'),
-        'features': get_attribute_options(attributes, 'Features'),
-        
         # Image
         'product_image': images[0].get('src', '') if images else '',
+        'image_placeholder': image_placeholder,
         
         # Additional Info
         'permalink': product.get('permalink', ''),
         'date_created': product.get('date_created', 'N/A'),
     }
 
-    fill_and_convert_template(template_path, output_docx, output_pdf, context_data)
+    # Render and save the document
+    doc.render(context_data)
+    doc.save(output_docx)
+    
+    # Convert DOCX to PDF using LibreOffice
+    try:
+        subprocess.run([
+            '/Applications/LibreOffice.app/Contents/MacOS/soffice',
+            '--headless',
+            '--convert-to', 'pdf',
+            '--outdir', os.path.dirname(output_pdf),
+            output_docx
+        ], check=True, capture_output=True)
+
+    except FileNotFoundError:
+        raise RuntimeError("LibreOffice is not installed. Please install it: "
+                          "macOS: brew install --cask libreoffice | "
+                          "Linux: sudo apt-get install libreoffice")
+    
+    # Clean up the temporary DOCX file
+    if os.path.exists(output_docx):
+        os.remove(output_docx)
     return output_pdf
