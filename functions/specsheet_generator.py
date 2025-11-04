@@ -1,10 +1,8 @@
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches, Mm
-import os
-import subprocess
-import requests
+import subprocess, re, os, requests, platform
 from io import BytesIO
-import re
+
 
 
 def strip_html_tags(text):
@@ -57,7 +55,7 @@ def generate_specsheet_pdf(product):
                 options = attr.get('options', [])
                 return ', '.join(options) if options else 'n/a'
         return 'n/a'
-    
+
     # Extract meta data
     meta_data = product.get('meta_data', [])
     attributes = product.get('attributes', [])
@@ -169,9 +167,21 @@ def generate_specsheet_pdf(product):
     doc.save(output_docx)
     
     # Convert DOCX to PDF using LibreOffice
+    # Detect OS and set appropriate LibreOffice path
+    system = platform.system()
+    
+    if system == 'Darwin':  # macOS
+        soffice_path = '/Applications/LibreOffice.app/Contents/MacOS/soffice'
+    elif system == 'Linux':  # Ubuntu/Linux
+        soffice_path = 'libreoffice'
+    elif system == 'Windows':
+        soffice_path = 'soffice'
+    else:
+        soffice_path = 'libreoffice'
+    
     try:
         subprocess.run([
-            '/Applications/LibreOffice.app/Contents/MacOS/soffice',
+            soffice_path,
             '--headless',
             '--convert-to', 'pdf',
             '--outdir', os.path.dirname(output_pdf),
