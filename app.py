@@ -6,8 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from functions.append_row_sheet import append_row
 from functions.product_api import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
-import uvicorn, os
-import json
+import uvicorn, os, json
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -63,6 +62,8 @@ async def webhook_2(request: Request):
     return Response(status_code=status.HTTP_200_OK)
     #return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
     
+
+
 
 
 SHEET_ID = os.getenv("SHEET_ID")

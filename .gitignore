@@ -2,7 +2,7 @@ token.json
 
 
 *.json
-*.docx
+# *.docx
 
 
 ### Python ###
