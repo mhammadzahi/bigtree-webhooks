@@ -105,5 +105,5 @@ async def root():
     return {"app": "BT", "version": "0.2.2"}
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
-    # uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
+    # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
+    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
