@@ -59,8 +59,8 @@ async def webhook_2(request: Request):
 
     file_path = generate_specsheet_pdf(product)
 
-    return Response(status_code=status.HTTP_200_OK)
-    #return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
+    #return Response(status_code=status.HTTP_200_OK)
+    return FileResponse(path=file_path, media_type="application/pdf", filename=f"{product_id}_specsheet.pdf")
     
 
 
