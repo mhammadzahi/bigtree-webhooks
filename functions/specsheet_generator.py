@@ -139,7 +139,7 @@ def generate_specsheet_pdf(product):
         'shrinkage_wet': get_meta_value(meta_data, 'shrinkage_wet'),
         
         # Certifications & Compliance
-        'flame_retardant': get_meta_value(meta_data, 'flame_retardant'),
+        'flame_retardant': get_meta_value(meta_data, 'flame_retardant', clean_html=True),
         'structural_compliance': get_meta_value(meta_data, 'structural_compliance'),
         'thermal_resistance': get_meta_value(meta_data, 'thermal_resistance'),
         'weather_resistance': get_meta_value(meta_data, 'weather_resistance'),

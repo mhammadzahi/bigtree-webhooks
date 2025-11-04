@@ -59,7 +59,7 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
     # print(f"Product data saved to product_{product['id']}_data.json")
 
     file_path = generate_specsheet_pdf(product)
-    background_tasks.add_task(os.remove, file_path)
+    #background_tasks.add_task(os.remove, file_path)
 
     #return Response(status_code=status.HTTP_200_OK)
     return FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
@@ -105,5 +105,5 @@ async def root():
     return {"app": "BT", "version": "0.2.2"}
 
 if __name__ == "__main__":
-    # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
-    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
+    uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
+    # uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
