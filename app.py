@@ -62,8 +62,9 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
     background_tasks.add_task(os.remove, file_path)
 
     #return Response(status_code=status.HTTP_200_OK)
-    return FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
-    
+    response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
+    response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+    return response
 
 
 
