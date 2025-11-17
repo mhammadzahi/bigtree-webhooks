@@ -7,12 +7,13 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from functions.append_row_sheet import append_row
 from functions.product_api import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
+from functions.email_service import send_product_enquiry_email
 import uvicorn, os, json
 
 from dotenv import load_dotenv
 load_dotenv()
 
-app = FastAPI(title="BT Webhooks API", version="0.2.2", description="API for handling BigTree webhooks")
+app = FastAPI(title="BT Webhooks API", version="0.3.0", description="API for handling BigTree webhooks")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,11 +24,56 @@ app.add_middleware(
 )
 
 
+class ProductEnquiry(BaseModel):
+    Email: EmailStr
+    product_ids: list[int]
+
 class ProductId(BaseModel):
     product_id: int
 
 class EmailWebhook(BaseModel):
     Email: EmailStr
+
+
+
+
+@app.post("/send-product-enquiry-email")
+async def webhook_3(request: Request, background_tasks: BackgroundTasks):
+    payload = await request.json()
+    print(payload)
+
+    try:
+        validated_data = ProductEnquiry.model_validate(payload)
+        product_ids = validated_data.product_ids
+        email = validated_data.Email
+
+    except ValidationError as e:
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_ids field"})
+
+    pdf_specsheet_files = []
+    for product_id in product_ids:
+        product = get_product(
+            store_url=os.getenv("WC_STORE_URL"),
+            consumer_key=os.getenv("WC_CONSUMER_KEY"),
+            consumer_secret=os.getenv("WC_CONSUMER_SECRET"),
+            product_id=product_id
+        )
+
+        if not product:
+            return JSONResponse(status_code=404, content={"status": "fail", "detail": f"Product with ID {product_id} not found"})
+
+        file_path = generate_specsheet_pdf(product)    
+        pdf_specsheet_files.append(file_path)
+
+    if not send_product_enquiry_email(email, pdf_specsheet_files):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
+
+    for file_path in pdf_specsheet_files:
+        background_tasks.add_task(os.remove, file_path)
+
+    return JSONResponse(status_code=200, content={"status": "success", "detail": f"Enquiry emails sent for product IDs {product_ids}"})
+
+
 
 
 @app.post("/bt-product-specsheet")
@@ -103,7 +149,7 @@ async def webhook_1(request: Request):
 
 @app.get("/")
 async def root():
-    return {"app": "BT", "version": "0.2.2"}
+    return {"app": "BT", "version": "0.3.0", "status": "running"}
 
 if __name__ == "__main__":
     # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
