@@ -50,7 +50,7 @@ async def webhook_3(request: Request, background_tasks: BackgroundTasks):
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_ids field"})
 
-    row = ["No Name", email, "Sent Enquiry"]
+    row = ["No Name", email, "Sent Enquiry", ", ".join(map(str, product_ids))]
     row_appended = append_row(SHEET_ID, "Sheet1", row)
 
     pdf_specsheet_files = []
