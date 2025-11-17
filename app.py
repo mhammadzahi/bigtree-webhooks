@@ -24,10 +24,6 @@ app.add_middleware(
 )
 
 
-class ProductEnquiry(BaseModel):
-    Email: EmailStr
-    product_ids: list[int]
-
 class ProductId(BaseModel):
     product_id: int
 
@@ -35,7 +31,11 @@ class EmailWebhook(BaseModel):
     Email: EmailStr
 
 
+SHEET_ID = os.getenv("SHEET_ID")
 
+class ProductEnquiry(BaseModel):
+    Email: EmailStr
+    product_ids: list[int]
 
 @app.post("/send-product-enquiry-email")
 async def webhook_3(request: Request, background_tasks: BackgroundTasks):
@@ -49,6 +49,9 @@ async def webhook_3(request: Request, background_tasks: BackgroundTasks):
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_ids field"})
+
+    row = ["No Name", email, "Sent Enquiry"]
+    row_appended = append_row(SHEET_ID, "Sheet1", row)
 
     pdf_specsheet_files = []
     for product_id in product_ids:
@@ -115,7 +118,6 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
 
 
 
-SHEET_ID = os.getenv("SHEET_ID")
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
 async def webhook_1(request: Request):
     form_data = await request.form()
