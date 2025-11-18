@@ -30,6 +30,7 @@ app.add_middleware(
 class ProductId(BaseModel):
     product_id: int
 
+
 class EmailWebhook(BaseModel):
     Email: EmailStr
 
@@ -60,13 +61,9 @@ async def webhook_3(request: Request):
 
     pdf_specsheet_files = []
     for product_id in product_ids:
-        product = get_product(
-            store_url=STORE_URL,
-            consumer_key=CUNSUMER_KEY,
-            consumer_secret=CUNSUMER_SECRET,
-            product_id=product_id
-        )
-
+        print(f"Processing product ID: {product_id}")
+        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+        print(product)
         if not product:
             return JSONResponse(status_code=404, content={"status": "fail", "detail": f"Product with ID {product_id} not found"})
 
@@ -97,12 +94,7 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_id field"})
 
 
-    product = get_product(
-        store_url=STORE_URL,
-        consumer_key=CUNSUMER_KEY,
-        consumer_secret=CUNSUMER_SECRET,
-        product_id=product_id
-    )
+    product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
 
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
