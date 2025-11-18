@@ -11,6 +11,10 @@ import uvicorn, os, json
 
 from dotenv import load_dotenv
 load_dotenv()
+SHEET_ID = os.getenv("SHEET_ID")
+STORE_URL = os.getenv("WC_STORE_URL")
+CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
+CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
 app = FastAPI(title="BT Webhooks API", version="0.3.0", description="API for handling BigTree webhooks")
 
@@ -30,11 +34,12 @@ class EmailWebhook(BaseModel):
     Email: EmailStr
 
 
-SHEET_ID = os.getenv("SHEET_ID")
-
 class ProductEnquiry(BaseModel):
     Email: EmailStr
     product_ids: list[int]
+
+
+
 
 @app.post("/send-product-enquiry-email")
 async def webhook_3(request: Request):
@@ -45,20 +50,20 @@ async def webhook_3(request: Request):
         validated_data = ProductEnquiry.model_validate(payload)
         product_ids = validated_data.product_ids
         email = validated_data.Email
+        name = payload.get("name", "")
 
     except ValidationError as e:
-        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_ids field"})
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = ["No Name", email, "Sent Enquiry", ", ".join(map(str, product_ids))]
-    print(row)
-    row_appended = append_row(SHEET_ID, "Sheet1", row)
+    row = [name, email, ", ".join(map(str, product_ids))]
+    row_appended = append_row(SHEET_ID, "enquiries", row)
 
     pdf_specsheet_files = []
     for product_id in product_ids:
         product = get_product(
-            store_url=os.getenv("WC_STORE_URL"),
-            consumer_key=os.getenv("WC_CONSUMER_KEY"),
-            consumer_secret=os.getenv("WC_CONSUMER_SECRET"),
+            store_url=STORE_URL,
+            consumer_key=CUNSUMER_KEY,
+            consumer_secret=CUNSUMER_SECRET,
             product_id=product_id
         )
 
@@ -93,9 +98,9 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
 
 
     product = get_product(
-        store_url= os.getenv("WC_STORE_URL"),
-        consumer_key=os.getenv("WC_CONSUMER_KEY"),
-        consumer_secret=os.getenv("WC_CONSUMER_SECRET"),
+        store_url=STORE_URL,
+        consumer_key=CUNSUMER_KEY,
+        consumer_secret=CUNSUMER_SECRET,
         product_id=product_id
     )
 
@@ -130,7 +135,8 @@ async def webhook_1(request: Request):
         validated_data = EmailWebhook.model_validate(dict(form_data))
 
         # 3. Get the validated email from the model
-        email = validated_data.Email 
+        email = validated_data.Email
+        name = form_data.get("Name", "")
 
     except ValidationError as e:
         # If validation fails (missing field or bad email),
@@ -138,10 +144,10 @@ async def webhook_1(request: Request):
         print(f"Validation Error: {e}")
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing email field"})
 
-    print(f"Extracted email: {email}")
+    # print(f"Extracted email: {email}")
 
-    row = ["No Name", email, "Subscribed"]
-    success = append_row(SHEET_ID, "Sheet1", row)
+    row = [name, email]
+    success = append_row(SHEET_ID, "subscribers", row)
     if not success:
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
 
