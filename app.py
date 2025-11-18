@@ -45,7 +45,7 @@ class ProductEnquiry(BaseModel):
 @app.post("/send-product-enquiry-email")
 async def webhook_3(request: Request):
     payload = await request.json()
-    print(payload)
+    # print(payload)
 
     try:
         validated_data = ProductEnquiry.model_validate(payload)
@@ -61,11 +61,10 @@ async def webhook_3(request: Request):
 
     pdf_specsheet_files = []
     for product_id in product_ids:
-        print(f"Processing product ID: {product_id}")
         product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-        print(product)
+
         if not product:
-            return JSONResponse(status_code=404, content={"status": "fail", "detail": f"Product with ID {product_id} not found"})
+            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
         file_path = generate_specsheet_pdf(product)    
         pdf_specsheet_files.append(file_path)
@@ -76,8 +75,10 @@ async def webhook_3(request: Request):
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
 
-    return JSONResponse(status_code=200, content={"status": "success", "detail": f"Enquiry emails sent for product IDs {product_ids}"})
+    with open('1.json', 'w') as f:
+        json.dump(product, f, indent=2)
 
+    return JSONResponse(status_code=200, content={"status": "success", "detail": f"Enquiry emails sent for product IDs {product_ids}"})
 
 
 
@@ -100,8 +101,9 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
     
-    # with open(f'product_{product["id"]}_data.json', 'w') as f:
-    #     json.dump(product, f, indent=2)
+    #with open(f'product_{product["id"]}_data.json', 'w') as f:
+    with open('2.json', 'w') as f:
+        json.dump(product, f, indent=2)
     # print(f"Product data saved to product_{product['id']}_data.json")
 
     file_path = generate_specsheet_pdf(product)
@@ -133,7 +135,7 @@ async def webhook_1(request: Request):
     except ValidationError as e:
         # If validation fails (missing field or bad email),
         # return a 422 Unprocessable Entity error.
-        print(f"Validation Error: {e}")
+        # print(f"Validation Error: {e}")
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing email field"})
 
     # print(f"Extracted email: {email}")
