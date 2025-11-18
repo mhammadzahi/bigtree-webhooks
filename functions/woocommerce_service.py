@@ -35,6 +35,7 @@ def get_product(store_url: str, consumer_key: str, consumer_secret: str, product
     return product
 
 
+
 # print("\n" + "="*50)
 # print(f"Product ID: {product.get('id')}")
 # print(f"Name: {product.get('name')}")

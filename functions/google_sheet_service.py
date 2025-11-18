@@ -6,7 +6,8 @@ from google.auth.transport.requests import Request
 from googleapiclient.errors import HttpError
 
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/spreadsheets"]
 CLIENT_SECRETS_FILE = "main-credentials.json"
 TOKEN_FILE = "token.json"
 
