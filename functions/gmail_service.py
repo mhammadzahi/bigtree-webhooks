@@ -95,7 +95,6 @@ def send_product_enquiry_email(to, pdf_files):
 
 
 
-
 # if __name__ == "__main__":
 #     to = "mohamedzahi33@gmail.com"
 #     pdf_specsheet_files = ["specsheet1.pdf", "specsheet2.pdf", "specsheet3.pdf"]
