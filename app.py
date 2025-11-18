@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
 from functions.google_sheet_service import append_row
-from functions.woocommerce_service import get_product
+from functions.woocommerce_service import get_product, get_default_product_id
 from functions.specsheet_generator import generate_specsheet_pdf
 from functions.gmail_service import send_product_enquiry_email
 import uvicorn, os, json
@@ -46,21 +46,27 @@ class ProductEnquiry(BaseModel):
 async def webhook_3(request: Request):
     payload = await request.json()
     # print(payload)
-
     try:
         validated_data = ProductEnquiry.model_validate(payload)
         product_ids = validated_data.product_ids
         email = validated_data.Email
         name = payload.get("name", "")
 
+        product_default_ids = []
+        for pid in product_ids:
+            default_id = get_default_product_id(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=pid)
+            if default_id:
+                product_default_ids.append(default_id)
+
+
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, email, ", ".join(map(str, product_ids))]
+    row = [name, email, ", ".join(map(str, product_default_ids))]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
     pdf_specsheet_files = []
-    for product_id in product_ids:
+    for product_id in product_default_ids:
         product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
 
         if not product:
@@ -75,10 +81,10 @@ async def webhook_3(request: Request):
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
 
-    with open('1.json', 'w') as f:
-        json.dump(product, f, indent=2)
+    # with open('1.json', 'w') as f:
+    #    json.dump(product, f, indent=2)
 
-    return JSONResponse(status_code=200, content={"status": "success", "detail": f"Enquiry emails sent for product IDs {product_ids}"})
+    return JSONResponse(status_code=200, content={"status": "success"})
 
 
 
@@ -101,10 +107,9 @@ async def webhook_2(request: Request, background_tasks: BackgroundTasks):
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
     
-    #with open(f'product_{product["id"]}_data.json', 'w') as f:
-    with open('2.json', 'w') as f:
-        json.dump(product, f, indent=2)
-    # print(f"Product data saved to product_{product['id']}_data.json")
+    # with open(f'product_{product["id"]}_data.json', 'w') as f:
+    #    json.dump(product, f, indent=2)
+
 
     file_path = generate_specsheet_pdf(product)
     background_tasks.add_task(os.remove, file_path)

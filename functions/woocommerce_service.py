@@ -24,29 +24,42 @@ class WooCommerceProductAPI:
             return None
 
 
+def get_default_product_id(store_url: str, consumer_key: str, consumer_secret: str, product_id: int) -> Optional[int]:
+    wc_api = WooCommerceProductAPI(store_url, consumer_key, consumer_secret)  # Initialize API
+    print(f"\n--- Checking Product ID: {product_id} ---")
+    product_data = wc_api.get_product_by_id(product_id)
+
+    if not product_data:
+        return None # The API class already prints an error, so we just return
+
+
+    product_type = product_data.get('type')
+
+    if product_type == 'variable':
+        # It's a parent product. The default is the first available variation.
+        variations = product_data.get('variations', [])
+        if variations:
+            default_variation_id = variations[0]
+            print(f"Type is 'variable'. Found default variation ID: {default_variation_id}")
+            return default_variation_id
+        else:
+            print(f"[None] Type is 'variable', but it has no variations.")
+            return None
+    
+    elif product_type in ['simple', 'variation']:
+        # It's already a specific, purchasable product.
+        print(f"Type is '{product_type}'. Returning its own ID: {product_id}")
+        return product_id
+        
+    else:
+        # Handle other potential types like 'grouped', 'external' etc.
+        print(f"Product type is '{product_type}'. This is not a standard purchasable item. Returning its own ID.")
+        return product_id
+
+
 
 def get_product(store_url: str, consumer_key: str, consumer_secret: str, product_id: int) -> Optional[Dict]:
     wc_api = WooCommerceProductAPI(store_url, consumer_key, consumer_secret)  # Initialize API
     product = wc_api.get_product_by_id(product_id)
-
-    # with open(f'product_data_{product_id}.json', 'w') as f:
-    #     json.dump(product, f, indent=2)
-
     return product
-
-
-
-# print("\n" + "="*50)
-# print(f"Product ID: {product.get('id')}")
-# print(f"Name: {product.get('name')}")
-# print(f"SKU: {product.get('sku')}")
-# print(f"Price: ${product.get('price')}")
-# print(f"Regular Price: ${product.get('regular_price')}")
-# print(f"Sale Price: ${product.get('sale_price')}")
-# print(f"Stock Status: {product.get('stock_status')}")
-# print(f"Stock Quantity: {product.get('stock_quantity')}")
-# print(f"Categories: {[cat['name'] for cat in product.get('categories', [])]}")
-# print(f"Tags: {[tag['name'] for tag in product.get('tags', [])]}")
-# print(f"Description: {product.get('description', '')[:100]}...")
-# print("="*50 + "\n")
 

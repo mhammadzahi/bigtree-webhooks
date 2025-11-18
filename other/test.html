@@ -164,3 +164,57 @@
     });
 
 </script>
+
+<script>
+    /**
+ * Fetches a product by its ID and returns its default variation.
+ * For variable products, the "default" is assumed to be the first one in the variations array.
+ *
+ * @param {number} productId The ID of the parent (variable) product.
+ * @returns {object|null} The default variation object, or null if not found or not a variable product.
+ */
+    async function getDefaultVariation(productId) {
+        // Use resolveSelect to handle the asynchronous data fetching from the store
+        const product = await window.wp.data.resolveSelect('wc/store/products').getProduct(productId);
+
+        // 1. Check if the product was found and is a variable product
+        if (!product || product.type !== 'variable') {
+            console.log(`Product #${productId} is not a variable product or could not be found.`);
+            return null;
+        }
+
+        // 2. Check if the product has any variations listed
+        if (!product.variations || product.variations.length === 0) {
+            console.log(`Product #${productId} has no variations.`);
+            return null;
+        }
+
+        // 3. Return the first variation in the array as the default
+        const defaultVariation = product.variations[0];
+
+        // The defaultVariation object contains its own id, price, attributes, etc.
+        // console.log('Default Variation ID:', defaultVariation.id);
+        // console.log('Default Variation Price:', defaultVariation.prices.price);
+
+        return defaultVariation;
+    }
+
+    
+    // --- EXAMPLE USAGE ---
+    // Replace 5340 with the ID of a variable product on your store
+    const variableProductId = 5340;
+
+    getDefaultVariation(variableProductId).then(variation => {
+        if (variation) {
+            console.log('Found default variation:', variation);
+
+            // Now you can use this variation's ID to add it to the cart,
+            // display its price, etc.
+            // Example:
+            // const { dispatch } = window.wp.data;
+            // dispatch('wc/store/cart').addItemToCart({ id: variation.id, quantity: 1 });
+        } else {
+            console.log('Could not retrieve a default variation.');
+        }
+    });
+</script>
