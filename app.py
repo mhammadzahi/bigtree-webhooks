@@ -1,13 +1,12 @@
-from fastapi import FastAPI, Response, status, Request
+from fastapi import FastAPI, Response, status, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, FileResponse
-from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
-from functions.append_row_sheet import append_row
-from functions.product_api import get_product
+from functions.google_sheet_service import append_row
+from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
-from functions.email_service import send_product_enquiry_email
+from functions.gmail_service import send_product_enquiry_email
 import uvicorn, os, json
 
 from dotenv import load_dotenv
@@ -38,7 +37,7 @@ class ProductEnquiry(BaseModel):
     product_ids: list[int]
 
 @app.post("/send-product-enquiry-email")
-async def webhook_3(request: Request, background_tasks: BackgroundTasks):
+async def webhook_3(request: Request):
     payload = await request.json()
     print(payload)
 
@@ -73,7 +72,7 @@ async def webhook_3(request: Request, background_tasks: BackgroundTasks):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
 
     for file_path in pdf_specsheet_files:
-        background_tasks.add_task(os.remove, file_path)
+        os.remove(file_path)
 
     return JSONResponse(status_code=200, content={"status": "success", "detail": f"Enquiry emails sent for product IDs {product_ids}"})
 
