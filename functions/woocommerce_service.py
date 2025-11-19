@@ -1,6 +1,6 @@
 from woocommerce import API
 import json
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 
 
 class WooCommerceProductAPI:
@@ -22,39 +22,6 @@ class WooCommerceProductAPI:
         except Exception as e:
             print(f"Exception occurred: {str(e)}")
             return None
-
-
-def get_default_product_id(store_url: str, consumer_key: str, consumer_secret: str, product_id: int) -> Optional[int]:
-    wc_api = WooCommerceProductAPI(store_url, consumer_key, consumer_secret)  # Initialize API
-    print(f"\n--- Checking Product ID: {product_id} ---")
-    product_data = wc_api.get_product_by_id(product_id)
-
-    if not product_data:
-        return None # The API class already prints an error, so we just return
-
-
-    product_type = product_data.get('type')
-
-    if product_type == 'variable':
-        # It's a parent product. The default is the first available variation.
-        variations = product_data.get('variations', [])
-        if variations:
-            default_variation_id = variations[0]
-            print(f"Type is 'variable'. Found default variation ID: {default_variation_id}")
-            return default_variation_id
-        else:
-            print(f"[None] Type is 'variable', but it has no variations.")
-            return None
-    
-    elif product_type in ['simple', 'variation']:
-        # It's already a specific, purchasable product.
-        print(f"Type is '{product_type}'. Returning its own ID: {product_id}")
-        return product_id
-        
-    else:
-        # Handle other potential types like 'grouped', 'external' etc.
-        print(f"Product type is '{product_type}'. This is not a standard purchasable item. Returning its own ID.")
-        return product_id
 
 
 
