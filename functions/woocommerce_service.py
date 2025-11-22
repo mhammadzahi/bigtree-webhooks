@@ -24,7 +24,6 @@ class WooCommerceProductAPI:
             return None
 
 
-
 def get_product(store_url: str, consumer_key: str, consumer_secret: str, product_id: int) -> Optional[Dict]:
     wc_api = WooCommerceProductAPI(store_url, consumer_key, consumer_secret)  # Initialize API
     product = wc_api.get_product_by_id(product_id)

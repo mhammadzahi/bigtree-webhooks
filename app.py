@@ -16,7 +16,7 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
-app = FastAPI(title="BT Webhooks API", version="0.3.0", description="API for handling BigTree webhooks")
+app = FastAPI(title="BT Webhooks API", version="0.4.0", description="API for handling BigTree webhooks")
 
 app.add_middleware(
     CORSMiddleware,
@@ -148,7 +148,7 @@ async def webhook_1(request: Request):
 
 @app.get("/")
 async def root():
-    return {"app": "BT", "version": "0.3.0", "status": "running"}
+    return {"app": "BT", "version": "0.4.0", "status": "running"}
 
 if __name__ == "__main__":
     # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
