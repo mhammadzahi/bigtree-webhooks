@@ -89,7 +89,7 @@ async def webhook_2(request: Request):
 
     try:
         validated_data = ProductIdAndEmail.model_validate(payload)
-        product_id, email = validated_data.product_id, validated_data.email
+        product_id, email, name = validated_data.product_id, validated_data.email, payload.get("name", "")
 
     except ValidationError as e:
         # print(f"Validation Error: {e}")
