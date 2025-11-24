@@ -11,7 +11,7 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.
 CLIENT_SECRETS_FILE = "main-credentials.json"
 TOKEN_FILE = "token.json"
 
-def init_sheets_service():
+def init_sheets_service():# Helper function
     try:
         creds = None
 
@@ -63,8 +63,9 @@ def append_row(sheet_id: str, sheet_name: str, row_data: list) -> bool:
             ).execute()
         )
 
-        updated_rows = result.get("updates", {}).get("updatedRows", 0)
+        # updated_rows = result.get("updates", {}).get("updatedRows", 0)
         # print(f"{updated_rows} rows appended.")
+        
         return True
 
     except HttpError as e:

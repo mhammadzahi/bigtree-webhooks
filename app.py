@@ -87,7 +87,6 @@ async def webhook_2(request: Request):
     payload = await request.json()
     print(payload)
 
-
     try:
         validated_data = ProductIdAndEmail.model_validate(payload)
         product_id, email = validated_data.product_id, validated_data.email
@@ -102,11 +101,10 @@ async def webhook_2(request: Request):
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
     row = [name, email, product_id]
-    row_appended = append_row(SHEET_ID, "", row)
+    row_appended = append_row(SHEET_ID, "specsheets", row)
 
     # with open(f'product_{product["id"]}_data.json', 'w') as f:
     #    json.dump(product, f, indent=2)
-
 
     file_path = generate_specsheet_pdf(product)
 

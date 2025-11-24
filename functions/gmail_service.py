@@ -45,7 +45,7 @@ single_product_html = """
 
 
 
-def get_gmail_service():
+def get_gmail_service():# Helper function
     creds = None
     if os.path.exists(token_file):
         creds = Credentials.from_authorized_user_file(token_file, SCOPES)
@@ -63,7 +63,7 @@ def get_gmail_service():
     return build("gmail", "v1", credentials=creds)
 
 
-def create_message_with_attachments(to, html_body, pdf_files):
+def create_message_with_attachments(to, html_body, pdf_files):# Herlper function
     message = MIMEMultipart("mixed")
     message["to"] = to
     message["from"] = 'BigTree Group <web@bigtree-group.com>'
@@ -73,7 +73,7 @@ def create_message_with_attachments(to, html_body, pdf_files):
     related = MIMEMultipart("related")
     message.attach(related)
 
-    html_part = MIMEText(product_enquiry_html, "html")
+    html_part = MIMEText(html_body, "html")
     related.attach(html_part)
 
     # Attach each PDF file
@@ -94,6 +94,7 @@ def create_message_with_attachments(to, html_body, pdf_files):
 
 
 
+
 def send_product_enquiry_email(to, pdf_files):
     service = get_gmail_service()
     body_message = create_message_with_attachments(to, product_enquiry_html, pdf_files)
@@ -109,9 +110,9 @@ def send_product_enquiry_email(to, pdf_files):
 
 
 
-def send_single_product_specsheet_email(email, file_path):
+def send_single_product_specsheet_email(to, file_path):
     service = get_gmail_service()
-    body_message = create_message_with_attachments(email, single_product_html, file_path)
+    body_message = create_message_with_attachments(to, single_product_html, file_path)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
