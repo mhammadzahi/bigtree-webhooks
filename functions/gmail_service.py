@@ -63,12 +63,11 @@ def get_gmail_service():# Helper function
     return build("gmail", "v1", credentials=creds)
 
 
-def create_message_with_attachments(to, html_body, pdf_files):# Herlper function
+def create_message_with_attachments(to, subject, html_body, pdf_files):# Herlper function
     message = MIMEMultipart("mixed")
     message["to"] = to
     message["from"] = 'BigTree Group <web@bigtree-group.com>'
-    message["subject"] = 'Product Enquiry'
-
+    message["subject"] = subject
     # Create a "related" part for the HTML and potential embedded images
     related = MIMEMultipart("related")
     message.attach(related)
@@ -97,7 +96,7 @@ def create_message_with_attachments(to, html_body, pdf_files):# Herlper function
 
 def send_product_enquiry_email(to, pdf_files):
     service = get_gmail_service()
-    body_message = create_message_with_attachments(to, product_enquiry_html, pdf_files)
+    body_message = create_message_with_attachments(to, "Product Enquiry", product_enquiry_html, pdf_files)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
@@ -112,7 +111,7 @@ def send_product_enquiry_email(to, pdf_files):
 
 def send_single_product_specsheet_email(to, file_path):
     service = get_gmail_service()
-    body_message = create_message_with_attachments(to, single_product_html, file_path)
+    body_message = create_message_with_attachments(to, "Product Specsheet", single_product_html, file_path)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
