@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from functions.google_sheet_service import append_row
 from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
-from functions.gmail_service import send_product_enquiry_email
+from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email
 import uvicorn, os, json
 
 from dotenv import load_dotenv
@@ -27,8 +27,9 @@ app.add_middleware(
 )
 
 
-class ProductId(BaseModel):
+class ProductIdAndEmail(BaseModel):
     product_id: int
+    email: EmailStr
 
 
 class EmailWebhook(BaseModel):
@@ -80,36 +81,45 @@ async def webhook_3(request: Request):
 
 
 
-@app.post("/bt-product-specsheet")
-async def webhook_2(request: Request, background_tasks: BackgroundTasks):
+
+@app.post("/bt-single-product-specsheet-webhook-v2-1")
+async def webhook_2(request: Request):
     payload = await request.json()
+    print(payload)
+
 
     try:
-        validated_data = ProductId.model_validate(payload)
-        product_id = validated_data.product_id
+        validated_data = ProductIdAndEmail.model_validate(payload)
+        product_id, email = validated_data.product_id, validated_data.email
 
     except ValidationError as e:
         # print(f"Validation Error: {e}")
-        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing product_id field"})
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing fields"})
 
 
     product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-    
+    row = [name, email, product_id]
+    row_appended = append_row(SHEET_ID, "", row)
+
     # with open(f'product_{product["id"]}_data.json', 'w') as f:
     #    json.dump(product, f, indent=2)
 
 
     file_path = generate_specsheet_pdf(product)
-    background_tasks.add_task(os.remove, file_path)
 
-    #return Response(status_code=status.HTTP_200_OK)
-    response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
-    response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
-    return response
+    if not send_single_product_specsheet_email(email, [file_path]):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
+
+    os.remove(file_path)
+
+    # response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
+    # response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+    # return response
+
+    return JSONResponse(status_code=200, content={"status": "success"})
 
 
 

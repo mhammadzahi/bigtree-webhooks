@@ -15,7 +15,7 @@ token_file = "token.json"
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/spreadsheets"]
 
-html_body = """
+product_enquiry_html = """
     <html>
         <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
             <p>Hello,</p>
@@ -29,6 +29,20 @@ html_body = """
         </body>
     </html>
     """
+
+single_product_html = """
+    <html>
+        <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+            <p>Hello,</p>
+            <p>
+            Please find your requested product spec sheet attached.
+            </p>
+
+            <p>Thank you!</p>
+        </body>
+    </html>
+    """
+
 
 
 def get_gmail_service():
@@ -59,7 +73,7 @@ def create_message_with_attachments(to, html_body, pdf_files):
     related = MIMEMultipart("related")
     message.attach(related)
 
-    html_part = MIMEText(html_body, "html")
+    html_part = MIMEText(product_enquiry_html, "html")
     related.attach(html_part)
 
     # Attach each PDF file
@@ -82,7 +96,7 @@ def create_message_with_attachments(to, html_body, pdf_files):
 
 def send_product_enquiry_email(to, pdf_files):
     service = get_gmail_service()
-    body_message = create_message_with_attachments(to, html_body, pdf_files)
+    body_message = create_message_with_attachments(to, product_enquiry_html, pdf_files)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
@@ -95,8 +109,17 @@ def send_product_enquiry_email(to, pdf_files):
 
 
 
-# if __name__ == "__main__":
-#     to = "mohamedzahi33@gmail.com"
-#     pdf_specsheet_files = ["specsheet1.pdf", "specsheet2.pdf", "specsheet3.pdf"]
+def send_single_product_specsheet_email(email, file_path):
+    service = get_gmail_service()
+    body_message = create_message_with_attachments(email, single_product_html, file_path)
     
-#     send_product_enquiry_email(to, pdf_specsheet_files)
+    try:
+        message = service.users().messages().send(userId="me", body=body_message).execute()
+        # print(f"Message Id: {message['id']}")
+        return True
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+
