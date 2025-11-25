@@ -37,7 +37,7 @@ class EmailWebhook(BaseModel):
 
 
 class ProductEnquiry(BaseModel):
-    Email: EmailStr
+    email: EmailStr
     product_ids: list[int]
     name: str | None = None
     phone: str | None = None
@@ -51,7 +51,7 @@ async def webhook_3(request: Request):
     try:
         validated_data = ProductEnquiry.model_validate(payload)
         product_ids = validated_data.product_ids
-        email = validated_data.Email
+        email = validated_data.email
         name = validated_data.name or ""
         phone = validated_data.phone or ""
         company = validated_data.company or ""
