@@ -46,7 +46,7 @@ class ProductEnquiry(BaseModel):
 @app.post("/bt-send-product-enquiry-email")# need to change endpoint url 
 async def webhook_3(request: Request):
     payload = await request.json()
-    # print(payload)
+    print(payload)
     try:
         validated_data = ProductEnquiry.model_validate(payload)
         product_ids = validated_data.product_ids
