@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, Request, BackgroundTasks
+from fastapi import FastAPI, Response, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -43,7 +43,7 @@ class ProductEnquiry(BaseModel):
 
 
 
-@app.post("/bt-send-product-enquiry-email")
+@app.post("/bt-send-product-enquiry-email")# need to change endpoint url 
 async def webhook_3(request: Request):
     payload = await request.json()
     # print(payload)
@@ -85,7 +85,7 @@ async def webhook_3(request: Request):
 @app.post("/bt-single-product-specsheet-webhook-v2-1")
 async def webhook_2(request: Request):
     payload = await request.json()
-    print(payload)
+    # print(payload)
 
     try:
         validated_data = ProductIdAndEmail.model_validate(payload)
