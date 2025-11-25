@@ -39,8 +39,9 @@ class EmailWebhook(BaseModel):
 class ProductEnquiry(BaseModel):
     Email: EmailStr
     product_ids: list[int]
-
-
+    name: str | None = None
+    phone: str | None = None
+    company: str | None = None
 
 
 @app.post("/bt-send-product-enquiry-email")# need to change endpoint url 
@@ -51,13 +52,15 @@ async def webhook_3(request: Request):
         validated_data = ProductEnquiry.model_validate(payload)
         product_ids = validated_data.product_ids
         email = validated_data.Email
-        name = payload.get("name", "")
+        name = validated_data.name or ""
+        phone = validated_data.phone or ""
+        company = validated_data.company or ""
 
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, email, ", ".join(map(str, product_ids))]
+    row = [name, phone, company, email, ", ".join(map(str, product_ids))]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
     pdf_specsheet_files = []
