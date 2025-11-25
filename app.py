@@ -58,6 +58,7 @@ async def webhook_3(request: Request):
 
 
     except ValidationError as e:
+        print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
     row = [name, phone, company, email, ", ".join(map(str, product_ids))]
