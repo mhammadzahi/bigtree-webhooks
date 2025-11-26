@@ -44,7 +44,7 @@ class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     company: str | None = None
 
 
-@app.post("/bt-send-product-enquiry-email")# need to change endpoint url 
+@app.post("/bt-send-product-enquiry-webhook-v2-1")# need to change endpoint url 
 async def webhook_3(request: Request):
     payload = await request.json()
     print(payload)
