@@ -27,16 +27,16 @@ app.add_middleware(
 )
 
 
-class ProductIdAndEmail(BaseModel):
+class ProductIdAndEmail(BaseModel):# for single product specsheet
     product_id: int
     email: EmailStr
 
 
-class EmailWebhook(BaseModel):
+class EmailWebhook(BaseModel):# for newsletter subscription
     Email: EmailStr
 
 
-class ProductEnquiry(BaseModel):
+class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     email: EmailStr
     product_ids: list[int]
     name: str | None = None
@@ -158,7 +158,7 @@ async def webhook_1(request: Request):
 
 
 
-@app.get("/")
+@app.get("/bigtree-webhooks-health-check")
 async def root():
     return {"app": "BT", "version": "0.4.0", "status": "running"}
 
