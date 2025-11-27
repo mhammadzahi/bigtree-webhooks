@@ -44,6 +44,59 @@ class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     company: str | None = None
 
 
+class RequestSample(BaseModel):# for multiple product sample request (List)
+    email: EmailStr
+    product_ids: list[int]
+    name: str | None = None
+    phone: str | None = None
+    company: str | None = None
+    message: str | None = None
+
+
+@app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
+async def webhook_4(request: Request):
+    payload = await request.json()
+    print(payload)
+    try:
+        validated_data = RequestSample.model_validate(payload)
+
+        product_ids = validated_data.product_ids
+        name = validated_data.name
+        email = validated_data.email
+        phone = validated_data.phone
+        company = validated_data.company
+        message = validated_data.message
+
+
+    except ValidationError as e:
+        print(e)
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
+
+    row = [name, phone, company, email, message, ", ".join(map(str, product_ids))]
+    row_appended = append_row(SHEET_ID, "sample_requests", row)
+
+    pdf_specsheet_files = []
+    for product_id in product_ids:
+        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+
+        if not product:
+            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+
+        file_path = generate_specsheet_pdf(product)    
+        pdf_specsheet_files.append(file_path)
+
+    if not send_product_enquiry_email(email, pdf_specsheet_files):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+
+    for file_path in pdf_specsheet_files:
+        os.remove(file_path)
+
+
+    return JSONResponse(status_code=200, content={"status": "success"})
+
+
+
+
 @app.post("/bt-send-product-enquiry-webhook-v2-1")# need to change endpoint url 
 async def webhook_3(request: Request):
     payload = await request.json()
@@ -132,18 +185,11 @@ async def webhook_1(request: Request):
     # print(form_data)
 
     try:
-        # 2. Validate the form data
-        #    We convert the form_data to a dict and pass it to the model.
-        #    This will check if "Email" exists AND if it's a valid email.
         validated_data = EmailWebhook.model_validate(dict(form_data))
-
-        # 3. Get the validated email from the model
         email = validated_data.Email
         name = form_data.get("Name", "")
 
     except ValidationError as e:
-        # If validation fails (missing field or bad email),
-        # return a 422 Unprocessable Entity error.
         # print(f"Validation Error: {e}")
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing email field"})
 
