@@ -44,13 +44,27 @@ single_product_html = """
     </html>
     """
 
-request_sample_html = """
+# request_sample_html = """
+#     <html>
+#         <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+#             <p>Hello,</p>
+#             <p>
+#             Please find your requested product sample spec sheets attached.
+#             We will contact you soon with further details.
+#             </p>
+
+#             <p>Thank you!</p>
+#         </body>
+#     </html>
+#     """
+
+request_sample_admin_html = """
     <html>
         <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-            <p>Hello,</p>
+            <p>Hello Sales Team,</p>
             <p>
-            Please find your requested product sample spec sheets attached.
-            We will contact you soon with further details.
+            A new sample request has been submitted on the website.
+            Please check and follow up accordingly.
             </p>
 
             <p>Thank you!</p>
@@ -76,6 +90,7 @@ def get_gmail_service():# Helper function
             token.write(creds.to_json())
 
     return build("gmail", "v1", credentials=creds)
+
 
 
 def create_message_without_attachments(to, subject, html_body):# Helper function
@@ -123,58 +138,57 @@ def create_message_with_attachments(to, subject, html_body, pdf_files):# Herlper
 
 
 
-
 def send_product_enquiry_email(to, pdf_files):
     service = get_gmail_service()
     body_message = create_message_with_attachments(to, "Product Enquiry", product_enquiry_html, pdf_files)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
-        # print(f"Message Id: {message['id']}")
         return True
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred in [send_product_enquiry_email]: {e}")
         return False
 
 
 
 def send_single_product_specsheet_email(to, file_path):
     service = get_gmail_service()
-    body_message = create_message_with_attachments(to, "Product Specsheet", single_product_html, file_path)
-    
-    try:
-        message = service.users().messages().send(userId="me", body=body_message).execute()
-        # print(f"Message Id: {message['id']}")
-        return True
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return False
-
-
-def send_request_sample_email(to, pdf_files):
-    service = get_gmail_service()
-    body_message = create_message_with_attachments(to, "Request Sample", request_sample_html, pdf_files)
-    
+    body_message = create_message_with_attachments(to, "Product Specsheet", single_product_html, [file_path])
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         return True
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred in [send_single_ product_ specsheet_email]: {e}")
         return False
 
 
-def send_request_sample_to_admin(name):
+
+# def send_request_sample_email(to, pdf_files):
+#     service = get_gmail_service()
+#     body_message = create_message_with_attachments(to, "Request Sample", request_sample_html, pdf_files)
+    
+#     try:
+#         message = service.users().messages().send(userId="me", body=body_message).execute()
+#         return True
+
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+#         return False
+
+
+
+def send_request_sample_to_admin(first_name, last_name):
     service = get_gmail_service()
     to = "sales@bigtree-group.com"
-    body_message = create_message_without_attachments(to, "Request Sample from " + name, request_sample_admin_html)
+    subject = "New Sample Request from " + first_name + " " + last_name
 
+    body_message = create_message_without_attachments(to, subject, request_sample_admin_html)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         return True
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred in [send_request_sample_to_admin]: {e}")
         return False

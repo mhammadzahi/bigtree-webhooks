@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from functions.google_sheet_service import append_row
 from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
-from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email
+from functions.gmail import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
 import uvicorn, os, json
 
 from dotenv import load_dotenv
@@ -45,10 +45,13 @@ class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
 
 
 class RequestSample(BaseModel):# for multiple product sample request (List)
+    first_name: str
+    last_name: str
     email: EmailStr
     product_ids: list[int]
-    name: str | None = None
     phone: str | None = None
+    project: str
+    quantity: int
     company: str | None = None
     message: str | None = None
 
@@ -61,36 +64,41 @@ async def webhook_4(request: Request):
         validated_data = RequestSample.model_validate(payload)
 
         product_ids = validated_data.product_ids
-        name = validated_data.name
+        first_name = validated_data.first_name
+        last_name = validated_data.last_name
         email = validated_data.email
         phone = validated_data.phone
         company = validated_data.company
         message = validated_data.message
+        project = validated_data.project
+        quantity = validated_data.quantity
 
 
     except ValidationError as e:
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, phone, company, email, message, ", ".join(map(str, product_ids))]
+    row = [first_name, last_name, phone, company, email, message, project, quantity, ", ".join(map(str, product_ids))]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
 
-    pdf_specsheet_files = []
-    for product_id in product_ids:
-        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+    # pdf_specsheet_files = []
+    # for product_id in product_ids:
+    #     product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
 
-        if not product:
-            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+    #     if not product:
+    #         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-        file_path = generate_specsheet_pdf(product)    
-        pdf_specsheet_files.append(file_path)
+    #     file_path = generate_specsheet_pdf(product)    
+    #     pdf_specsheet_files.append(file_path)
 
-    if not send_request_sample_email(email, pdf_specsheet_files):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+    # if not send_request_sample_email(email, pdf_specsheet_files):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
 
-    for file_path in pdf_specsheet_files:
-        os.remove(file_path)
+    if not send_request_sample_to_admin(first_name, last_name):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email to admin"})
 
+    # for file_path in pdf_specsheet_files:
+    #     os.remove(file_path)
 
     return JSONResponse(status_code=200, content={"status": "success"})
 
@@ -164,8 +172,7 @@ async def webhook_2(request: Request):
     #    json.dump(product, f, indent=2)
 
     file_path = generate_specsheet_pdf(product)
-
-    if not send_single_product_specsheet_email(email, [file_path]):
+    if not send_single_product_specsheet_email(email, file_path):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
     os.remove(file_path)

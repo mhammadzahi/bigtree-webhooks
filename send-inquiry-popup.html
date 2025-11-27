@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #532A44; /* Deep Plum */
+      --header-color: #532A44;
+      --border-color: #B4AEA7; /* Beige-Grey */
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --bg-card: #ffffff;
+      --radius: 16px;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* Card Container */
+    .card {
+      /* UPDATED WIDTH & PADDING */
+      width: 600px;
+      max-width: 100%;
+      padding: 30px;
+      
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    /* Header Styling */
+    .card-header {
+      text-align: center;
+      margin-bottom: 28px; /* Slightly reduced margin to match compact padding */
+    }
+
+    .card h2 {
+      margin: 0 0 6px 0;
+      font-weight: 700;
+      font-size: 26px;
+      color: var(--header-color);
+      letter-spacing: -0.5px;
+    }
+
+    .card p.lead {
+      margin: 0;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* Form Grid */
+    .enquiry-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .col-full {
+      grid-column: span 2;
+    }
+
+    /* Input Styling */
+    .form-group {
+      position: relative;
+    }
+
+    .input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 16px 12px 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 15px;
+      outline: none;
+      background: #fff;
+      color: var(--text-main);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Floating Label Styling */
+    .form-label {
+      position: absolute;
+      left: 12px;
+      top: 14px;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: 0.2s ease all;
+      background: transparent;
+      
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90%; 
+    }
+
+    /* Red asterisk for required fields */
+    .input:required ~ .form-label::after,
+    textarea:required ~ .form-label::after {
+      content: " *";
+      color: #b91c1c;
+    }
+
+    /* Focus States */
+    .input:focus, textarea:focus {
+      border-color: var(--header-color);
+      box-shadow: 0 0 0 4px rgba(83, 42, 68, 0.1);
+    }
+
+    /* Floating Label Animation */
+    .input:focus ~ .form-label,
+    .input:not(:placeholder-shown) ~ .form-label,
+    textarea:focus ~ .form-label,
+    textarea:not(:placeholder-shown) ~ .form-label {
+      top: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--header-color);
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      margin-top: 10px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      height: 52px;
+      width: 100%;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .submit-btn:hover {
+      background: #3e1f33;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    @media (max-width: 600px) {
+      .enquiry-form {
+        grid-template-columns: 1fr;
+      }
+      .col-full {
+        grid-column: span 1;
+      }
+      .card {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    
+    <div class="card-header">
+      <h2>Send Inquiry</h2>
+      <p class="lead">Have a question about this product? We're here to help.</p>
+    </div>
+
+    <form id="enquiryForm" class="enquiry-form" novalidate>
+
+      <div class="form-group">
+        <input class="input" type="text" id="fname" name="fname" placeholder=" " required>
+        <label class="form-label" for="fname">First Name</label>
+      </div>
+
+      <div class="form-group">
+        <input class="input" type="text" id="lname" name="lname" placeholder=" " required>
+        <label class="form-label" for="lname">Last Name</label>
+      </div>
+
+      <div class="form-group">
+        <input class="input" type="email" id="email" name="email" placeholder=" " required>
+        <label class="form-label" for="email">Email Address</label>
+      </div>
+
+      <div class="form-group">
+        <input class="input" type="tel" id="phone" name="phone" placeholder=" ">
+        <label class="form-label" for="phone">Phone</label>
+      </div>
+
+      <div class="form-group col-full">
+        <input class="input" type="text" id="company" name="company" placeholder=" ">
+        <label class="form-label" for="company">Company</label>
+      </div>
+
+      <div class="form-group col-full">
+        <input class="input" type="text" id="project" name="project" placeholder=" " required>
+        <label class="form-label" for="project">Project</label>
+      </div>
+
+      <div class="form-group col-full">
+        <input class="input" type="number" id="qte" name="qte" min="1" value="1" placeholder=" ">
+        <label class="form-label" for="qte">Quantity</label>
+      </div>
+
+      <div class="form-group col-full">
+        <textarea id="message" name="message" placeholder=" "></textarea>
+        <label class="form-label" for="message">Additional thoughts or details...</label>
+      </div>
+
+      <div class="col-full">
+        <button type="submit" class="submit-btn">Submit</button>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("enquiryForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      if (!this.checkValidity()) {
+        return;
+      }
+
+      const btn = this.querySelector('.submit-btn');
+      const originalText = btn.innerText;
+      
+      btn.innerText = "Sending...";
+      btn.style.opacity = "0.7";
+
+      setTimeout(() => {
+        const data = {
+          firstName: this.fname.value.trim(),
+          lastName: this.lname.value.trim(),
+          email: this.email.value.trim(),
+          phone: this.phone.value.trim(),
+          company: this.company.value.trim(),
+          project: this.project.value.trim(),
+          quantity: this.qte.value,
+          message: this.message.value.trim()
+        };
+        
+        console.table(data);
+        alert("Enquiry Sent!");
+        
+        this.reset();
+        btn.innerText = originalText;
+        btn.style.opacity = "1";
+      }, 500);
+    });
+  </script>
+</body>
+</html>
