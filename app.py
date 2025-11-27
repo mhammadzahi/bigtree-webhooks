@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from functions.google_sheet_service import append_row
 from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
-from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email
+from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email
 import uvicorn, os, json
 
 from dotenv import load_dotenv
@@ -85,7 +85,7 @@ async def webhook_4(request: Request):
         file_path = generate_specsheet_pdf(product)    
         pdf_specsheet_files.append(file_path)
 
-    if not send_product_enquiry_email(email, pdf_specsheet_files):
+    if not send_request_sample_email(email, pdf_specsheet_files):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
 
     for file_path in pdf_specsheet_files:
