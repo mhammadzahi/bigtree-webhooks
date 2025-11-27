@@ -4,6 +4,8 @@ token.json
 *.json
 # *.docx
 *.pdf
+backup_contact_form.txt
+
 
 
 ### Python ###
