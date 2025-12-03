@@ -165,17 +165,17 @@ def send_single_product_specsheet_email(to, file_path):
 
 
 
-# def send_request_sample_email(to, pdf_files):
-#     service = get_gmail_service()
-#     body_message = create_message_with_attachments(to, "Request Sample", request_sample_html, pdf_files)
+def send_request_sample_email(to, pdf_files):
+    service = get_gmail_service()
+    body_message = create_message_with_attachments(to, "Request Sample", request_sample_html, pdf_files)
     
-#     try:
-#         message = service.users().messages().send(userId="me", body=body_message).execute()
-#         return True
+    try:
+        message = service.users().messages().send(userId="me", body=body_message).execute()
+        return True
 
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
-#         return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
 
 
 
