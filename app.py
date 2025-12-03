@@ -8,6 +8,7 @@ from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
 from functions.gmail import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
 import uvicorn, os, json
+from typing import List
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -35,24 +36,72 @@ class ProductIdAndEmail(BaseModel):# for single product specsheet
     email: EmailStr
 
 
-class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
-    email: EmailStr
-    product_ids: list[int]
-    name: str | None = None
-    phone: str | None = None
-    company: str | None = None
-
-
 class RequestSample(BaseModel):# for multiple product sample request (List)
-    first_name: str
-    last_name: str
+    name: str
+    # email: EmailStr
+    # product_ids: list[int]
+    # phone: str | None = None
+    # project: str | None = None
+    # quantity: int | None = None
+    # company: str | None = None
+    # message: str | None = None
+
+
+class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
+    name: str
     email: EmailStr
-    product_ids: list[int]
     phone: str | None = None
-    project: str | None = None
-    quantity: int | None = None
     company: str | None = None
+    project: str | None = None
     message: str | None = None
+    cart_items: List[CartItem]
+
+class CartItem(BaseModel):
+    id: int
+    quantity: int
+
+
+@app.post("/bt-send-product-enquiry-webhook-v2-1")
+async def webhook_3(request: Request):
+    payload = await request.json()
+    print(payload)
+    try:
+        validated_data = ProductEnquiry.model_validate(payload)
+        name = validated_data.name
+        email = validated_data.email
+        phone = validated_data.phone
+        company = validated_data.company
+        project = validated_data.project
+        message = validated_data.message
+        cart_items = validated_data.cart_items
+        #product_ids = [item.id for item in cart_items]
+
+    except ValidationError as e:
+        print(e)
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
+
+    row = [name, email, phone, company, project, message, ", ".join(map(str, cart_items))]
+    row_appended = append_row(SHEET_ID, "enquiries", row)
+
+    pdf_specsheet_files = []
+    for product_id in product_ids:
+        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+
+        if not product:
+            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+
+        file_path = generate_specsheet_pdf(product)    
+        pdf_specsheet_files.append(file_path)
+
+    if not send_product_enquiry_email(email, pdf_specsheet_files):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
+
+    for file_path in pdf_specsheet_files:
+        os.remove(file_path)
+
+
+    return JSONResponse(status_code=200, content={"status": "success"})
+
 
 
 @app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
@@ -101,49 +150,6 @@ async def webhook_4(request: Request):
     #     os.remove(file_path)
 
     return JSONResponse(status_code=200, content={"status": "success"})
-
-
-
-
-@app.post("/bt-send-product-enquiry-webhook-v2-1")# need to change endpoint url 
-async def webhook_3(request: Request):
-    payload = await request.json()
-    print(payload)
-    try:
-        validated_data = ProductEnquiry.model_validate(payload)
-        product_ids = validated_data.product_ids
-        email = validated_data.email
-        name = validated_data.name or ""
-        phone = validated_data.phone or ""
-        company = validated_data.company or ""
-
-
-    except ValidationError as e:
-        print(e)
-        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
-
-    row = [name, phone, company, email, ", ".join(map(str, product_ids))]
-    row_appended = append_row(SHEET_ID, "enquiries", row)
-
-    pdf_specsheet_files = []
-    for product_id in product_ids:
-        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-
-        if not product:
-            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
-
-        file_path = generate_specsheet_pdf(product)    
-        pdf_specsheet_files.append(file_path)
-
-    if not send_product_enquiry_email(email, pdf_specsheet_files):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
-
-    for file_path in pdf_specsheet_files:
-        os.remove(file_path)
-
-
-    return JSONResponse(status_code=200, content={"status": "success"})
-
 
 
 
