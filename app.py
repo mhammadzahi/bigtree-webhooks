@@ -26,14 +26,13 @@ app.add_middleware(
     allow_headers=["*"],  # Or ["Content-Type"]
 )
 
+class EmailWebhook(BaseModel):# for newsletter subscription
+    Email: EmailStr
+
 
 class ProductIdAndEmail(BaseModel):# for single product specsheet
     product_id: int
     email: EmailStr
-
-
-class EmailWebhook(BaseModel):# for newsletter subscription
-    Email: EmailStr
 
 
 class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
@@ -50,8 +49,8 @@ class RequestSample(BaseModel):# for multiple product sample request (List)
     email: EmailStr
     product_ids: list[int]
     phone: str | None = None
-    project: str
-    quantity: int
+    project: str | None = None
+    quantity: int | None = None
     company: str | None = None
     message: str | None = None
 
@@ -59,6 +58,7 @@ class RequestSample(BaseModel):# for multiple product sample request (List)
 @app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
 async def webhook_4(request: Request):
     payload = await request.json()
+    print("-------- New Sample Request -------")
     print(payload)
     try:
         validated_data = RequestSample.model_validate(payload)
