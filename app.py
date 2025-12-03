@@ -74,7 +74,7 @@ async def webhook_3(request: Request):
         project = validated_data.project
         message = validated_data.message
         cart_items = validated_data.cart_items
-        #product_ids = [item.id for item in cart_items]
+        product_ids = [item.id for item in cart_items]
 
     except ValidationError as e:
         print(e)
