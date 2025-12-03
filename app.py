@@ -47,6 +47,10 @@ class RequestSample(BaseModel):# for multiple product sample request (List)
     # message: str | None = None
 
 
+class CartItem(BaseModel):
+    id: int
+    quantity: int
+
 class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     name: str
     email: EmailStr
@@ -55,10 +59,6 @@ class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     project: str | None = None
     message: str | None = None
     cart_items: List[CartItem]
-
-class CartItem(BaseModel):
-    id: int
-    quantity: int
 
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")
