@@ -64,7 +64,7 @@ request_sample_admin_html = """
             <p>Hello Sales Team,</p>
             <p>
             A new sample request has been submitted on the website.
-            Please check and follow up accordingly.
+            Please <a href="https://docs.google.com/spreadsheets/d/1wY2Vz1w9Ld0HHLbankE-9ISVq15zixn2oxs7aRGhljw/edit?usp=sharing">check the Google Sheet</a> and follow up accordingly.
             </p>
 
             <p>Thank you!</p>
@@ -190,5 +190,5 @@ def send_request_sample_to_admin(first_name, last_name):
         return True
 
     except Exception as e:
-        print(f"An error occurred in [send_request_sample_to_admin]: {e}")
+        print(f"Error occurred in [send request sample to admin]: {e}")
         return False

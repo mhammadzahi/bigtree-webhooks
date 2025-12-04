@@ -62,19 +62,12 @@ class RequestSample(BaseModel):
     qte: str
     message: str | None = None
 
-'''
-{
-'fname': 'Molly', 'lname': 'Houston', 'email': 'mz25922@gmail.com', 
-'phone': '+1 (499) 291-2045', 'company': 'Richardson Co', 'project': 'Minus fugit dolorum', 
-'qte': '874', 'message': 'Laboris dolor deseru', 'productId': ['5813']
-}
-'''
 
 @app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
 async def webhook_4(request: Request):
     payload = await request.json()
-    print("-------- New Sample Request -------")
-    print(payload)
+    # print("-------- New Sample Request -------")
+    # print(payload)
     try:
         validated_data = RequestSample.model_validate(payload)
 
