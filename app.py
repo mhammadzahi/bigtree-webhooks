@@ -87,7 +87,7 @@ async def webhook_4(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [first_name, last_name, phone, company, email, message, project, quantity, ", ".join(map(str, product_ids))]
+    row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
 
     # pdf_specsheet_files = []
