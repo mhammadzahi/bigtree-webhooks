@@ -36,23 +36,13 @@ class ProductIdAndEmail(BaseModel):# for single product specsheet
     email: EmailStr
 
 
-class RequestSample(BaseModel):# for multiple product sample request (List)
-    name: str
-    # email: EmailStr
-    # product_ids: list[int]
-    # phone: str | None = None
-    # project: str | None = None
-    # quantity: int | None = None
-    # company: str | None = None
-    # message: str | None = None
-
-
 class CartItem(BaseModel):
     id: int
     quantity: int
 
 class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
-    name: str
+    first_name: str
+    last_name: str
     email: EmailStr
     phone: str | None = None
     company: str | None = None
@@ -61,13 +51,78 @@ class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     cart_items: List[CartItem]
 
 
+
+class RequestSample(BaseModel):
+    product_ids: list[int]# for multiple product sample request (List)
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone: str | None = None
+    company: str | None = None
+    project: str | None = None
+    quantity: str
+    message: str | None = None
+
+
+
+@app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
+async def webhook_4(request: Request):
+    payload = await request.json()
+    print("-------- New Sample Request -------")
+    print(payload)
+    try:
+        validated_data = RequestSample.model_validate(payload)
+
+        product_ids = validated_data.product_ids
+        first_name = validated_data.first_name
+        last_name = validated_data.last_name
+        email = validated_data.email
+        phone = validated_data.phone
+        company = validated_data.company
+        project = validated_data.project
+        quantity = validated_data.quantity
+        message = validated_data.message
+
+
+    except ValidationError as e:
+        print(e)
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
+
+    row = [first_name, last_name, phone, company, email, message, project, quantity, ", ".join(map(str, product_ids))]
+    row_appended = append_row(SHEET_ID, "sample_requests", row)
+
+    # pdf_specsheet_files = []
+    # for product_id in product_ids:
+    #     product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+
+    #     if not product:
+    #         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+
+    #     file_path = generate_specsheet_pdf(product)    
+    #     pdf_specsheet_files.append(file_path)
+
+    # if not send_request_sample_email(email, pdf_specsheet_files):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+
+    if not send_request_sample_to_admin(first_name, last_name):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email to admin"})
+
+    # for file_path in pdf_specsheet_files:
+    #     os.remove(file_path)
+
+    return JSONResponse(status_code=200, content={"status": "success"})
+
+
+
+
 @app.post("/bt-send-product-enquiry-webhook-v2-1")
 async def webhook_3(request: Request):
     payload = await request.json()
     print(payload)
     try:
         validated_data = ProductEnquiry.model_validate(payload)
-        name = validated_data.name
+        first_name = validated_data.first_name
+        last_name = validated_data.last_name
         email = validated_data.email
         phone = validated_data.phone
         company = validated_data.company
@@ -99,55 +154,6 @@ async def webhook_3(request: Request):
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
 
-
-    return JSONResponse(status_code=200, content={"status": "success"})
-
-
-
-@app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
-async def webhook_4(request: Request):
-    payload = await request.json()
-    print("-------- New Sample Request -------")
-    print(payload)
-    try:
-        validated_data = RequestSample.model_validate(payload)
-
-        product_ids = validated_data.product_ids
-        first_name = validated_data.first_name
-        last_name = validated_data.last_name
-        email = validated_data.email
-        phone = validated_data.phone
-        company = validated_data.company
-        message = validated_data.message
-        project = validated_data.project
-        quantity = validated_data.quantity
-
-
-    except ValidationError as e:
-        print(e)
-        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
-
-    row = [first_name, last_name, phone, company, email, message, project, quantity, ", ".join(map(str, product_ids))]
-    row_appended = append_row(SHEET_ID, "sample_requests", row)
-
-    # pdf_specsheet_files = []
-    # for product_id in product_ids:
-    #     product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-
-    #     if not product:
-    #         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
-
-    #     file_path = generate_specsheet_pdf(product)    
-    #     pdf_specsheet_files.append(file_path)
-
-    # if not send_request_sample_email(email, pdf_specsheet_files):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
-
-    if not send_request_sample_to_admin(first_name, last_name):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email to admin"})
-
-    # for file_path in pdf_specsheet_files:
-    #     os.remove(file_path)
 
     return JSONResponse(status_code=200, content={"status": "success"})
 
