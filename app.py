@@ -41,8 +41,7 @@ class CartItem(BaseModel):
     quantity: int
 
 class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
-    first_name: str
-    last_name: str
+    full_name: str
     email: EmailStr
     phone: str | None = None
     company: str | None = None
@@ -121,8 +120,7 @@ async def webhook_3(request: Request):
     print(payload)
     try:
         validated_data = ProductEnquiry.model_validate(payload)
-        first_name = validated_data.first_name
-        last_name = validated_data.last_name
+        full_name = validated_data.full_name
         email = validated_data.email
         phone = validated_data.phone
         company = validated_data.company
@@ -135,7 +133,7 @@ async def webhook_3(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [first_name, last_name, email, phone, company, project, message, ", ".join(map(str, cart_items))]
+    row = [full_name, email, phone, company, project, message, ", ".join(map(str, cart_items))]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
     pdf_specsheet_files = []
