@@ -52,17 +52,23 @@ class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
 
 
 class RequestSample(BaseModel):
-    product_ids: list[int]# for multiple product sample request (List)
-    first_name: str
-    last_name: str
+    productId: list[int]# for multiple product sample request (List)
+    fname: str
+    lname: str
     email: EmailStr
     phone: str | None = None
     company: str | None = None
     project: str | None = None
-    quantity: str
+    qte: str
     message: str | None = None
 
-
+'''
+{
+'fname': 'Molly', 'lname': 'Houston', 'email': 'mz25922@gmail.com', 
+'phone': '+1 (499) 291-2045', 'company': 'Richardson Co', 'project': 'Minus fugit dolorum', 
+'qte': '874', 'message': 'Laboris dolor deseru', 'productId': ['5813']
+}
+'''
 
 @app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
 async def webhook_4(request: Request):
@@ -72,14 +78,14 @@ async def webhook_4(request: Request):
     try:
         validated_data = RequestSample.model_validate(payload)
 
-        product_ids = validated_data.product_ids
-        first_name = validated_data.first_name
-        last_name = validated_data.last_name
+        product_ids = validated_data.productId
+        first_name = validated_data.fname
+        last_name = validated_data.lname
         email = validated_data.email
         phone = validated_data.phone
         company = validated_data.company
         project = validated_data.project
-        quantity = validated_data.quantity
+        quantity = validated_data.qte
         message = validated_data.message
 
 
