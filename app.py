@@ -135,7 +135,7 @@ async def webhook_3(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, email, phone, company, project, message, ", ".join(map(str, cart_items))]
+    row = [first_name, last_name, email, phone, company, project, message, ", ".join(map(str, cart_items))]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
     pdf_specsheet_files = []
