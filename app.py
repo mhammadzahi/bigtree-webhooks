@@ -7,8 +7,9 @@ from functions.google_sheet_service import append_row
 from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
 from functions.gmail import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
-import uvicorn, os, json, time
+import uvicorn, os, json
 from typing import List
+from datetime import datetime, timezone, timedelta
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,7 +19,6 @@ CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Or specify your frontend domain
@@ -95,7 +95,7 @@ async def webhook_5(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [fname, lname, email, phone, company, location, project, message, time.strftime("%Y-%m-%d %H:%M:%S")]
+    row = [fname, lname, email, phone, company, location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "contact", row)
 
     # if not send_product_enquiry_to_admin(name, email):
@@ -127,7 +127,7 @@ async def webhook_4(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, time.strftime("%Y-%m-%d %H:%M:%S")]
+    row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
 
     # pdf_specsheet_files = []
@@ -173,7 +173,7 @@ async def webhook_3(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, email, phone, company, project, message, ", ".join(map(str, cart_items)), time.strftime("%Y-%m-%d %H:%M:%S")]
+    row = [name, email, phone, company, project, message, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
     pdf_specsheet_files = []
@@ -215,7 +215,7 @@ async def webhook_2(request: Request):
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-    row = [name, email, product_id, time.strftime("%Y-%m-%d %H:%M:%S")]
+    row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "specsheets", row)
 
     # with open(f'product_{product["id"]}_data.json', 'w') as f:
@@ -252,7 +252,7 @@ async def webhook_1(request: Request):
 
     # print(f"Extracted email: {email}")
 
-    row = [name, email, time.strftime("%Y-%m-%d %H:%M:%S")]
+    row = [name, email, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     success = append_row(SHEET_ID, "subscribers", row)
     if not success:
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
