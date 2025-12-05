@@ -7,7 +7,7 @@ from functions.google_sheet_service import append_row
 from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
 from functions.gmail import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
-import uvicorn, os, json
+import uvicorn, os, json, time
 from typing import List
 
 from dotenv import load_dotenv
@@ -63,6 +63,47 @@ class RequestSample(BaseModel):
     message: str | None = None
 
 
+class ContactRequest(BaseModel):
+    fname: str
+    lname: str
+    email: EmailStr
+    phone: str | None = None
+    company: str | None = None
+    location: str
+    project: str
+    message: str | None = None
+
+
+@app.post("/bt-contact-webhook-v2-1")# need to change endpoint url
+async def webhook_5(request: Request):
+    payload = await request.json()
+    print("-------- New Contact Request -------")
+    print(payload)
+    try:
+        validated_data = ContactRequest.model_validate(payload)
+
+        fname = validated_data.fname
+        lname = validated_data.lname
+        email = validated_data.email
+        phone = validated_data.phone
+        company = validated_data.company
+        location = validated_data.location
+        project = validated_data.project
+        message = validated_data.message
+
+    except ValidationError as e:
+        print(e)
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
+
+    row = [fname, lname, email, phone, company, location, project, message, time.strftime("%Y-%m-%d %H:%M:%S")]
+    row_appended = append_row(SHEET_ID, "contact", row)
+
+    # if not send_product_enquiry_to_admin(name, email):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
+
+    return JSONResponse(status_code=200, content={"status": "success"})
+
+
 @app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
 async def webhook_4(request: Request):
     payload = await request.json()
@@ -86,7 +127,7 @@ async def webhook_4(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message]
+    row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, time.strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
 
     # pdf_specsheet_files = []
@@ -132,7 +173,7 @@ async def webhook_3(request: Request):
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, email, phone, company, project, message, ", ".join(map(str, cart_items))]
+    row = [name, email, phone, company, project, message, ", ".join(map(str, cart_items)), time.strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
     pdf_specsheet_files = []
@@ -174,7 +215,7 @@ async def webhook_2(request: Request):
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-    row = [name, email, product_id]
+    row = [name, email, product_id, time.strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "specsheets", row)
 
     # with open(f'product_{product["id"]}_data.json', 'w') as f:
@@ -211,7 +252,7 @@ async def webhook_1(request: Request):
 
     # print(f"Extracted email: {email}")
 
-    row = [name, email]
+    row = [name, email, time.strftime("%Y-%m-%d %H:%M:%S")]
     success = append_row(SHEET_ID, "subscribers", row)
     if not success:
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
