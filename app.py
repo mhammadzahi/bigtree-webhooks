@@ -106,7 +106,7 @@ async def webhook_5(request: Request):
 
 
 
-@app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page, multiple products in cart later] 
+@app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
 async def webhook_4(request: Request):
     payload = await request.json()
 
@@ -122,7 +122,6 @@ async def webhook_4(request: Request):
         project = validated_data.project
         quantity = validated_data.qte
         message = validated_data.message
-
 
     except ValidationError as e:
         print(e)
