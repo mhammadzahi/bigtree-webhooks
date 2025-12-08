@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, Request
+from fastapi import FastAPI, Response, FileResponse, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -74,11 +74,12 @@ class ContactRequest(BaseModel):
     message: str | None = None
 
 
-@app.post("/bt-contact-webhook-v2-1")# need to change endpoint url
+@app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- not yet --
 async def webhook_5(request: Request):
     payload = await request.json()
-    print("-------- New Contact Request -------")
+    print("----------- New Contact Request ----------")
     print(payload)
+    print("----------- New Contact Request ----------")
     try:
         validated_data = ContactRequest.model_validate(payload)
 
@@ -104,11 +105,11 @@ async def webhook_5(request: Request):
     return JSONResponse(status_code=200, content={"status": "success"})
 
 
-@app.post("/bt-send-request-sample-webhook-v2-1")# need to change endpoint url
+
+@app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page, multiple products in cart later] 
 async def webhook_4(request: Request):
     payload = await request.json()
-    # print("-------- New Sample Request -------")
-    # print(payload)
+
     try:
         validated_data = RequestSample.model_validate(payload)
 
@@ -154,10 +155,10 @@ async def webhook_4(request: Request):
 
 
 
-@app.post("/bt-send-product-enquiry-webhook-v2-1")
+@app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- done -- [multiple products in cart]
 async def webhook_3(request: Request):
     payload = await request.json()
-    print(payload)
+
     try:
         validated_data = ProductEnquiry.model_validate(payload)
         name = validated_data.name
@@ -197,11 +198,9 @@ async def webhook_3(request: Request):
 
 
 
-@app.post("/bt-single-product-specsheet-webhook-v2-1")
+@app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet -- not yet -- [single product page]
 async def webhook_2(request: Request):
     payload = await request.json()
-    # print(payload)
-
     try:
         validated_data = ProductIdAndEmail.model_validate(payload)
         product_id, email, name = validated_data.product_id, validated_data.email, payload.get("name", "")
@@ -236,11 +235,9 @@ async def webhook_2(request: Request):
 
 
 
-@app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
+@app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")#1. Newsletter -- done -- [footer]
 async def webhook_1(request: Request):
     form_data = await request.form()
-    # print(form_data)
-
     try:
         validated_data = EmailWebhook.model_validate(dict(form_data))
         email = validated_data.Email
