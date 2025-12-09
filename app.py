@@ -90,18 +90,16 @@ async def webhook_5(request: Request):
         location = validated_data.location
         project = validated_data.project
         message = validated_data.message
-        print(f"Contact Request from {fname} {lname}, email: {email}, phone: {phone}, company: {company}, location: {location}, project: {project}, message: {message}")
+        # print(f"Contact Request from {fname} {lname}, email: {email}, phone: {phone}, company: {company}, location: {location}, project: {project}, message: {message}")
 
     except ValidationError as e:
         print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    # row = [fname, lname, email, phone, company, location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-    # row_appended = append_row(SHEET_ID, "contact", row)
+    row = [fname, lname, email, phone, company, location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+    row_appended = append_row(SHEET_ID, "contact", row)
 
-
-
-    # if not send_product_enquiry_to_admin(name, email):
+    # if not send_product_enquiry_to_admin(name, email): # or send to salesforce
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
 
     return JSONResponse(status_code=200, content={"status": "success"})
