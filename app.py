@@ -18,6 +18,8 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
+#'https://app.bigtree-group.com/bt-contact-webhook-v2-1'
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -76,7 +78,7 @@ class ContactRequest(BaseModel):
 
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- not yet --
 async def webhook_5(request: Request):
-    payload = await request.form()
+    payload = await request.json()
     print(f"Received payload: {payload}")
     try:
         validated_data = ContactRequest.model_validate(payload)
