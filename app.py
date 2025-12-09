@@ -77,9 +77,7 @@ class ContactRequest(BaseModel):
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- not yet --
 async def webhook_5(request: Request):
     payload = await request.form()
-    print("----------- New Contact Request ----------")
-    print(payload)
-    print("----------- New Contact Request ----------")
+    print(f"Received payload: {payload}")
     try:
         validated_data = ContactRequest.model_validate(payload)
 
