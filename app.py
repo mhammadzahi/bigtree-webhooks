@@ -79,25 +79,29 @@ class ContactRequest(BaseModel):
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- not yet --
 async def webhook_5(request: Request):
     payload = await request.json()
-    print(f"Received payload: {payload}")
-    try:
-        validated_data = ContactRequest.model_validate(payload)
+    print(payload)
 
-        fname = validated_data.fname
-        lname = validated_data.lname
-        email = validated_data.email
-        phone = validated_data.phone
-        company = validated_data.company
-        location = validated_data.location
-        project = validated_data.project
-        message = validated_data.message
 
-    except ValidationError as e:
-        print(e)
-        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
+    # try:
+    #     validated_data = ContactRequest.model_validate(payload)
 
-    row = [fname, lname, email, phone, company, location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-    row_appended = append_row(SHEET_ID, "contact", row)
+    #     fname = validated_data.fname
+    #     lname = validated_data.lname
+    #     email = validated_data.email
+    #     phone = validated_data.phone
+    #     company = validated_data.company
+    #     location = validated_data.location
+    #     project = validated_data.project
+    #     message = validated_data.message
+
+    # except ValidationError as e:
+    #     print(e)
+    #     return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
+
+    # row = [fname, lname, email, phone, company, location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+    # row_appended = append_row(SHEET_ID, "contact", row)
+
+
 
     # if not send_product_enquiry_to_admin(name, email):
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
