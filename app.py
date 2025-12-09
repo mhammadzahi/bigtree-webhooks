@@ -93,7 +93,6 @@ async def webhook_5(request: Request):
         # print(f"Contact Request from {fname} {lname}, email: {email}, phone: {phone}, company: {company}, location: {location}, project: {project}, message: {message}")
 
     except ValidationError as e:
-        print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
     row = [fname, lname, email, phone, company, location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
@@ -124,7 +123,6 @@ async def webhook_4(request: Request):
         message = validated_data.message
 
     except ValidationError as e:
-        print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
     row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
@@ -144,8 +142,8 @@ async def webhook_4(request: Request):
     # if not send_request_sample_email(email, pdf_specsheet_files):
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
 
-    if not send_request_sample_to_admin(first_name, last_name):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email to admin"})
+    # if not send_request_sample_to_admin(first_name, last_name):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email to admin"})
 
     # for file_path in pdf_specsheet_files:
     #     os.remove(file_path)
@@ -172,7 +170,6 @@ async def webhook_3(request: Request):
         product_ids = [item.id for item in cart_items]
 
     except ValidationError as e:
-        print(e)
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
     row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
@@ -189,8 +186,8 @@ async def webhook_3(request: Request):
         file_path = generate_specsheet_pdf(product)    
         pdf_specsheet_files.append(file_path)
 
-    if not send_product_enquiry_email(email, pdf_specsheet_files):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
+    # if not send_product_enquiry_email(email, pdf_specsheet_files):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
 
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
@@ -208,7 +205,6 @@ async def webhook_2(request: Request):
         product_id, email, name = validated_data.product_id, validated_data.email, payload.get("name", "")
 
     except ValidationError as e:
-        # print(f"Validation Error: {e}")
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing fields"})
 
 
@@ -223,15 +219,14 @@ async def webhook_2(request: Request):
     #    json.dump(product, f, indent=2)
 
     file_path = generate_specsheet_pdf(product)
-    if not send_single_product_specsheet_email(email, file_path):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
+    # if not send_single_product_specsheet_email(email, file_path):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
     os.remove(file_path)
 
     # response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
     # response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
     # return response
-
     return JSONResponse(status_code=200, content={"status": "success"})
 
 
@@ -246,7 +241,6 @@ async def webhook_1(request: Request):
         name = form_data.get("Name", "")
 
     except ValidationError as e:
-        # print(f"Validation Error: {e}")
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing email field"})
 
     # print(f"Extracted email: {email}")
