@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
 from functions.google_sheet_service import append_row
+from functions.database import insert_product_enquiry, insert_sample_request
 from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
 from functions.gmail import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
@@ -18,7 +19,6 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
-#'https://app.bigtree-group.com/bt-contact-webhook-v2-1'
 
 app = FastAPI()
 app.add_middleware(
@@ -42,6 +42,7 @@ class CartItem(BaseModel):
     id: int
     quantity: int
 
+
 class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     name: str
     email: EmailStr
@@ -50,7 +51,6 @@ class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
     project: str | None = None
     message: str | None = None
     cart_items: List[CartItem]
-
 
 
 class RequestSample(BaseModel):
@@ -129,6 +129,7 @@ async def webhook_4(request: Request):
 
     row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
+    insert_sample_request(first_name, last_name, email, phone, company, project, quantity, json.dumps(product_ids), message)
 
     # pdf_specsheet_files = []
     # for product_id in product_ids:
@@ -176,6 +177,7 @@ async def webhook_3(request: Request):
 
     row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
+    insert_product_enquiry(name, email, phone, company, project, message, req_sample, json.dumps([item.model_dump() for item in cart_items]))
 
     pdf_specsheet_files = []
     for product_id in product_ids:
