@@ -29,11 +29,11 @@ app.add_middleware(
     allow_headers=["*"],  # Or ["Content-Type"]
 )
 
-class EmailWebhook(BaseModel):# for newsletter subscription
+class NewsletterWebhook(BaseModel):
     Email: EmailStr
 
 
-class ProductIdAndEmail(BaseModel):# for single product specsheet
+class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
 
@@ -42,8 +42,7 @@ class CartItem(BaseModel):
     id: int
     quantity: int
 
-
-class ProductEnquiry(BaseModel):# for multiple product enquiry (List)
+class ProductEnquiry(BaseModel):
     name: str
     email: EmailStr
     phone: str | None = None
@@ -76,7 +75,7 @@ class ContactRequest(BaseModel):
     message: str | None = None
 
 
-@app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- not yet --
+@app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
 async def webhook_5(request: Request):
     payload = await request.json()
     try:
@@ -201,7 +200,7 @@ async def webhook_3(request: Request):
 async def webhook_2(request: Request):
     payload = await request.json()
     try:
-        validated_data = ProductIdAndEmail.model_validate(payload)
+        validated_data = SpecSheetWebhook.model_validate(payload)
         product_id, email, name = validated_data.product_id, validated_data.email, payload.get("name", "")
 
     except ValidationError as e:
@@ -236,14 +235,12 @@ async def webhook_2(request: Request):
 async def webhook_1(request: Request):
     form_data = await request.form()
     try:
-        validated_data = EmailWebhook.model_validate(dict(form_data))
+        validated_data = NewsletterWebhook.model_validate(dict(form_data))
         email = validated_data.Email
         name = form_data.get("Name", "")
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing email field"})
-
-    # print(f"Extracted email: {email}")
 
     row = [name, email, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     success = append_row(SHEET_ID, "subscribers", row)

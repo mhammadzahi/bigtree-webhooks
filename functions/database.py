@@ -3,9 +3,8 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 
-DB_PATH = "user_info.db"
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect("user_info.db")
     conn.row_factory = sqlite3.Row
     return conn
 
