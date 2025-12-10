@@ -71,7 +71,7 @@ def create_message(to, subject, html_body, pdf_files=None, attachments=False):
 
 
 
-def send_product_enquiry_email(full_name, password=None, to, pdf_files):
+def send_product_enquiry_email(full_name, to, pdf_files, password=None):
     service = get_gmail_service()
     html_body = load_email_template("product_enquiry.html")
     body_message = create_message(to, "Product Enquiry", html_body, pdf_files, attachments=True)
@@ -81,7 +81,7 @@ def send_product_enquiry_email(full_name, password=None, to, pdf_files):
         return True
 
     except Exception as e:
-        print(f"An error occurred in [send_product_enquiry_email]: {e}")
+        print(f"An error occurred in [send product_enquiry email]: {e}")
         return False
 
 
