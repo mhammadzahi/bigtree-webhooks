@@ -12,6 +12,7 @@ from typing import List
 from datetime import datetime, timezone, timedelta
 
 from dotenv import load_dotenv
+
 load_dotenv()
 SHEET_ID = os.getenv("SHEET_ID")
 STORE_URL = os.getenv("WC_STORE_URL")
@@ -28,40 +29,8 @@ app.add_middleware(
     allow_headers=["*"],  # Or ["Content-Type"]
 )
 
-class NewsletterWebhook(BaseModel):
-    Email: EmailStr
 
 
-class SpecSheetWebhook(BaseModel):
-    product_id: int
-    email: EmailStr
-
-
-class CartItem(BaseModel):
-    id: int
-    quantity: int
-
-class ProductEnquiry(BaseModel):
-    name: str# fname + lname
-    email: EmailStr
-    phone: str
-    company: str
-    project: str | None = None
-    message: str | None = None
-    cart_items: List[CartItem]
-    account_password: str | None = None
-
-
-class RequestSample(BaseModel):
-    productId: list[int]
-    fname: str
-    lname: str
-    email: EmailStr
-    phone: str | None = None
-    company: str | None = None
-    project: str | None = None
-    qte: str
-    message: str | None = None
 
 
 class ContactRequest(BaseModel):
@@ -74,13 +43,11 @@ class ContactRequest(BaseModel):
     project: str
     message: str | None = None
 
-
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
 async def webhook_5(request: Request):
     payload = await request.json()
     try:
         validated_data = ContactRequest.model_validate(payload)
-
         fname = validated_data.fname
         lname = validated_data.lname
         email = validated_data.email
@@ -103,6 +70,16 @@ async def webhook_5(request: Request):
     return JSONResponse(status_code=200, content={"status": "success"})
 
 
+class RequestSample(BaseModel):
+    productId: list[int]
+    fname: str
+    lname: str
+    email: EmailStr
+    phone: str | None = None
+    company: str | None = None
+    project: str | None = None
+    qte: str
+    message: str | None = None
 
 @app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
 async def webhook_4(request: Request):
@@ -148,6 +125,19 @@ async def webhook_4(request: Request):
 
 
 
+class CartItem(BaseModel):
+    id: int
+    quantity: int
+
+class ProductEnquiry(BaseModel):
+    name: str# fname + lname
+    email: EmailStr
+    phone: str
+    company: str
+    project: str | None = None
+    message: str | None = None
+    cart_items: List[CartItem]
+    account_password: str | None = None
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- pending -- [multiple products in cart]
 async def webhook_3(request: Request):
@@ -161,11 +151,11 @@ async def webhook_3(request: Request):
         company = validated_data.company
         project = validated_data.project
         message = validated_data.message
-        req_sample = payload.get("request_sample", "NO")
+        account_password = validated_data.account_password
+        req_sample = payload.get("request_sample", "No")
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
-        account_password = validated_data.account_password
-        print(f"Received password: {account_password}")
+        
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
@@ -193,6 +183,10 @@ async def webhook_3(request: Request):
     return JSONResponse(status_code=200, content={"status": "success"})
 
 
+
+class SpecSheetWebhook(BaseModel):
+    product_id: int
+    email: EmailStr
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet -- not yet -- [single product page]
 async def webhook_2(request: Request):
@@ -228,6 +222,9 @@ async def webhook_2(request: Request):
 
 
 
+
+class NewsletterWebhook(BaseModel):
+    Email: EmailStr
 
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")#1. Newsletter -- done -- [footer]
 async def webhook_1(request: Request):
