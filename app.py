@@ -49,7 +49,7 @@ class ProductEnquiry(BaseModel):
     project: str | None = None
     message: str | None = None
     cart_items: List[CartItem]
-    password: str | None = None
+    account_password: str | None = None
 
 
 class RequestSample(BaseModel):
@@ -167,8 +167,8 @@ async def webhook_3(request: Request):
         req_sample = payload.get("request_sample", "NO")
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
-        password = validated_data.password
-        print(f"Received password: {password}")
+        account_password = validated_data.account_password
+        print(f"Received password: {account_password}")
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
