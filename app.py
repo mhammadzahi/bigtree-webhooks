@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from functions.specsheet_generator import generate_specsheet_pdf
 from functions.google_sheet_service import append_row
 from functions.woocommerce_service import get_product
-from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
+from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email
 import uvicorn, os, json
 from typing import List
 from datetime import datetime, timezone, timedelta
@@ -140,9 +140,6 @@ async def webhook_4(request: Request):
 
     # if not send_request_sample_email(email, pdf_specsheet_files):
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
-
-    # if not send_request_sample_to_admin(first_name, last_name):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email to admin"})
 
     # for file_path in pdf_specsheet_files:
     #     os.remove(file_path)
