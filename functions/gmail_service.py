@@ -40,12 +40,14 @@ def get_gmail_service():
 
 
 
-def create_message(to, subject, html_body, pdf_files=None, attachments=False):
+def create_message(to, subject, html_body, pdf_files=None, attachments=False, cc=None):
     message = MIMEMultipart("mixed")
     message["to"] = to
     message["from"] = FROM
     message["subject"] = subject
-    message["cc"] = "sales@bigtree-group.com"
+    if cc:
+        message["cc"] = cc
+
     related = MIMEMultipart("related")
     message.attach(related)
 
@@ -70,12 +72,16 @@ def create_message(to, subject, html_body, pdf_files=None, attachments=False):
     return {"raw": base64.urlsafe_b64encode(message.as_bytes()).decode()}
 
 
-
-def send_product_enquiry_email(full_name, to, pdf_files, password=None):
+# ------- Send Emails ------- #
+def send_product_enquiry_email(full_name, email, pdf_files, password=None, cc=None):# if user creation password is given
     service = get_gmail_service()
-    html_body = load_email_template("product_enquiry.html")
-    body_message = create_message(to, "Product Enquiry", html_body, pdf_files, attachments=True)
-    
+
+    if password:
+        html_body = load_email_template("product_enquiry_with_password.html").replace("{{password}}", password)
+    else:
+        html_body = load_email_template("product_enquiry.html").replace("{{full_name}}", full_name)
+
+    body_message = create_message(email, "Product Enquiry", html_body, pdf_files, attachments=True, cc=cc)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         return True
@@ -85,11 +91,10 @@ def send_product_enquiry_email(full_name, to, pdf_files, password=None):
         return False
 
 
-
-def send_single_product_specsheet_email(to, file_path):
+def send_single_product_specsheet_email(to, file_path, cc=None):
     service = get_gmail_service()
     html_body = load_email_template("single_product.html")
-    body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True)
+    body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True, cc=cc)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         return True
@@ -99,9 +104,9 @@ def send_single_product_specsheet_email(to, file_path):
         return False
 
 
-def send_request_sample_email(to, pdf_files):
+def send_request_sample_email(to, pdf_files, cc=None):
     service = get_gmail_service()
-    body_message = create_message(to, "Request Sample", request_sample_html, pdf_files, attachments=True)
+    body_message = create_message(to, "Request Sample", request_sample_html, pdf_files, attachments=True, cc=cc)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()

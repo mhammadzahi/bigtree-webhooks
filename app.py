@@ -19,6 +19,8 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
+SALES_EMAIL = "sales@bigtree-group.com"
+
 
 app = FastAPI()
 app.add_middleware(
@@ -28,8 +30,6 @@ app.add_middleware(
     allow_methods=["*"],  # Or ["POST"] if you want to be strict
     allow_headers=["*"],  # Or ["Content-Type"]
 )
-
-
 
 
 
@@ -115,7 +115,7 @@ async def webhook_4(request: Request):
     #     file_path = generate_specsheet_pdf(product)    
     #     pdf_specsheet_files.append(file_path)
 
-    # if not send_request_sample_email(email, pdf_specsheet_files):
+    # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
 
     # for file_path in pdf_specsheet_files:
@@ -130,7 +130,7 @@ class CartItem(BaseModel):
     quantity: int
 
 class ProductEnquiry(BaseModel):
-    name: str# fname + lname
+    name: str # fname + lname
     email: EmailStr
     phone: str
     company: str
@@ -173,12 +173,12 @@ async def webhook_3(request: Request):
         file_path = generate_specsheet_pdf(product)    
         pdf_specsheet_files.append(file_path)
 
-    # if not send_product_enquiry_email(email, pdf_specsheet_files):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
+
+    if not send_product_enquiry_email(name, email, pdf_specsheet_files, account_password, SALES_EMAIL):# ???????
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
 
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
-
 
     return JSONResponse(status_code=200, content={"status": "success"})
 
@@ -188,7 +188,7 @@ class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
 
-@app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet -- not yet -- [single product page]
+@app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page]
 async def webhook_2(request: Request):
     payload = await request.json()
     try:
@@ -218,6 +218,7 @@ async def webhook_2(request: Request):
     # response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
     # response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
     # return response
+
     return JSONResponse(status_code=200, content={"status": "success"})
 
 
