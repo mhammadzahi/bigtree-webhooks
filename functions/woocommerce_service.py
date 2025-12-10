@@ -29,3 +29,4 @@ def get_product(store_url: str, consumer_key: str, consumer_secret: str, product
     product = wc_api.get_product_by_id(product_id)
     return product
 
+

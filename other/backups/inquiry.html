@@ -16,7 +16,6 @@
     }
 
     /* --- Styles for the NEW Enquiry Form --- */
-    /* Encapsulated within #enquiry-popup-content to avoid conflicts */
     #enquiry-popup-content {
         --primary: #532A44;
         --header-color: #532A44;
@@ -175,8 +174,8 @@
     }
 
     #send-enquiry-btn {
-		color: white;
-	}
+        color: white;
+    }
 
     @media (max-width: 600px) {
         #enquiry-popup-content .enquiry-form {
@@ -220,7 +219,7 @@
                     <input class="input" type="text" id="company" name="company" placeholder="">
                     <label class="form-label" for="company">Company</label>
                 </div>
-							  <div class="form-group col-full">
+                <div class="form-group col-full">
                     <input class="input" type="text" id="project" name="project" placeholder="">
                     <label class="form-label" for="project">Project</label>
                 </div>
@@ -237,62 +236,74 @@
 </div>
 
 <script>
-	
-		function emptyWooCart() {// __1__
-				jQuery.ajax({
-						type: 'POST',
-						url: my_ajax_obj.ajax_url, 
-						data: {
-								action: 'woocommerce_empty_cart_via_js' 
-						},
-						success: function(response) {
-								if (response.success) {
-										jQuery(document.body).trigger('wc_fragment_refresh');
-										setTimeout(function() {
-											document.location.href = '/my-account';
-										}, 3000);
-								} else {
-										console.error(response.data);
-										alert('An error occurred: ' + response.data);
-								}
-						},
-						error: function(error) {
-								console.error('AJAX Error:', error);
-								alert('A network error occurred.');
-						}
-				});
-		}
+    function initializeEnquiryFeature() { 
 
-    function initializeEnquiryFeature() {// ____2____
+        // --- 1. NEW: Auto-Fill Form if Logged In ---
+        const populateUserData = () => {
+            if (typeof btAuthObj !== 'undefined' && btAuthObj.is_logged_in === 'yes' && btAuthObj.user_data) {
+                const u = btAuthObj.user_data;
+                const setVal = (id, val) => {
+                    const el = document.getElementById(id);
+                    if(el && val) el.value = val;
+                };
+                
+                setVal('fname', u.fname);
+                setVal('lname', u.lname);
+                setVal('email', u.email);
+                setVal('phone', u.phone);
+                setVal('company', u.company);
+            }
+        };
 
-        const sendToBackend = async (formData) => {
+        // --- 2. NEW: Single AJAX for Registration & Order Creation ---
+        const processInquiryOrder = async (formDataPayload) => {
+            if (typeof btAuthObj === 'undefined') {
+                console.error('btAuthObj not found.');
+                throw new Error('Configuration error');
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'bt_process_inquiry_order');
+            formData.append('nonce', btAuthObj.nonce);
+            
+            // Append all fields from our cleaned payload
+            formData.append('fname', formDataPayload.fname);
+            formData.append('lname', formDataPayload.lname);
+            formData.append('email', formDataPayload.email);
+            formData.append('phone', formDataPayload.phone);
+            formData.append('company', formDataPayload.company);
+            formData.append('project', formDataPayload.project);
+            formData.append('message', formDataPayload.message);
+
+            const response = await fetch(btAuthObj.ajax_url, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.data ? result.data.message : 'Unknown server error');
+            }
+            return result;
+        };
+
+        const sendToWebhook = async (formData) => {
             try {
+                // ... (Existing Webhook Validation Logic) ...
                 const cartItemElements = document.querySelectorAll('.woocommerce-cart-form__cart-item.cart_item');
-                if (!cartItemElements || cartItemElements.length === 0) {
-                    console.error("Could not find any cart item elements.");
-                    throw new Error("Validation: No cart items found.");
-                }
+                if (!cartItemElements || cartItemElements.length === 0) { throw new Error("Validation: No cart items found."); }
 
                 const cart_items = Array.from(cartItemElements).map(itemEl => {
                     const productElement = itemEl.querySelector('a.remove[data-product_id]');
                     const quantityInput = itemEl.querySelector('.quantity .qty');
-                    
                     const productId = productElement ? parseInt(productElement.getAttribute('data-product_id'), 10) : null;
                     const quantity = quantityInput ? quantityInput.value : 0;
-                    
-                    return {
-                        id: productId,
-                        quantity: quantity,
-                    };
+                    return { id: productId, quantity: quantity };
                 }).filter(item => item.id !== null && !isNaN(item.id));
 
-                if (cart_items.length === 0) {
-                     console.error("Could not find any valid product IDs in the cart.");
-                     throw new Error("Validation: No product IDs found."); 
-                }
+                if (cart_items.length === 0) { throw new Error("Validation: No product IDs found."); }
                 
                 const payload = { ...formData, cart_items };
-                console.log("Payload to be sent:", payload);
 
                 Swal.fire({
                     title: 'Submitting...',
@@ -307,30 +318,16 @@
                 });
 
                 if (!response.ok) {
+                     // Note: We Log webhook failure but don't stop order creation? 
+                     // Or strict: Throw error. Let's strict for consistency.
                     const errorData = await response.json();
-                    console.error('API Error:', errorData);
-                    throw new Error('Failed to send an enquiry. The server responded with an error.');
+                    console.error('Webhook Error:', errorData);
+                    throw new Error('Failed to send enquiry to external system.');
                 }
-
-                Swal.close();
                 return await response.json();
 
             } catch (error) {
-                if (error.message && !error.message.startsWith("Validation:")) {
-                    Swal.close();
-                    console.error("Error submitting enquiry:", error);
-                    // --- MODIFIED: Changed the main error alert to a toast ---
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: 'Failed to submit enquiry. Please try again.',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
-                }
-                throw error;
+                throw error; // Re-throw to be caught in main handler
             }
         };
 
@@ -354,34 +351,58 @@
                     if (submitButton) submitButton.disabled = true;
 
                     try {
-                        const fname = document.getElementById('fname').value;
-                        const lname = document.getElementById('lname').value;
-                        const formData = {
-                            name: `${fname} ${lname}`.trim(),
+                        // Gather raw values
+                        const rawFname = document.getElementById('fname').value;
+                        const rawLname = document.getElementById('lname').value;
+                        const rawData = {
+                            fname: rawFname,
+                            lname: rawLname,
+                            name: `${rawFname} ${rawLname}`.trim(), // For Webhook
                             phone: document.getElementById('phone').value,
                             company: document.getElementById('company').value,
-														project: document.getElementById('project').value,
+                            project: document.getElementById('project').value,
                             email: document.getElementById('email').value,
                             message: document.getElementById('message').value
                         };
 
-                        await sendToBackend(formData);
-                        // The success alert is already a toast, so no changes needed here.
+                        // 1. Send to Webhook first
+                        await sendToWebhook(rawData);
+
+                        // 2. Process Order & Registration (Unified)
+                        // Note: The cart is still intact here. The PHP will create order then empty cart.
+                        const orderResponse = await processInquiryOrder(rawData);
+
+                        // 3. Success
+                        Swal.close();
                         Swal.fire({
                             toast: true,
                             position: 'top-end',
                             icon: 'success',
-                            title: 'Enquiry sent! Check your email',
+                            title: 'Enquiry & Order Created!',
                             showConfirmButton: false,
-                            timer: 3000,
+                            timer: 2000,
                             timerProgressBar: true
                         });
+                        
                         closePopup();
                         enquiryForm.reset();
-												emptyWooCart();
+                        
+                        // 4. Redirect based on server response
+                        setTimeout(() => {
+                             window.location.href = orderResponse.data.redirect || '/my-account';
+                        }, 2000);
 
                     } catch (error) {
-                        console.error("Form submission failed.", error.message);
+                        Swal.close();
+                        console.error("Submission failed.", error);
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: error.message || 'An error occurred.',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
                     } finally {
                         if (submitButton) submitButton.disabled = false;
                     }
@@ -408,6 +429,8 @@
             enquiryButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 const popupOverlay = document.getElementById('enquiry-popup-overlay');
+                // Run auto-fill when popup opens
+                populateUserData();
                 popupOverlay.style.display = 'flex';
             });
             checkoutButton.closest('.wc-proceed-to-checkout')?.appendChild(enquiryButton);
@@ -418,10 +441,7 @@
             const observer = new MutationObserver((mutations) => {
                 setTimeout(reinitializeEnquiryButton, 100);
             });
-            observer.observe(cartWrapper, {
-                childList: true,
-                subtree: true
-            });
+            observer.observe(cartWrapper, { childList: true, subtree: true });
         }
 
         setupPopupLogic();

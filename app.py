@@ -3,11 +3,10 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
-from functions.google_sheet_service import append_row
-from functions.database import insert_product_enquiry, insert_sample_request
-from functions.woocommerce_service import get_product
 from functions.specsheet_generator import generate_specsheet_pdf
-from functions.gmail import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
+from functions.google_sheet_service import append_row
+from functions.woocommerce_service import get_product
+from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_request_sample_to_admin
 import uvicorn, os, json
 from typing import List
 from datetime import datetime, timezone, timedelta
@@ -43,17 +42,18 @@ class CartItem(BaseModel):
     quantity: int
 
 class ProductEnquiry(BaseModel):
-    name: str
+    name: str# fname + lname
     email: EmailStr
-    phone: str | None = None
-    company: str | None = None
+    phone: str
+    company: str
     project: str | None = None
     message: str | None = None
     cart_items: List[CartItem]
+    password: str | None = None
 
 
 class RequestSample(BaseModel):
-    productId: list[int]# for multiple product sample request (List)
+    productId: list[int]
     fname: str
     lname: str
     email: EmailStr
@@ -126,7 +126,7 @@ async def webhook_4(request: Request):
 
     row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
-    insert_sample_request(first_name, last_name, email, phone, company, project, quantity, json.dumps(product_ids), message)
+
 
     # pdf_specsheet_files = []
     # for product_id in product_ids:
@@ -167,13 +167,14 @@ async def webhook_3(request: Request):
         req_sample = payload.get("request_sample", "NO")
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
+        password = validated_data.password
+        print(f"Received password: {password}")
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
     row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
-    insert_product_enquiry(name, email, phone, company, project, message, req_sample, json.dumps([item.model_dump() for item in cart_items]))
 
     pdf_specsheet_files = []
     for product_id in product_ids:
