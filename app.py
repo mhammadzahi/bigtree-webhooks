@@ -138,7 +138,7 @@ class ProductEnquiry(BaseModel):
     cart_items: List[CartItem]
     account_password: str | None = None
 
-@app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- pending -- [multiple products in cart]
+@app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def webhook_3(request: Request):
     payload = await request.json()
 
@@ -173,12 +173,12 @@ async def webhook_3(request: Request):
         pdf_specsheet_files.append(file_path)
 
 
-    if not send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
+    # if not send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
 
-    if account_password:
-        if not send_account_creation_email(email, account_password):
-            return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
+    # if account_password:
+    #     if not send_account_creation_email(email, account_password):
+    #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
 
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
