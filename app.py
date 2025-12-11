@@ -104,7 +104,6 @@ async def webhook_4(request: Request):
     row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
 
-
     # pdf_specsheet_files = []
     # for product_id in product_ids:
     #     product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
