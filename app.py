@@ -163,10 +163,10 @@ async def webhook_3(request: Request):
     row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
+
     pdf_specsheet_files = []
     for product_id in product_ids:
         product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-
         if not product:
             return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
@@ -174,8 +174,12 @@ async def webhook_3(request: Request):
         pdf_specsheet_files.append(file_path)
 
 
-    if not send_product_enquiry_email(name, email, pdf_specsheet_files, account_password, SALES_EMAIL):# ???????
+    if not send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
+
+    if account_password:
+        if not send_account_creation_email(email, account_password):
+            return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
 
     for file_path in pdf_specsheet_files:
         os.remove(file_path)

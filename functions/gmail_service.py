@@ -73,22 +73,34 @@ def create_message(to, subject, html_body, pdf_files=None, attachments=False, cc
 
 
 # ------- Send Emails ------- #
-def send_product_enquiry_email(full_name, email, pdf_files, password=None, cc=None):# if user creation password is given
+def send_product_enquiry_email(full_name, email, pdf_files, cc):
     service = get_gmail_service()
-
-    if password:
-        html_body = load_email_template("product_enquiry_with_password.html").replace("{{password}}", password)
-    else:
-        html_body = load_email_template("product_enquiry.html").replace("{{full_name}}", full_name)
-
+    html_body = load_email_template("product_enquiry.html").replace("{{full_name}}", full_name)
+    
     body_message = create_message(email, "Product Enquiry", html_body, pdf_files, attachments=True, cc=cc)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         return True
 
     except Exception as e:
-        print(f"An error occurred in [send product_enquiry email]: {e}")
+        print(f"An error occurred in [send product enquiry email]: {e}")
         return False
+
+
+def send_account_creation_email(email, password, cc=None):
+    service = get_gmail_service()
+    html_body = load_email_template("account_creation.html").replace("{{email}}", email).replace("{{password}}", password)
+    body_message = create_message(email, "Your New Account Details", html_body, attachments=False, cc=cc)
+    
+    try:
+        message = service.users().messages().send(userId="me", body=body_message).execute()
+        return True
+
+    except Exception as e:
+        print(f"An error occurred in [send_account creation email]: {e}")
+        return False
+
+
 
 
 def send_single_product_specsheet_email(to, file_path, cc=None):
@@ -115,5 +127,4 @@ def send_request_sample_email(to, pdf_files, cc=None):
     except Exception as e:
         print(f"An error occurred: {e}")
         return False
-
 
