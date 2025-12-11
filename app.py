@@ -75,8 +75,9 @@ class RequestSample(BaseModel):
     fname: str
     lname: str
     email: EmailStr
-    phone: str | None = None
-    company: str | None = None
+    account_password: str | None = None
+    phone: str
+    company: str
     project: str | None = None
     qte: str
     message: str | None = None
@@ -91,11 +92,17 @@ async def webhook_4(request: Request):
         first_name = validated_data.fname
         last_name = validated_data.lname
         email = validated_data.email
+        account_password = validated_data.account_password
         phone = validated_data.phone
         company = validated_data.company
         project = validated_data.project
         quantity = validated_data.qte
         message = validated_data.message
+
+        if account_password:
+            print(f"{account_password}")
+        else:
+            print(account_password)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
@@ -114,8 +121,8 @@ async def webhook_4(request: Request):
         file_path = generate_specsheet_pdf(product)    
         pdf_specsheet_files.append(file_path)
 
-    if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+    # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
 
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
@@ -214,9 +221,9 @@ async def webhook_2(request: Request):
     # with open(f'product_{product["id"]}_data.json', 'w') as f:
     #    json.dump(product, f, indent=2)
 
-    file_path = generate_specsheet_pdf(product)
-    if not send_single_product_specsheet_email(email, file_path):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
+    # file_path = generate_specsheet_pdf(product)
+    # if not send_single_product_specsheet_email(email, file_path):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
     os.remove(file_path)
 
