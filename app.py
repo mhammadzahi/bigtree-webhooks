@@ -136,6 +136,7 @@ class ProductEnquiry(BaseModel):
     company: str
     project: str | None = None
     message: str | None = None
+    req_sample: str
     cart_items: List[CartItem]
     account_password: str | None = None
 
@@ -152,7 +153,8 @@ async def webhook_3(request: Request):
         project = validated_data.project
         message = validated_data.message
         account_password = validated_data.account_password
-        req_sample = payload.get("request_sample", "No")
+        req_sample = validated_data.req_sample
+        print('req_sample', req_sample)
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
         
