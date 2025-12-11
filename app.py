@@ -153,8 +153,8 @@ async def webhook_3(request: Request):
         project = validated_data.project
         message = validated_data.message
         account_password = validated_data.account_password
+        print(f"Account password: {account_password}")
         req_sample = validated_data.req_sample
-        print('req_sample', req_sample)
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
         
