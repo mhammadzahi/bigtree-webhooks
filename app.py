@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from functions.specsheet_generator import generate_specsheet_pdf
 from functions.google_sheet_service import append_row
 from functions.woocommerce_service import get_product
-from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email
+from functions.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_account_creation_email
 import uvicorn, os, json
 from typing import List
 from datetime import datetime, timezone, timedelta
