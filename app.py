@@ -213,8 +213,8 @@ async def webhook_2(request: Request):
     #    json.dump(product, f, indent=2)
 
     file_path = generate_specsheet_pdf(product)
-    # if not send_single_product_specsheet_email(email, file_path):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
+    if not send_single_product_specsheet_email(email, file_path):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
     os.remove(file_path)
 
@@ -223,7 +223,6 @@ async def webhook_2(request: Request):
     # return response
 
     return JSONResponse(status_code=200, content={"status": "success"})
-
 
 
 
