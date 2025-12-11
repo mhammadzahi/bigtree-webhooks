@@ -102,7 +102,6 @@ def send_account_creation_email(email, password, cc=None):
 
 
 
-
 def send_single_product_specsheet_email(to, file_path, cc=None):
     service = get_gmail_service()
     html_body = load_email_template("single_product_Specsheet.html")
@@ -116,9 +115,11 @@ def send_single_product_specsheet_email(to, file_path, cc=None):
         return False
 
 
-def send_request_sample_email(to, pdf_files, cc=None):
+
+def send_request_sample_email(email, pdf_files, cc=None):
     service = get_gmail_service()
-    body_message = create_message(to, "Request Sample", request_sample_html, pdf_files, attachments=True, cc=cc)
+    request_sample_html = load_email_template("request_sample.html")
+    body_message = create_message(email, "Request Sample", request_sample_html, pdf_files, attachments=True, cc=cc)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()

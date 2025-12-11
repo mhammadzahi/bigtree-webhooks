@@ -87,7 +87,6 @@ async def webhook_4(request: Request):
 
     try:
         validated_data = RequestSample.model_validate(payload)
-
         product_ids = validated_data.productId
         first_name = validated_data.fname
         last_name = validated_data.lname
@@ -104,21 +103,23 @@ async def webhook_4(request: Request):
     row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
 
-    # pdf_specsheet_files = []
-    # for product_id in product_ids:
-    #     product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
 
-    #     if not product:
-    #         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+    pdf_specsheet_files = []
+    for product_id in product_ids:
+        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
 
-    #     file_path = generate_specsheet_pdf(product)    
-    #     pdf_specsheet_files.append(file_path)
+        if not product:
+            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-    # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+        file_path = generate_specsheet_pdf(product)    
+        pdf_specsheet_files.append(file_path)
 
-    # for file_path in pdf_specsheet_files:
-    #     os.remove(file_path)
+    if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+
+    for file_path in pdf_specsheet_files:
+        os.remove(file_path)
+
 
     return JSONResponse(status_code=200, content={"status": "success"})
 
@@ -191,7 +192,7 @@ class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
 
-@app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page]
+@app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
 async def webhook_2(request: Request):
     payload = await request.json()
     try:
