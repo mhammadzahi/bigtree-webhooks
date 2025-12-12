@@ -43,6 +43,40 @@ app.add_middleware(
 
 
 
+
+# class ShopNewOrderWebhook(BaseModel):
+#     email: EmailStr
+#     fname: str
+#     lname: str
+#     phone: str | None = None
+#     company: str | None = None
+#     billing_address: dict
+#     shipping_address: dict
+#     items: List[dict]
+#     total: float
+
+# @app.post("/shop-bt-new-order-webhook")#6. Shop New Order -- done -- [shop checkout]
+# async def shop_new_order_webhook(request: Request):
+#     payload = await request.json()
+#     try:
+#         validated_data = ShopNewOrderWebhook.model_validate(payload)
+#         first_name = validated_data.fname
+#         last_name = validated_data.lname
+#         email = validated_data.email
+#         phone = validated_data.phone or ""
+#         country = validated_data.billing_address.get("country", "")
+#         street_address = validated_data.billing_address.get("address_1", "") + " " + validated_data.billing_address.get("address_2", "")
+#         city = validated_data.billing_address.get("city", "")
+#         timestamp = datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")
+#         product = ", ".join([item.get("name", "") for item in validated_data.items])    
+
+#     except KeyError as e:
+#         return JSONResponse(status_code=422, content={"status": "fail", "detail": f"Missing field: {str(e)}"})
+
+#     return JSONResponse(status_code=200, content={"status": "success", "salesforce_response": result})
+
+
+
 class ContactRequest(BaseModel):
     fname: str
     lname: str
@@ -54,7 +88,7 @@ class ContactRequest(BaseModel):
     message: str | None = None
 
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
-async def webhook_5(request: Request):
+async def contact_request_webhook(request: Request):
     payload = await request.json()
     try:
         validated_data = ContactRequest.model_validate(payload)
@@ -92,7 +126,7 @@ class RequestSample(BaseModel):
     message: str | None = None
 
 @app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
-async def webhook_4(request: Request):
+async def request_sample_webhook(request: Request):
     payload = await request.json()
 
     try:
@@ -156,7 +190,7 @@ class ProductEnquiry(BaseModel):
     account_password: str | None = None
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
-async def webhook_3(request: Request):
+async def product_enquiry_webhook(request: Request):
     payload = await request.json()
 
     try:
@@ -209,7 +243,7 @@ class SpecSheetWebhook(BaseModel):
     email: EmailStr
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
-async def webhook_2(request: Request):
+async def specsheet_webhook(request: Request):
     payload = await request.json()
     try:
         validated_data = SpecSheetWebhook.model_validate(payload)
@@ -247,7 +281,7 @@ class NewsletterWebhook(BaseModel):
     Email: EmailStr
 
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")#1. Newsletter -- done -- [footer]
-async def webhook_1(request: Request):
+async def newsletter_webhook(request: Request):
     form_data = await request.form()
     try:
         validated_data = NewsletterWebhook.model_validate(dict(form_data))
@@ -267,7 +301,7 @@ async def webhook_1(request: Request):
 
 
 @app.get("/bigtree-webhooks-health-check")
-async def root():
+async def health_check():
     return {"app": "BT", "version": "0.4.1", "status": "running"}
 
 if __name__ == "__main__":
