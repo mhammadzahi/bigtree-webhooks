@@ -117,7 +117,7 @@ async def webhook_4(request: Request):
 
     # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
-    
+
     # if account_password:
     #     if not send_account_creation_email(email, account_password):
     #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
@@ -158,6 +158,7 @@ async def webhook_3(request: Request):
         project = validated_data.project
         message = validated_data.message
         account_password = validated_data.account_password
+        print(account_password)
         req_sample = validated_data.req_sample
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
