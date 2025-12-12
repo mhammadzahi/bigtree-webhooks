@@ -1,0 +1,20 @@
+this attached file contains my Elementor custom code for send Sample Request form, Your task is the following:
+
+   if the user is already signed-in just skip all and keep only current code functionality.
+   else: do the following:
+      1. Add AJAX-powered WordPress user creation (role: customer) + instant login.
+      2. Integrate it into my existing code WITHOUT modifying or breaking any current functionality.
+      3. Keep all my form fields, IDs, CSS, JS logic, and layout untouched.
+      4. Generate AJAX code, event handlers, and backend PHP.
+      5. Backend must:
+         - receive AJAX request
+         - sanitize and validate all fields
+         - check for existing email
+         - create the user
+         - log them in immediately (wp_set_auth_cookie + wp_set_current_user)
+         - return JSON response
+      6. After success, add a redirect to '/my-account/request-history/'
+      7. Provide:
+         - Updated full elementor custom code
+         - Full PHP code for code_snippet plugin
+      8. Produce robust, secure, clean and production-ready code.
