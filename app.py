@@ -30,7 +30,7 @@ SF_SECURITY_TOKEN = os.getenv("SF_SECURITY_TOKEN")
 
 SALES_EMAIL = "sales@bigtree-group.com"
 
-sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
+# sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
 
 app = FastAPI()
 app.add_middleware(
