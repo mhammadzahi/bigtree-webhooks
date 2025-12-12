@@ -4,27 +4,12 @@ from typing import Dict, Optional, List
 
 class SalesforceLeadService:
     def __init__(self, username: str, password: str, security_token: str):
-        self.sf = Salesforce(
-            username=username,
-            password=password,
-            security_token=security_token
-        )
+        self.sf = Salesforce(username=username, password=password, security_token=security_token)
 
     # ======================================================================
     # 1. Product Inquiries
     # ======================================================================
-    def insert_product_inquiry(
-        self,
-        full_name: str,
-        email: str,
-        phone: str,
-        company_name: str,
-        project: Optional[str],
-        message: Optional[str],
-        sample_request: Optional[str],
-        products: List[str],
-        timestamp: str
-    ) -> Dict:
+    def insert_product_inquiry(self, full_name: str, email: str, phone: str, company_name: str, project: Optional[str], message: Optional[str], sample_request: Optional[str], products: List[str], timestamp: str) -> Dict:
 
         payload = {
             "LastName": full_name,                       # Full name stored in LastName if no split
@@ -44,19 +29,7 @@ class SalesforceLeadService:
     # ======================================================================
     # 2. Sample Requests
     # ======================================================================
-    def insert_sample_request(
-        self,
-        first_name: str,
-        last_name: str,
-        phone: str,
-        email: str,
-        company: str,
-        project: Optional[str],
-        quantity: Optional[str],
-        product_id: Optional[str],
-        message: Optional[str],
-        timestamp: str
-    ) -> Dict:
+    def insert_sample_request(self, first_name: str, last_name: str, phone: str, email: str, company: str, project: Optional[str], quantity: Optional[str], product_id: Optional[str], message: Optional[str], timestamp: str) -> Dict:
 
         payload = {
             "FirstName": first_name,
@@ -77,18 +50,7 @@ class SalesforceLeadService:
     # ======================================================================
     # 3. Contact Form
     # ======================================================================
-    def insert_contact_form(
-        self,
-        first_name: str,
-        last_name: str,
-        email: str,
-        phone: str,
-        company: str,
-        location: Optional[str],
-        project: Optional[str],
-        message: Optional[str],
-        timestamp: str
-    ) -> Dict:
+    def insert_contact_form(self, first_name: str, last_name: str, email: str, phone: str, company: str, location: Optional[str], project: Optional[str], message: Optional[str], timestamp: str) -> Dict:
 
         payload = {
             "FirstName": first_name,
@@ -108,18 +70,7 @@ class SalesforceLeadService:
     # ======================================================================
     # 4. Shop Orders
     # ======================================================================
-    def insert_shop_order(
-        self,
-        first_name: str,
-        last_name: str,
-        email: str,
-        phone: str,
-        country: str,
-        street_address: str,
-        timestamp: str,
-        city: str,
-        product: Optional[str]
-    ) -> Dict:
+    def insert_shop_order(self, first_name: str, last_name: str, email: str, phone: str, country: str, street_address: str, timestamp: str, city: str, product: Optional[str]) -> Dict:
 
         payload = {
             "FirstName": first_name,
@@ -136,6 +87,27 @@ class SalesforceLeadService:
         }
 
         return self.sf.Lead.create(payload)
+
+
+
+
+'''
+Notes:
+    1. You must create these Salesforce custom fields: 
+
+    Project__c
+    Message__c
+    Sample_Request__c
+    Products__c
+    Timestamp__c
+    Quantity__c
+    Product_ID__c
+    Location__c
+    Country__c
+    Street_Address__c
+    City__c
+    Product__c
+'''
 
 
 # ==========================================================================

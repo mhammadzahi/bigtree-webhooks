@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from modules.specsheet_generator import generate_specsheet_pdf
 from modules.google_sheet_service import append_row
 from modules.woocommerce_service import get_product
+from modules.salesforce import SalesforceLeadService
 from modules.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_account_creation_email
 import uvicorn, os, json
 from typing import List
@@ -29,6 +30,7 @@ SF_SECURITY_TOKEN = os.getenv("SF_SECURITY_TOKEN")
 
 SALES_EMAIL = "sales@bigtree-group.com"
 
+sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
 
 app = FastAPI()
 app.add_middleware(
