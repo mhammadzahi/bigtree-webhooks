@@ -40,8 +40,8 @@ app.add_middleware(
 )
 
 
-sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
-print(sf_service)
+# sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
+# print(sf_service)
 
 
 # class ShopNewOrderWebhook(BaseModel):
@@ -213,7 +213,7 @@ async def product_enquiry_webhook(request: Request):
     row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
-    sf_service.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, message=message, sample_request=req_sample, products=[str(pid) for pid in product_ids], timestamp=datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"))
+    # sf_service.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, message=message, sample_request=req_sample, products=[str(pid) for pid in product_ids], timestamp=datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"))
 
     pdf_specsheet_files = []
     for product_id in product_ids:
