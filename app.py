@@ -56,7 +56,6 @@ async def webhook_5(request: Request):
         location = validated_data.location
         project = validated_data.project
         message = validated_data.message
-        # print(f"Contact Request from {fname} {lname}, email: {email}, phone: {phone}, company: {company}, location: {location}, project: {project}, message: {message}")
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
@@ -99,11 +98,6 @@ async def webhook_4(request: Request):
         quantity = validated_data.qte
         message = validated_data.message
 
-        if account_password:
-            print(f"{account_password}")
-        else:
-            print(account_password)
-
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
@@ -123,6 +117,10 @@ async def webhook_4(request: Request):
 
     # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+    
+    # if account_password:
+    #     if not send_account_creation_email(email, account_password):
+    #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
 
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
