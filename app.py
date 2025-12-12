@@ -24,13 +24,11 @@ SF_USERNAME = os.getenv("SF_USERNAME")
 SF_PASSWORD = os.getenv("SF_PASSWORD")
 SF_SECURITY_TOKEN = os.getenv("SF_SECURITY_TOKEN")
 
-# print("Salesforce Username:", SF_USERNAME)
-# print("Salesforce Password:", SF_PASSWORD)
-# print("Salesforce Security Token:", SF_SECURITY_TOKEN)
+print("Salesforce Username:", SF_USERNAME)
+print("Salesforce Password:", SF_PASSWORD)
+print("Salesforce Security Token:", SF_SECURITY_TOKEN)
 
 SALES_EMAIL = "sales@bigtree-group.com"
-
-# sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
 
 app = FastAPI()
 app.add_middleware(
@@ -42,6 +40,8 @@ app.add_middleware(
 )
 
 
+sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
+print(sf_service)
 
 
 # class ShopNewOrderWebhook(BaseModel):
@@ -55,7 +55,7 @@ app.add_middleware(
 #     items: List[dict]
 #     total: float
 
-# @app.post("/shop-bt-new-order-webhook")#6. Shop New Order -- done -- [shop checkout]
+# @app.post("/shop-bt-new-order-webhook")#6. Shop New Order --  -- [shop checkout]
 # async def shop_new_order_webhook(request: Request):
 #     payload = await request.json()
 #     try:
@@ -213,6 +213,7 @@ async def product_enquiry_webhook(request: Request):
     row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
+    sf_service.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, message=message, sample_request=req_sample, products=[str(pid) for pid in product_ids], timestamp=datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"))
 
     pdf_specsheet_files = []
     for product_id in product_ids:
