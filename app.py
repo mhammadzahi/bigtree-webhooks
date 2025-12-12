@@ -88,7 +88,6 @@ async def webhook_4(request: Request):
     try:
         validated_data = RequestSample.model_validate(payload)
         product_ids = validated_data.productId
-        print(product_ids)
         first_name = validated_data.fname
         last_name = validated_data.lname
         email = validated_data.email
@@ -116,12 +115,12 @@ async def webhook_4(request: Request):
         file_path = generate_specsheet_pdf(product)    
         pdf_specsheet_files.append(file_path)
 
-    if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
+    # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
+    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
 
-    if account_password:
-        if not send_account_creation_email(email, account_password):
-            return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
+    # if account_password:
+    #     if not send_account_creation_email(email, account_password):
+    #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
 
     for file_path in pdf_specsheet_files:
         os.remove(file_path)
