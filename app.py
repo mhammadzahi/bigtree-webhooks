@@ -261,14 +261,15 @@ async def specsheet_webhook(request: Request):
     row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "specsheets", row)
 
-    # with open(f'product_{product["id"]}_data.json', 'w') as f:
-    #    json.dump(product, f, indent=2)
-
-    # file_path = generate_specsheet_pdf(product)
-    # if not send_single_product_specsheet_email(email, file_path):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
+    file_path = generate_specsheet_pdf(product)
+    if not send_single_product_specsheet_email(email, file_path):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
     os.remove(file_path)
+
+    # with open(f'product_{product["id"]}_data.json', 'w') as f:
+    #    json.dump(product, f, indent=2)
+    
 
     # response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
     # response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
