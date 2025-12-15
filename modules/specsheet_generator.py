@@ -79,10 +79,14 @@ def generate_specsheet_pdf(product):
             # Create InlineImage from downloaded image with height limit
             image_stream = BytesIO(response.content)
             
-            # Open image to get dimensions
+            # Open image to get dimensions and validate format
             img = Image.open(image_stream)
             img_width, img_height = img.size
-
+            
+            # Convert image to RGB if necessary (handles RGBA, P, L, etc.)
+            if img.mode not in ('RGB', 'L'):
+                img = img.convert('RGB')
+            
             # Calculate dimensions to limit height to 300px while maintaining aspect ratio
             max_height_px = 300
             if img_height > max_height_px:
@@ -90,33 +94,39 @@ def generate_specsheet_pdf(product):
                 scale_factor = max_height_px / img_height
                 new_height_px = max_height_px
             else:
-                # Use original size if already smaller than 500px
+                # Use original size if already smaller than 300px
                 new_height_px = img_height
             
             # Convert pixels to inches (96 DPI standard)
             new_height_inches = new_height_px / 96
             
-            # Reset stream position for InlineImage
-            image_stream.seek(0)
+            # Convert image to a format supported by docx (JPEG)
+            converted_stream = BytesIO()
+            img.save(converted_stream, format='JPEG', quality=95)
+            converted_stream.seek(0)
             
             # Create InlineImage with calculated height (using height parameter maintains aspect ratio)
-            image_placeholder = InlineImage(doc, image_stream, height=Inches(new_height_inches))
+            image_placeholder = InlineImage(doc, converted_stream, height=Inches(new_height_inches))
             # print("Image downloaded and processed successfully")
 
         except Exception as e:
-            print(f"Error downloading image: {e}")
+            print(f"Error processing image (attempt 1): {e}")
             # Try without SSL verification as fallback
             try:
                 response = requests.get(image_url, timeout=10, verify=False)
                 response.raise_for_status()
                 image_stream = BytesIO(response.content)
                 
-                # Open image to get dimensions
+                # Open image to get dimensions and validate format
                 img = Image.open(image_stream)
                 img_width, img_height = img.size
                 
-                # Calculate dimensions to limit height to 500px while maintaining aspect ratio
-                max_height_px = 500
+                # Convert image to RGB if necessary
+                if img.mode not in ('RGB', 'L'):
+                    img = img.convert('RGB')
+                
+                # Calculate dimensions to limit height to 300px while maintaining aspect ratio
+                max_height_px = 300
                 if img_height > max_height_px:
                     new_height_px = max_height_px
                 else:
@@ -125,13 +135,15 @@ def generate_specsheet_pdf(product):
                 # Convert pixels to inches
                 new_height_inches = new_height_px / 96
                 
-                # Reset stream position
-                image_stream.seek(0)
+                # Convert image to JPEG format
+                converted_stream = BytesIO()
+                img.save(converted_stream, format='JPEG', quality=95)
+                converted_stream.seek(0)
                 
-                image_placeholder = InlineImage(doc, image_stream, height=Inches(new_height_inches))
-                print("Image downloaded successfully (without SSL verification)")
+                image_placeholder = InlineImage(doc, converted_stream, height=Inches(new_height_inches))
+                print("Image processed successfully (without SSL verification)")
             except Exception as e2:
-                print(f"Image download failed completely: {e2}")
+                print(f"Image processing failed completely: {e2}")
                 image_placeholder = ""  # Empty string instead of text
     else:
         image_placeholder = ""  # Empty string if no image
