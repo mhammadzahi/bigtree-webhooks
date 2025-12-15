@@ -184,7 +184,7 @@ class ProductEnquiry(BaseModel):
     email: EmailStr
     phone: str
     company: str
-    project: str | None = None
+    project: str
     message: str | None = None
     req_sample: str
     cart_items: List[CartItem]
