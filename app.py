@@ -122,7 +122,7 @@ class RequestSample(BaseModel):
     account_password: str | None = None
     phone: str
     company: str
-    project: str | None = None
+    project: str
     qte: str
     message: str | None = None
 
