@@ -1,41 +1,41 @@
 <style>
     /* =========================================
-       ISOLATED CSS - ELEMENTOR SAFE
+       ISOLATED CSS - INLINE / EMBEDDED VERSION
        ========================================= */
 
-    /* 1. Scoped Reset (Only affects items inside the popup) */
-    #enquiry-popup-overlay {
-        /* Reset root font settings to ensure rem/em works predictably */
+    /* 1. Main Container (Formerly Overlay) - Now acts as a wrapper */
+    #enquiry-inline-wrapper {
+        /* Reset root font settings */
         font-size: 16px;
         line-height: 1.5;
         -webkit-text-size-adjust: 100%;
 
-        /* Positioning */
-        display: flex;
-        /* Kept as flex for preview. Toggle to 'none' via JS when needed */
-        position: fixed;
-        top: 0;
-        left: 0;
+        /* LAYOUT: Changed from Fixed to Relative/Block */
+        position: relative;
         width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-        z-index: 99999;
-        /* Very high Z-index to sit on top of WP Header */
+        height: auto;
+        background-color: transparent;
+        /* No dark overlay */
+        z-index: 1;
+
+        /* Center the card within the Elementor column */
+        display: flex;
         justify-content: center;
-        align-items: center;
-        padding: 20px;
+        align-items: flex-start;
+        padding: 10px;
+        /* Small padding to prevent cutting off shadows */
         box-sizing: border-box;
 
         /* Enforce Font Family */
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Force Box Sizing on EVERYTHING inside the popup */
-    #enquiry-popup-overlay * {
+    /* Force Box Sizing */
+    #enquiry-inline-wrapper * {
         box-sizing: border-box;
     }
 
-    /* Reset Styles for specific elements to strip Theme Defaults */
+    /* Reset Styles to strip Theme Defaults */
     #enquiry-popup-content h2,
     #enquiry-popup-content p,
     #enquiry-popup-content form,
@@ -60,7 +60,7 @@
     }
 
     /* =========================================
-       MAIN LAYOUT
+       MAIN CARD LAYOUT
        ========================================= */
 
     #enquiry-popup-content {
@@ -74,31 +74,34 @@
 
         background: transparent;
         max-width: 600px;
+        /* Keeps the form from getting too wide */
         width: 100%;
         position: relative;
     }
 
     #enquiry-popup-content .card {
         width: 100%;
-        padding: 30px;
+        padding: 40px;
+        /* Increased slightly for inline look */
         background: var(--bg-card);
         border-radius: var(--radius);
-        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2);
-        /* Slightly stronger shadow for isolation */
+        /* Soft shadow to separate it from page background */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         position: relative;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        /* Optional subtle border */
     }
 
     #enquiry-popup-content .card-header {
         text-align: center !important;
-        /* Force center */
         margin-bottom: 28px !important;
     }
 
     #enquiry-popup-content h2 {
         display: block;
-        margin: 0 0 6px 0 !important;
+        margin: 0 0 8px 0 !important;
         font-weight: 700 !important;
-        font-size: 26px !important;
+        font-size: 28px !important;
         color: var(--header-color) !important;
         letter-spacing: -0.5px !important;
         line-height: 1.2 !important;
@@ -143,8 +146,6 @@
         background-color: #fff !important;
         color: var(--text-main) !important;
         transition: border-color 0.2s, box-shadow 0.2s;
-
-        /* Critical to remove WP Theme styles */
         -webkit-appearance: none !important;
         -moz-appearance: none !important;
         appearance: none !important;
@@ -161,7 +162,6 @@
     /* --- Select Dropdown Specifics --- */
     #enquiry-popup-content select {
         cursor: pointer;
-        /* Custom Arrow SVG encoded in Base64 */
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
         background-repeat: no-repeat !important;
         background-position: right 12px center !important;
@@ -191,7 +191,6 @@
         margin: 0 !important;
     }
 
-    /* Required Asterisk */
     #enquiry-popup-content .input:required~.form-label::after,
     #enquiry-popup-content textarea:required~.form-label::after,
     #enquiry-popup-content select:required~.form-label::after {
@@ -245,20 +244,9 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }
 
-    /* --- Close Button --- */
+    /* --- Close Button HIDDEN for inline mode --- */
     #close-popup-btn {
-        position: absolute;
-        top: 15px;
-        right: 20px;
-        background: transparent !important;
-        border: none !important;
-        font-size: 28px !important;
-        cursor: pointer;
-        line-height: 1 !important;
-        padding: 0 !important;
-        color: #333 !important;
-        z-index: 10;
-        width: auto !important;
+        display: none !important;
     }
 
     /* --- Responsive --- */
@@ -278,13 +266,15 @@
 </style>
 
 
-<div id="enquiry-popup-overlay">
+<!-- Renamed ID to avoid confusion, now acts as a wrapper -->
+<div id="enquiry-inline-wrapper">
     <div id="enquiry-popup-content">
         <div class="card">
+            <!-- Close button is hidden via CSS -->
             <button id="close-popup-btn" title="Close">&times;</button>
             <div class="card-header">
                 <h2>Send Inquiry</h2>
-                <p class="lead">Have a question about the items in your cart? We're here to help.</p>
+                <p class="lead">Fill out the form below and we'll get back to you.</p>
             </div>
             <form id="enquiryForm" class="enquiry-form">
 

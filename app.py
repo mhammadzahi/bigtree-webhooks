@@ -81,10 +81,10 @@ class ContactRequest(BaseModel):
     fname: str
     lname: str
     email: EmailStr
-    phone: str | None = None
-    company: str | None = None
-    location: str
+    phone: str
+    company: str
     project: str
+    project_location: str
     message: str | None = None
 
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
@@ -97,14 +97,14 @@ async def contact_request_webhook(request: Request):
         email = validated_data.email
         phone = validated_data.phone
         company = validated_data.company
-        location = validated_data.location
         project = validated_data.project
+        project_location = validated_data.project_location
         message = validated_data.message
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [fname, lname, email, phone, company, location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+    row = [fname, lname, email, phone, company, project_location, project, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "contact", row)
 
     # if not send_product_enquiry_to_admin(name, email): # or send to salesforce
