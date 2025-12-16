@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, ValidationError
 from modules.specsheet_generator import generate_specsheet_pdf
 from modules.google_sheet_service import append_row
 from modules.woocommerce_service import get_product
-from modules.salesforce import SalesforceLeadService
+from modules.salesforce import SalesforceWebToLeadService
 from modules.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_account_creation_email
 import uvicorn, os, json
 from typing import List
@@ -20,14 +20,6 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
-SF_USERNAME = os.getenv("SF_USERNAME")
-SF_PASSWORD = os.getenv("SF_PASSWORD")
-SF_SECURITY_TOKEN = os.getenv("SF_SECURITY_TOKEN")
-
-print("Salesforce Username:", SF_USERNAME)
-print("Salesforce Password:", SF_PASSWORD)
-print("Salesforce Security Token:", SF_SECURITY_TOKEN)
-
 SALES_EMAIL = "sales@bigtree-group.com"
 
 app = FastAPI()
@@ -40,8 +32,8 @@ app.add_middleware(
 )
 
 
-# sf_service = SalesforceLeadService(username=SF_USERNAME, password=SF_PASSWORD, security_token=SF_SECURITY_TOKEN)
-# print(sf_service)
+sf = SalesforceWebToLeadService(debug_mode=True)
+
 
 
 # class ShopNewOrderWebhook(BaseModel):
@@ -107,6 +99,9 @@ async def contact_request_webhook(request: Request):
 
     row = [fname, lname, email, phone, company, project, project_location, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "contact", row)
+
+    result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code="", project=project, general_notes=message)
+    print("Salesforce Response:", result)
 
     # if not send_product_enquiry_to_admin(name, email): # or send to salesforce
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
