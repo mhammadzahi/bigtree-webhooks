@@ -1,132 +1,143 @@
-from simple_salesforce import Salesforce
-from typing import Dict, Optional, List
+import requests
+from typing import Dict, Optional, List, Union
 
+class SalesforceWebToLeadService:
+    # Constants based on your HTML Form
+    ORG_ID = "00D58000000YppW"
+    RET_URL = "https://yallaiot.com/"
+    ENDPOINT = "https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8"
 
-class SalesforceLeadService:
-    def __init__(self, username: str, password: str, security_token: str):
-        self.sf = Salesforce(username=username, password=password, security_token=security_token)
+    # Custom Field Mappings (From your HTML)
+    FIELD_PROJECT = "00NWS000006el81"
+    FIELD_NOTES   = "00N4I00000EzMsn" # Used for "General Notes" or "Message"
 
-    # ======================================================================
-    # 1. Product Inquiries
-    # ======================================================================
-    def insert_product_inquiry(self, full_name: str, email: str, phone: str, company_name: str, project: Optional[str], message: Optional[str], sample_request: Optional[str], products: List[str], timestamp: str) -> Dict:
+    def __init__(self, org_id: str = None, debug_mode: bool = False, debug_email: str = None):
+        """
+        :param org_id: Optional override for Org ID.
+        :param debug_mode: If True, tells Salesforce to send a debug email instead of creating a lead.
+        :param debug_email: The email to receive debug logs.
+        """
+        self.org_id = org_id if org_id else self.ORG_ID
+        self.debug_mode = debug_mode
+        self.debug_email = debug_email
 
+    def _submit(self, data: Dict) -> Dict:
+        # Base payload required by Salesforce
         payload = {
-            "LastName": full_name,                       # Full name stored in LastName if no split
-            "Email": email,
-            "Phone": phone,
-            "Company": company_name,
-            "Project__c": project,
-            "Message__c": message,
-            "Sample_Request__c": sample_request,
-            "Products__c": ",".join(products),
-            "Timestamp__c": timestamp,
-            "LeadSource": "Product Inquiry"
+            "oid": self.org_id,
+            "retURL": self.RET_URL
+        }
+        
+        # Add debug parameters if enabled
+        if self.debug_mode:
+            payload["debug"] = 1
+            if self.debug_email:
+                payload["debugEmail"] = self.debug_email
+
+        # Merge specific form data
+        payload.update(data)
+
+        try:
+            response = requests.post(self.ENDPOINT, data=payload)
+            
+            # Web-to-Lead usually returns 200 OK (and creates a redirect) even on some failures.
+            # Real validation errors are only visible via email in Debug Mode.
+            success = response.status_code == 200
+            
+            return {
+                "success": success,
+                "status_code": response.status_code,
+                "response_text": "Lead submitted (redirect)" if success else response.text
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    # ======================================================================
+    # 1. Contact Form (Directly maps to your HTML)
+    # ======================================================================
+    def insert_contact_form(self, first_name: str, last_name: str, email: str, mobile: str, company: str, country_code: str, project: Optional[str], general_notes: Optional[str]) -> Dict:
+        
+        payload = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "mobile": mobile,         # HTML used 'mobile', standard API often uses 'phone'
+            "company": company,
+            "country_code": country_code, # e.g. 'AE', 'SA'
+            self.FIELD_PROJECT: project,
+            self.FIELD_NOTES: general_notes
         }
 
-        return self.sf.Lead.create(payload)
+        return self._submit(payload)
+
 
     # ======================================================================
-    # 2. Sample Requests
+    # 2. Product Inquiries (Mapped to available Web-to-Lead fields)
     # ======================================================================
-    def insert_sample_request(self, first_name: str, last_name: str, phone: str, email: str, company: str, project: Optional[str], quantity: Optional[str], product_id: Optional[str], message: Optional[str], timestamp: str) -> Dict:
+    def insert_product_inquiry(self, full_name: str, email: str, phone: str, company_name: str, project: Optional[str], message: Optional[str], products: List[str]) -> Dict:
+        
+        # Web-to-Lead expects first/last split. We try to split logic here.
+        names = full_name.split(" ", 1)
+        first_name = names[0]
+        last_name = names[1] if len(names) > 1 else "-"
+
+        # Combine products into the Project text area or Notes, as we lack a specific Product ID in the HTML provided
+        product_str = ", ".join(products)
+        project_details = f"{project} - Interested in: {product_str}" if project else f"Interested in: {product_str}"
 
         payload = {
-            "FirstName": first_name,
-            "LastName": last_name,
-            "Email": email,
-            "Phone": phone,
-            "Company": company,
-            "Project__c": project,
-            "Quantity__c": quantity,
-            "Product_ID__c": product_id,
-            "Message__c": message,
-            "Timestamp__c": timestamp,
-            "LeadSource": "Sample Request"
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "mobile": phone,
+            "company": company_name,
+            self.FIELD_PROJECT: project_details,
+            self.FIELD_NOTES: message
+            # Note: 'LeadSource' is not usually a standard hidden input in basic Web-to-Lead unless added as a custom field or hidden input.
+            # You can add "lead_source": "Product Inquiry" if your SF configuration allows it via Web-to-Lead.
         }
 
-        return self.sf.Lead.create(payload)
+        return self._submit(payload)
+
 
     # ======================================================================
-    # 3. Contact Form
+    # 3. Sample Requests
     # ======================================================================
-    def insert_contact_form(self, first_name: str, last_name: str, email: str, phone: str, company: str, location: Optional[str], project: Optional[str], message: Optional[str], timestamp: str) -> Dict:
+    def insert_sample_request(self, first_name: str, last_name: str, phone: str, email: str, company: str, project: Optional[str], quantity: Optional[str], product_id: Optional[str], message: Optional[str]) -> Dict:
+        
+        # We merge Quantity/Product ID into the Notes field because the HTML 
+        # provided didn't have specific IDs for Quantity/Product ID.
+        details = f"SAMPLE REQUEST. Qty: {quantity}, Product ID: {product_id}. \nMessage: {message}"
 
         payload = {
-            "FirstName": first_name,
-            "LastName": last_name,
-            "Email": email,
-            "Phone": phone,
-            "Company": company,
-            "Location__c": location,
-            "Project__c": project,
-            "Message__c": message,
-            "Timestamp__c": timestamp,
-            "LeadSource": "Contact Form"
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "mobile": phone,
+            "company": company,
+            self.FIELD_PROJECT: project,
+            self.FIELD_NOTES: details
         }
 
-        return self.sf.Lead.create(payload)
+        return self._submit(payload)
 
     # ======================================================================
     # 4. Shop Orders
     # ======================================================================
-    def insert_shop_order(self, first_name: str, last_name: str, email: str, phone: str, country: str, street_address: str, timestamp: str, city: str, product: Optional[str]) -> Dict:
+    def insert_shop_order(self, first_name: str, last_name: str, email: str, phone: str, country_code: str, city: str, product: Optional[str]) -> Dict:
+        
+        # Merging City/Product into notes as per available HTML fields
+        order_details = f"SHOP ORDER. City: {city}. Product: {product}"
 
         payload = {
-            "FirstName": first_name,
-            "LastName": last_name,
-            "Email": email,
-            "Phone": phone,
-            "Company": "Online Shop",             # Required Salesforce field
-            "Country__c": country,
-            "Street_Address__c": street_address,
-            "Timestamp__c": timestamp,
-            "City__c": city,
-            "Product__c": product,
-            "LeadSource": "Online Shop Order"
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "mobile": phone,
+            "company": "Online Shop Customer", 
+            "country_code": country_code,
+            self.FIELD_NOTES: order_details
         }
 
-        return self.sf.Lead.create(payload)
+        return self._submit(payload)
 
-
-
-
-'''
-Notes:
-    1. You must create these Salesforce custom fields: 
-
-    Project__c
-    Message__c
-    Sample_Request__c
-    Products__c
-    Timestamp__c
-    Quantity__c
-    Product_ID__c
-    Location__c
-    Country__c
-    Street_Address__c
-    City__c
-    Product__c
-'''
-
-
-# ==========================================================================
-# Example usage
-# ==========================================================================
-if __name__ == "__main__":
-    sf_service = SalesforceLeadService(username="YOUR_USERNAME", password="YOUR_PASSWORD", security_token="YOUR_SECURITY_TOKEN")
-
-    # Example: Product inquiry
-    result = sf_service.insert_product_inquiry(
-        full_name="John Doe",
-        email="john@example.com",
-        phone="+123456789",
-        company_name="ABC Corp",
-        project="Villa Project",
-        message="I need pricing.",
-        sample_request="Yes",
-        products=["5340", "4698", "5818"],
-        timestamp="2025-12-12 14:00:00"
-    )
-
-    print(result)
