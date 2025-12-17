@@ -69,7 +69,7 @@ async def contact_request_webhook(request: Request):
     row_appended = append_row(SHEET_ID, "contact", row)
 
     result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
-    print("Salesforce Response:", result)
+    # print("Salesforce Response:", result)
 
     # if not send_product_enquiry_to_admin(name, email): # or send to salesforce
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
