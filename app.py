@@ -31,41 +31,7 @@ app.add_middleware(
     allow_headers=["*"],  # Or ["Content-Type"]
 )
 
-
 sf = SalesforceWebToLeadService(debug_mode=True, debug_email="mzahi@bigtree-group.com")
-
-
-
-# class ShopNewOrderWebhook(BaseModel):
-#     email: EmailStr
-#     fname: str
-#     lname: str
-#     phone: str | None = None
-#     company: str | None = None
-#     billing_address: dict
-#     shipping_address: dict
-#     items: List[dict]
-#     total: float
-
-# @app.post("/shop-bt-new-order-webhook")#6. Shop New Order --  -- [shop checkout]
-# async def shop_new_order_webhook(request: Request):
-#     payload = await request.json()
-#     try:
-#         validated_data = ShopNewOrderWebhook.model_validate(payload)
-#         first_name = validated_data.fname
-#         last_name = validated_data.lname
-#         email = validated_data.email
-#         phone = validated_data.phone or ""
-#         country = validated_data.billing_address.get("country", "")
-#         street_address = validated_data.billing_address.get("address_1", "") + " " + validated_data.billing_address.get("address_2", "")
-#         city = validated_data.billing_address.get("city", "")
-#         timestamp = datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")
-#         product = ", ".join([item.get("name", "") for item in validated_data.items])    
-
-#     except KeyError as e:
-#         return JSONResponse(status_code=422, content={"status": "fail", "detail": f"Missing field: {str(e)}"})
-
-#     return JSONResponse(status_code=200, content={"status": "success", "salesforce_response": result})
 
 
 
@@ -104,6 +70,7 @@ async def contact_request_webhook(request: Request):
 
     result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code="", project=project, general_notes=message)
     print("Salesforce Response:", result)
+    print('Project Location:', project_location)
 
     # if not send_product_enquiry_to_admin(name, email): # or send to salesforce
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
@@ -307,3 +274,40 @@ async def health_check():
 if __name__ == "__main__":
     # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
     uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
+
+
+
+
+
+
+# class ShopNewOrderWebhook(BaseModel):
+#     email: EmailStr
+#     fname: str
+#     lname: str
+#     phone: str | None = None
+#     company: str | None = None
+#     billing_address: dict
+#     shipping_address: dict
+#     items: List[dict]
+#     total: float
+
+# @app.post("/shop-bt-new-order-webhook")#6. Shop New Order --  -- [shop checkout]
+# async def shop_new_order_webhook(request: Request):
+#     payload = await request.json()
+#     try:
+#         validated_data = ShopNewOrderWebhook.model_validate(payload)
+#         first_name = validated_data.fname
+#         last_name = validated_data.lname
+#         email = validated_data.email
+#         phone = validated_data.phone or ""
+#         country = validated_data.billing_address.get("country", "")
+#         street_address = validated_data.billing_address.get("address_1", "") + " " + validated_data.billing_address.get("address_2", "")
+#         city = validated_data.billing_address.get("city", "")
+#         timestamp = datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")
+#         product = ", ".join([item.get("name", "") for item in validated_data.items])    
+
+#     except KeyError as e:
+#         return JSONResponse(status_code=422, content={"status": "fail", "detail": f"Missing field: {str(e)}"})
+
+#     return JSONResponse(status_code=200, content={"status": "success", "salesforce_response": result})
+
