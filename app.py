@@ -78,6 +78,7 @@ class ContactRequest(BaseModel):
     project: str
     project_location: str
     message: str | None = None
+    src: str | None = None
 
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
 async def contact_request_webhook(request: Request):
@@ -93,6 +94,8 @@ async def contact_request_webhook(request: Request):
         project = validated_data.project
         project_location = validated_data.project_location
         message = validated_data.message
+        src = validated_data.src
+        print(src)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
