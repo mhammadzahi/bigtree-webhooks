@@ -95,12 +95,11 @@ async def contact_request_webhook(request: Request):
         project_location = validated_data.project_location
         message = validated_data.message
         src = validated_data.src
-        print(src)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [fname, lname, email, phone, company, project, project_location, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+    row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "contact", row)
 
     result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code="", project=project, general_notes=message)
