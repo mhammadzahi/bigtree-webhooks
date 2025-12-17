@@ -43,6 +43,7 @@ class SalesforceWebToLeadService:
             # Web-to-Lead usually returns 200 OK (and creates a redirect) even on some failures.
             # Real validation errors are only visible via email in Debug Mode.
             success = response.status_code == 200
+            print('success:', success)
             
             return {
                 "success": success,
