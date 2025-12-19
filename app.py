@@ -265,6 +265,10 @@ async def newsletter_webhook(request: Request):
     return Response(status_code=status.HTTP_200_OK)
 
 
+@app.get("/unsubscribe/{email_id}")
+async def unsubscribe(email_id: str):
+    print("Unsubscribe request for email:", email_id)
+    return "you are unsubscribed"
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
