@@ -227,7 +227,7 @@ class SpecSheetWebhook(BaseModel):
 async def specsheet_webhook(request: Request):
     # Validate API Key
     api_key = request.headers.get("X-API-Key")
-    print("API Key:", api_key)
+    print("API Key:", api_key, "Expected:", API_KEY)
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
