@@ -21,6 +21,7 @@ CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
 SALES_EMAIL = "sales@bigtree-group.com"
+API_KEY = os.getenv("API_KEY")
 
 app = FastAPI()
 app.add_middleware(
@@ -48,6 +49,11 @@ class ContactRequest(BaseModel):
 
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
 async def contact_request_webhook(request: Request):
+    # Validate API Key
+    api_key = request.headers.get("X-API-Key")
+    if not api_key or api_key != API_KEY:
+        return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
+    
     payload = await request.json()
     # print("Contact Request Payload:", payload)
     try:
@@ -91,6 +97,11 @@ class RequestSample(BaseModel):
 
 @app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
 async def request_sample_webhook(request: Request):
+    # Validate API Key
+    api_key = request.headers.get("X-API-Key")
+    if not api_key or api_key != API_KEY:
+        return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
+    
     payload = await request.json()
 
     try:
@@ -155,6 +166,11 @@ class ProductEnquiry(BaseModel):
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def product_enquiry_webhook(request: Request):
+    # Validate API Key
+    api_key = request.headers.get("X-API-Key")
+    if not api_key or api_key != API_KEY:
+        return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
+    
     payload = await request.json()
 
     try:
@@ -209,6 +225,12 @@ class SpecSheetWebhook(BaseModel):
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
 async def specsheet_webhook(request: Request):
+    # Validate API Key
+    api_key = request.headers.get("X-API-Key")
+    print("API Key:", api_key)
+    if not api_key or api_key != API_KEY:
+        return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
+    
     payload = await request.json()
     try:
         validated_data = SpecSheetWebhook.model_validate(payload)
@@ -248,6 +270,11 @@ class NewsletterWebhook(BaseModel):
 
 @app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")#1. Newsletter -- done -- [footer]
 async def newsletter_webhook(request: Request):
+    # Validate API Key
+    api_key = request.headers.get("X-API-Key")
+    if not api_key or api_key != API_KEY:
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Unauthorized"})
+    
     form_data = await request.form()
     try:
         validated_data = NewsletterWebhook.model_validate(dict(form_data))
@@ -265,10 +292,12 @@ async def newsletter_webhook(request: Request):
     return Response(status_code=status.HTTP_200_OK)
 
 
+
 @app.get("/unsubscribe/{email_id}")
-async def unsubscribe(email_id: str):
-    print("Unsubscribe request for email:", email_id)
-    return "you are unsubscribed"
+async def unsubscribe(email_id: str, request: Request):
+    print("Unsubscribe request")
+    return "You are unsubscribed"
+
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
@@ -277,40 +306,4 @@ async def health_check():
 if __name__ == "__main__":
     # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
     uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
-
-
-
-
-
-
-# class ShopNewOrderWebhook(BaseModel):
-#     email: EmailStr
-#     fname: str
-#     lname: str
-#     phone: str | None = None
-#     company: str | None = None
-#     billing_address: dict
-#     shipping_address: dict
-#     items: List[dict]
-#     total: float
-
-# @app.post("/shop-bt-new-order-webhook")#6. Shop New Order --  -- [shop checkout]
-# async def shop_new_order_webhook(request: Request):
-#     payload = await request.json()
-#     try:
-#         validated_data = ShopNewOrderWebhook.model_validate(payload)
-#         first_name = validated_data.fname
-#         last_name = validated_data.lname
-#         email = validated_data.email
-#         phone = validated_data.phone or ""
-#         country = validated_data.billing_address.get("country", "")
-#         street_address = validated_data.billing_address.get("address_1", "") + " " + validated_data.billing_address.get("address_2", "")
-#         city = validated_data.billing_address.get("city", "")
-#         timestamp = datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")
-#         product = ", ".join([item.get("name", "") for item in validated_data.items])    
-
-#     except KeyError as e:
-#         return JSONResponse(status_code=422, content={"status": "fail", "detail": f"Missing field: {str(e)}"})
-
-#     return JSONResponse(status_code=200, content={"status": "success", "salesforce_response": result})
 
