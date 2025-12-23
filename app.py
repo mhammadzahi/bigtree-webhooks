@@ -34,6 +34,7 @@ app.add_middleware(
 
 sf = SalesforceWebToLeadService(debug_mode=True, debug_email="mzahi@bigtree-group.com")
 
+# src in shop is null
 
 
 class ContactRequest(BaseModel):
@@ -67,6 +68,7 @@ async def contact_request_webhook(request: Request):
         project_location = validated_data.project_location
         message = validated_data.message
         src = validated_data.src
+        print("SRC:", src)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
@@ -94,6 +96,7 @@ class RequestSample(BaseModel):
     project: str
     qte: str
     message: str | None = None
+    src: str | None = None
 
 @app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
 async def request_sample_webhook(request: Request):
@@ -116,6 +119,8 @@ async def request_sample_webhook(request: Request):
         project = validated_data.project
         quantity = validated_data.qte
         message = validated_data.message
+        src = validated_data.src
+        print("SRC:", src)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
@@ -163,6 +168,7 @@ class ProductEnquiry(BaseModel):
     req_sample: str
     cart_items: List[CartItem]
     account_password: str | None = None
+    src: str | None = None
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def product_enquiry_webhook(request: Request):
@@ -185,6 +191,8 @@ async def product_enquiry_webhook(request: Request):
         req_sample = validated_data.req_sample
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
+        src = validated_data.src
+        print("SRC:", src)
         
 
     except ValidationError as e:
@@ -222,6 +230,7 @@ async def product_enquiry_webhook(request: Request):
 class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
+    src: str | None = None
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
 async def specsheet_webhook(request: Request):
@@ -234,7 +243,8 @@ async def specsheet_webhook(request: Request):
     payload = await request.json()
     try:
         validated_data = SpecSheetWebhook.model_validate(payload)
-        product_id, email, name = validated_data.product_id, validated_data.email, payload.get("name", "")
+        product_id, email, name, src = validated_data.product_id, validated_data.email, payload.get("name", ""), validated_data.src
+        print("SRC:", src)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing fields"})
