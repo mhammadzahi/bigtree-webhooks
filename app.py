@@ -122,7 +122,7 @@ async def request_sample_webhook(request: Request):
 
     row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
-    result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, phone=phone, company=company, project=project, quantity=quantity, products=[str(pid) for pid in product_ids], general_notes=message)
+    result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, phone=phone, company=company, project=project, quantity=quantity, product_id=[str(pid) for pid in product_ids], general_notes=message)
     print("Salesforce Response:", result)
 
     pdf_specsheet_files = []
