@@ -52,7 +52,6 @@ class ContactRequest(BaseModel):
 
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
 async def contact_request_webhook(request: Request):
-    # Validate API Key
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -123,7 +122,8 @@ async def request_sample_webhook(request: Request):
 
     row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
-
+    result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, mobile=phone, company=company, country_code=project, quantity=quantity, products=[str(pid) for pid in product_ids], general_notes=message)
+    print("Salesforce Response:", result)
 
     pdf_specsheet_files = []
     for product_id in product_ids:
