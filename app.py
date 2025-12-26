@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Response, status, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
@@ -292,7 +292,46 @@ async def newsletter_webhook(request: Request):
 @app.get("/unsubscribe/{email_id}")
 async def unsubscribe(email_id: str, request: Request):
     # print("Unsubscribe request")
-    return "You are unsubscribed"
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Unsubscribed</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #f5f5f5;
+            }
+            .container {
+                text-align: center;
+                padding: 40px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #333;
+            }
+            p {
+                color: #666;
+                margin-top: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>✓ You are unsubscribed</h1>
+            <p>You have been successfully removed from our mailing list.</p>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content, status_code=200)
 
 
 @app.get("/bigtree-webhooks-health-check")
