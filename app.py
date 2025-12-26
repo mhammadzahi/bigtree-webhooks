@@ -97,11 +97,10 @@ class RequestSample(BaseModel):
     project: str
     qte: str
     message: str | None = None
-    src: str | None = None
+
 
 @app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
 async def request_sample_webhook(request: Request):
-    # Validate API Key
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -119,8 +118,6 @@ async def request_sample_webhook(request: Request):
         project = validated_data.project
         quantity = validated_data.qte
         message = validated_data.message
-        src = validated_data.src
-        print("SRC:", src)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
@@ -231,7 +228,6 @@ class SpecSheetWebhook(BaseModel):
 async def specsheet_webhook(request: Request):
 
     api_key = request.headers.get("X-API-Key")
-    #print("API Key:", api_key, "Expected:", API_KEY)
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
