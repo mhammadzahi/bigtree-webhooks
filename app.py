@@ -167,7 +167,6 @@ class ProductEnquiry(BaseModel):
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def product_enquiry_webhook(request: Request):
-    # Validate API Key
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -225,7 +224,6 @@ class SpecSheetWebhook(BaseModel):
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
 async def specsheet_webhook(request: Request):
-
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -293,13 +291,14 @@ async def newsletter_webhook(request: Request):
 
 @app.get("/unsubscribe/{email_id}")
 async def unsubscribe(email_id: str, request: Request):
-    print("Unsubscribe request")
+    # print("Unsubscribe request")
     return "You are unsubscribed"
 
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
     return {"app": "BT", "version": "0.4.1", "status": "running"}
+
 
 if __name__ == "__main__":
     # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
