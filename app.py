@@ -69,7 +69,6 @@ async def contact_request_webhook(request: Request):
         project_location = validated_data.project_location
         message = validated_data.message
         src = validated_data.src
-        print("SRC:", src)
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
