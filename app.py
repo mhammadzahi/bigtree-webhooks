@@ -243,8 +243,7 @@ async def specsheet_webhook(request: Request):
     payload = await request.json()
     try:
         validated_data = SpecSheetWebhook.model_validate(payload)
-        product_id, email, name, src = validated_data.product_id, validated_data.email, payload.get("name", ""), validated_data.src
-        print("SRC:", src)
+        product_id, email, name = validated_data.product_id, validated_data.email, payload.get("name", "")
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing fields"})
