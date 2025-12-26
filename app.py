@@ -28,13 +28,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Or specify your frontend domain
     allow_credentials=True,
-    allow_methods=["*"],  # Or ["POST"] if you want to be strict
+    allow_methods=["POST", "GET"],
     allow_headers=["*"],  # Or ["Content-Type"]
 )
 
 sf = SalesforceWebToLeadService(debug_mode=True, debug_email="mzahi@bigtree-group.com")
 
-# src in shop is null
+
+
+
 
 
 class ContactRequest(BaseModel):
@@ -56,7 +58,6 @@ async def contact_request_webhook(request: Request):
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
     payload = await request.json()
-    # print("Contact Request Payload:", payload)
     try:
         validated_data = ContactRequest.model_validate(payload)
         fname = validated_data.fname
@@ -106,7 +107,6 @@ async def request_sample_webhook(request: Request):
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
     payload = await request.json()
-
     try:
         validated_data = RequestSample.model_validate(payload)
         product_ids = validated_data.productId
@@ -168,7 +168,6 @@ class ProductEnquiry(BaseModel):
     req_sample: str
     cart_items: List[CartItem]
     account_password: str | None = None
-    src: str | None = None
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def product_enquiry_webhook(request: Request):
@@ -178,7 +177,6 @@ async def product_enquiry_webhook(request: Request):
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
     payload = await request.json()
-
     try:
         validated_data = ProductEnquiry.model_validate(payload)
         name = validated_data.name
@@ -191,9 +189,6 @@ async def product_enquiry_webhook(request: Request):
         req_sample = validated_data.req_sample
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
-        src = validated_data.src
-        print("SRC:", src)
-        
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
@@ -230,7 +225,7 @@ async def product_enquiry_webhook(request: Request):
 class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
-    src: str | None = None
+
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
 async def specsheet_webhook(request: Request):
