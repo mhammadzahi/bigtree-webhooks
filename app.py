@@ -245,8 +245,8 @@ async def specsheet_webhook(request: Request):
     row_appended = append_row(SHEET_ID, "specsheets", row)
 
     file_path = generate_specsheet_pdf(product)
-    # if not send_single_product_specsheet_email(email, file_path):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
+    if not send_single_product_specsheet_email(email, file_path):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
     os.remove(file_path)
 
