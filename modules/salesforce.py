@@ -76,7 +76,7 @@ class SalesforceWebToLeadService:
     # ======================================================================
     # 2. Product Inquiries (Mapped to available Web-to-Lead fields)
     # ======================================================================
-    def insert_product_inquiry(self, full_name: str, email: str, phone: str, company_name: str, project: Optional[str], message: Optional[str], products: List[str]) -> Dict:
+    def insert_product_inquiry(self, full_name: str, email: str, phone: str, company_name: str, project: Optional[str], country: str, message: Optional[str], products: List[str]) -> Dict:
         
         # Web-to-Lead expects first/last split. We try to split logic here.
         names = full_name.split(" ", 1)
@@ -93,7 +93,7 @@ class SalesforceWebToLeadService:
             "email": email,
             "mobile": phone,
             "company": company_name,
-            "country_code": "AE",  # Static country code
+            "country_code": country,
             self.FIELD_PROJECT: project_details,
             self.FIELD_NOTES: message
             # Note: 'LeadSource' is not usually a standard hidden input in basic Web-to-Lead unless added as a custom field or hidden input.
@@ -106,7 +106,7 @@ class SalesforceWebToLeadService:
     # ======================================================================
     # 3. Sample Requests
     # ======================================================================
-    def insert_sample_request(self, first_name: str, last_name: str, email: str, company: str, mobile: Optional[str], project: Optional[str], quantity: Optional[str], other_product_interest: Optional[str]) -> Dict:
+    def insert_sample_request(self, first_name: str, last_name: str, email: str, company: str, mobile: Optional[str], project: Optional[str], country: str, quantity: Optional[str], other_product_interest: Optional[str]) -> Dict:
         
         payload = {
             "first_name": first_name,
@@ -114,7 +114,7 @@ class SalesforceWebToLeadService:
             "email": email,
             "company": company,
             "mobile": mobile,
-            "country_code": "AE",  # Static country code
+            "country_code": country,
             "00NWS000006el81": project,  # Project
             "00NWS000006nIef": quantity,  # Quantity
             "00N4I00000EzMsr": other_product_interest  # Other Product Interest

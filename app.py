@@ -93,6 +93,7 @@ class RequestSample(BaseModel):
     phone: str
     company: str
     project: str
+    country: str
     qte: str
     message: str | None = None
 
@@ -114,20 +115,20 @@ async def request_sample_webhook(request: Request):
         phone = validated_data.phone
         company = validated_data.company
         project = validated_data.project
+        country = validated_data.country
         quantity = validated_data.qte
         message = validated_data.message
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [first_name, last_name, phone, email, company, project, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+    row = [first_name, last_name, phone, email, company, project, country, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "sample_requests", row)
     
     # Combine product_ids and message into other_product_interest field
     other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
     
-    result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, quantity=quantity, other_product_interest=other_product_interest)
-    print("Salesforce Response:", result)
+    result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
 
     pdf_specsheet_files = []
     for product_id in product_ids:
@@ -164,6 +165,7 @@ class ProductEnquiry(BaseModel):
     phone: str
     company: str
     project: str
+    company_location: str | None = None
     message: str | None = None
     req_sample: str
     cart_items: List[CartItem]
@@ -183,6 +185,7 @@ async def product_enquiry_webhook(request: Request):
         phone = validated_data.phone
         company = validated_data.company
         project = validated_data.project
+        country = validated_data.country
         message = validated_data.message
         account_password = validated_data.account_password
         req_sample = validated_data.req_sample # Yes/No
@@ -192,14 +195,13 @@ async def product_enquiry_webhook(request: Request):
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+    row = [name, email, phone, company, project, country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
     # Merge req_sample into message
-    combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
-    
-    result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, message=combined_message, products=[str(pid) for pid in product_ids])
-    print("Salesforce Response:", result)
+    combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}" 
+    result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
+
 
     pdf_specsheet_files = []
     for product_id in product_ids:

@@ -226,7 +226,7 @@
             <button id="close-popup-btn" title="Close">&times;</button>
             <div class="card-header">
                 <h2>Send Inquiry</h2>
-                <p class="lead">Have a question about the items in your cart? We're here to help.</p>
+                <p class="lead">Have a question about the items in your list? We're here to help.</p>
             </div>
             <form id="enquiryForm" class="enquiry-form">
                 <div class="form-group">
@@ -250,7 +250,7 @@
                     <label class="form-label" for="company">Company</label>
                 </div>
                 <div class="form-group col-full">
-                    <input class="input" type="text" id="project" name="project" placeholder="">
+                    <input class="input" type="text" id="project" name="project" placeholder="" required>
                     <label class="form-label" for="project">Project</label>
                 </div>
                 <div class="form-group col-full">
@@ -265,7 +265,7 @@
                 <div class="col-full">
                     <div class="checkbox-group">
                         <input type="checkbox" id="req_sample" name="req_sample">
-                        <label for="req_sample">Request Sample</label>
+                        <label style="color:#131313" for="req_sample">I would also like to request a sample</label>
                     </div>
                 </div>
 
@@ -365,24 +365,32 @@
                     payload['password'] = password;
                     payload['account_password'] = password;
                 }
-
                 // console.log("Sending Webhook Payload:", payload);
 
-								function showToast(icon, title) {
-										const Toast = Swal.mixin({
-												toast: true,
-												position: 'top-end',
-												showConfirmButton: false,
-												timer: 4500,
-												timerProgressBar: true
-										});
-										Toast.fire({ icon: icon, title: title });
-								}
-                 showToast('info', 'Processing request...');
+								const Toast = Swal.mixin({
+										toast: true,
+										position: 'top-end',
+										showConfirmButton: false,
+										timer: 3000,
+										timerProgressBar: true
+// 										didOpen: (toast) => {
+// 												toast.addEventListener('mouseenter', Swal.stopTimer)
+// 												toast.addEventListener('mouseleave', Swal.resumeTimer)
+// 										}
+								});
+
+								Toast.fire({
+										icon: 'info',
+										title: 'Processing request...',
+										timer: 0, // Keep open until fetch finishes
+										didOpen: () => {
+												Swal.showLoading();
+										}
+								});
 
                 const response = await fetch('https://app.bigtree-group.com/bt-send-product-enquiry-webhook-v2-1', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', "X-API-Key": window.MySiteSettings.apiKey },
                     body: JSON.stringify(payload)
                 });
 
@@ -488,7 +496,7 @@
             const enquiryButton = checkoutButton.cloneNode(true);
             checkoutButton.style.display = 'none';
             enquiryButton.id = 'send-enquiry-btn';
-            enquiryButton.textContent = 'Send Enquiry';
+            enquiryButton.textContent = 'Send Inquiry';
             enquiryButton.href = '#';
             enquiryButton.style.opacity = '1';
             enquiryButton.style.cursor = 'pointer';
