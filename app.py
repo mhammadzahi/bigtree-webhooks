@@ -78,7 +78,7 @@ async def contact_request_webhook(request: Request):
     result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
     # print("Salesforce Response:", result)
 
-    # if not send_product_enquiry_to_admin(name, email): # or send to salesforce
+    # if not send_product_enquiry_ _admin(name, email): # or send to salesforce
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
 
     return JSONResponse(status_code=200, content={"status": "success"})
@@ -185,7 +185,7 @@ async def product_enquiry_webhook(request: Request):
         project = validated_data.project
         message = validated_data.message
         account_password = validated_data.account_password
-        req_sample = validated_data.req_sample
+        req_sample = validated_data.req_sample # Yes/No
         cart_items = validated_data.cart_items
         product_ids = [item.id for item in cart_items]
 
@@ -195,7 +195,11 @@ async def product_enquiry_webhook(request: Request):
     row = [name, email, phone, company, project, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "enquiries", row)
 
-    # sf_service.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, message=message, sample_request=req_sample, products=[str(pid) for pid in product_ids], timestamp=datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"))
+    # Merge req_sample into message
+    combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
+    
+    result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, message=combined_message, products=[str(pid) for pid in product_ids])
+    print("Salesforce Response:", result)
 
     pdf_specsheet_files = []
     for product_id in product_ids:
