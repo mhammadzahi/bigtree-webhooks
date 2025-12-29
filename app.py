@@ -127,7 +127,6 @@ async def request_sample_webhook(request: Request):
     
     # Combine product_ids and message into other_product_interest field
     other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
-    
     result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
 
     pdf_specsheet_files = []
