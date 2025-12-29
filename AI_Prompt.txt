@@ -1,6 +1,0 @@
-change the logic to generate a product PDF spec sheet HTML for wkhtmltopdf.
-Fetch product specs from the WooCommerce API, remove any spec where the value is n/a, empty, or null, and do not render those rows at all.
-Build the layout using HTML tables only (no Flexbox/Grid).
-If specs are displayed in two columns (Label | Value | Label | Value), rebalance rows after filtering and use colspan when a single spec remains.
-Output final static HTML only (no JS, no CSS hiding).
-The HTML must be deterministic and print-safe for wkhtmltopdf.

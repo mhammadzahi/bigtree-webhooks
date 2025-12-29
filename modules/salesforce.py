@@ -105,20 +105,15 @@ class SalesforceWebToLeadService:
     # ======================================================================
     # 3. Sample Requests
     # ======================================================================
-    def insert_sample_request(self, first_name: str, last_name: str, phone: str, email: str, company: str, project: Optional[str], quantity: Optional[str], product_id: Optional[str], message: Optional[str]) -> Dict:
+    def insert_sample_request(self, first_name: str, last_name: str, email: str, company: str, quantity: Optional[str], other_product_interest: Optional[str]) -> Dict:
         
-        # We merge Quantity/Product ID into the Notes field because the HTML 
-        # provided didn't have specific IDs for Quantity/Product ID.
-        details = f"SAMPLE REQUEST. Qty: {quantity}, Product ID: {product_id}. \nMessage: {message}"
-
         payload = {
             "first_name": first_name,
             "last_name": last_name,
             "email": email,
-            "mobile": phone,
             "company": company,
-            self.FIELD_PROJECT: project,
-            self.FIELD_NOTES: details
+            "00NWS000006nIef": quantity,  # Quantity
+            "00N4I00000EzMsr": other_product_interest  # Other Product Interest
         }
 
         return self._submit(payload)
