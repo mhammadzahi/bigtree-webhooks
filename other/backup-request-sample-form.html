@@ -1,0 +1,303 @@
+<style>
+  :root {
+    --primary: #532A44; --header-color: #532A44; --border-color: #B4AEA7;
+    --text-main: #1f2937; --text-muted: #6b7280; --bg-card: #ffffff; --radius: 16px;
+  }
+  .popup-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; box-sizing: border-box; opacity: 0;
+    visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .popup-overlay.active { opacity: 1; visibility: visible; }
+  .popup-card {
+    width: 600px; max-width: 100%; padding: 30px;
+    background: var(--bg-card); border-radius: var(--radius);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2);
+    position: relative; transform: scale(0.95); transition: transform 0.3s ease;
+  }
+  .popup-overlay.active .popup-card { transform: scale(1); }
+  .popup-close-btn {
+    position: absolute; top: 15px; right: 20px; font-size: 28px;
+    font-weight: bold; color: var(--text-muted); cursor: pointer; line-height: 1;
+  }
+  .popup-close-btn:hover { color: var(--text-main); }
+  .card-header { text-align: center; margin-bottom: 28px; }
+  .popup-card h2 {
+    margin: 0 0 6px 0; font-weight: 700; font-size: 26px;
+    color: var(--header-color); letter-spacing: -0.5px;
+  }
+  .popup-card p.lead {
+    margin: 0; font-weight: 500; color: var(--text-muted);
+    font-size: 15px; line-height: 1.5;
+  }
+  .enquiry-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .col-full { grid-column: span 2; }
+  .form-group { position: relative; }
+  .input, textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 18px 12px 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    outline: none;
+    background: #fff;
+    color: var(--text-main);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  textarea { min-height: 120px; resize: vertical; }
+  .form-label {
+    position: absolute;
+    left: 12px;
+    top: 15px;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: 0.2s ease all;
+    background: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+  }
+  .input:required~.form-label::after, textarea:required~.form-label::after {
+    content: " *"; color: #b91c1c;
+  }
+  .input:focus, textarea:focus {
+    border-color: var(--header-color);
+    box-shadow: 0 0 0 4px rgba(83, 42, 68, 0.1);
+  }
+  
+  .input:focus ~ .form-label,
+  .input:not(:placeholder-shown) ~ .form-label,
+  textarea:focus ~ .form-label,
+  textarea:not(:placeholder-shown) ~ .form-label {
+    top: -8px;
+    left: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--header-color);
+    background: var(--bg-card);
+    padding: 0 4px;
+  }
+  
+  .submit-btn {
+    margin-top: 10px; background: var(--primary); color: #fff;
+    border: none; height: 52px; width: 100%; border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: 0.2s ease; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .submit-btn:hover {
+    background: #3e1f33; transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .submit-btn:disabled { background-color: #a79a9f; cursor: not-allowed; }
+  @media (max-width: 600px) {
+    .enquiry-form { grid-template-columns: 1fr; }
+    .col-full { grid-column: span 1; }
+    .popup-card { padding: 24px; }
+  }
+  .swal2-container {
+    z-index: 99999 !important;
+  }
+</style>
+<div id="request-sample-popup" class="popup-overlay" style="display: none;">
+  <div class="popup-card">
+    <div class="popup-close-btn" onclick="closePopup()">&times;</div>
+    <div class="card-header">
+      <h2>Request Sample</h2>
+      <p class="lead">Fill out the form below and we'll get back to you shortly.</p>
+    </div>
+
+    <form id="enquiryForm" class="enquiry-form" novalidate>
+      <div class="form-group">
+        <input class="input" type="text" id="fname" name="fname" required>
+        <label class="form-label" for="fname">First Name</label>
+      </div>
+      <div class="form-group">
+        <input class="input" type="text" id="lname" name="lname" required>
+        <label class="form-label" for="lname">Last Name</label>
+      </div>
+      <div class="form-group">
+        <input class="input" type="email" id="email" name="email" required>
+        <label class="form-label" for="email">Email Address</label>
+      </div>
+      <div class="form-group">
+        <input class="input" type="tel" id="phone" name="phone" required>
+        <label class="form-label" for="phone">Phone</label>
+      </div>
+      <div class="form-group col-full">
+        <input class="input" type="text" id="company" name="company" required>
+        <label class="form-label" for="company">Company</label>
+      </div>
+      <div class="form-group col-full">
+        <input class="input" type="text" id="project" name="project" required>
+        <label class="form-label" for="project">Project</label>
+      </div>
+      <div class="form-group col-full">
+        <input class="input" type="number" id="qte" name="qte" min="1" value="1" required>
+        <label class="form-label" for="qte">Quantity</label>
+      </div>
+      <div class="form-group col-full">
+        <textarea id="message" name="message"></textarea>
+        <label class="form-label" for="message">Additional thoughts or details...</label>
+      </div>
+      <div class="col-full">
+        <button type="submit" class="submit-btn">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const popup = document.getElementById('request-sample-popup');
+    const requestButtons = document.querySelectorAll('.request-sample-btn');
+    const enquiryForm = document.getElementById('enquiryForm');
+    let currentProductId = null;
+
+    // --- 1. PRE-FILL FORM DATA IF LOGGED IN ---
+    if (typeof bt_vars !== 'undefined' && bt_vars.user_data) {
+        const u = bt_vars.user_data;
+        if(u.fname) document.getElementById('fname').value = u.fname;
+        if(u.lname) document.getElementById('lname').value = u.lname;
+        if(u.email) document.getElementById('email').value = u.email;
+        if(u.phone) document.getElementById('phone').value = u.phone;
+        if(u.company) document.getElementById('company').value = u.company;
+    }
+
+    requestButtons.forEach(button => {
+      button.addEventListener('click', function(event) {
+        event.preventDefault();
+        const parentContainer = this.closest('.elementor-element');
+        if (parentContainer) {
+          const specsheetBtnContainer = parentContainer.nextElementSibling;
+          if (specsheetBtnContainer && specsheetBtnContainer.classList.contains('download-specsheet-btn')) {
+            const specsheetLink = specsheetBtnContainer.querySelector('a');
+            if (specsheetLink && specsheetLink.id) {
+              currentProductId = specsheetLink.id;
+            } else {
+              currentProductId = null;
+              console.log('Specification Sheet link or ID not found.');
+            }
+          }
+        }
+        popup.style.display = 'flex';
+        setTimeout(() => popup.classList.add('active'), 10);
+      });
+    });
+
+    // Helper: Toast Notification
+    function showToast(icon, title) {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        Toast.fire({ icon: icon, title: title });
+    }
+
+    enquiryForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const submitBtn = this.querySelector('.submit-btn');
+        const formData = new FormData(this);
+        
+        // Prepare Base Payload for Webhook
+        const payload = {};
+        formData.forEach((value, key) => { payload[key] = value; });
+        payload.productId = [currentProductId];
+        
+        // Prepare Data for WordPress AJAX
+        formData.append('action', 'bt_process_sample_request');
+        formData.append('nonce', bt_vars.nonce);
+        formData.append('product_id', currentProductId || 0);
+
+        submitBtn.disabled = true;
+
+				// showToast('info', 'Processing request...');
+
+				const Toast = Swal.mixin({
+					toast: true,
+					position: 'top-end',
+					showConfirmButton: false,
+					// timer: 3000,
+					timerProgressBar: true
+				});
+
+				Toast.fire({
+					icon: 'info',
+					title: 'Processing request...',
+					timer: 0,
+					didOpen: () => {
+						Swal.showLoading();
+					}
+				});
+
+        // 1. CALL WORDPRESS AJAX
+        fetch(bt_vars.ajax_url, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(wpResponse => {
+            if (!wpResponse.success) {
+                throw new Error(wpResponse.data.message || 'Something went wrong on the server.');
+            }
+            
+            // --- INJECT PASSWORD INTO WEBHOOK PAYLOAD IF EXISTS ---
+            if (wpResponse.data.account_password) {
+                payload.account_password = wpResponse.data.account_password;
+                // console.log('New account created, password added to payload.');
+            }
+
+            // 2. CALL EXTERNAL WEBHOOK
+            return fetch('https://app.bigtree-group.com/bt-send-request-sample-webhook-v2-1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', "X-API-Key": window.MySiteSettings.apiKey },
+                body: JSON.stringify(payload),
+            });
+        })
+        .then(webhookResponse => {
+             // 3. SUCCESS & REDIRECT
+             showToast('success', 'Order created! Redirecting...');
+             enquiryForm.reset();
+             closePopup();
+             
+             setTimeout(() => {
+                 window.location.href = '/my-account/request-history/';
+             }, 1500);
+        })
+        .catch(error => {
+            showToast('error', error.message);
+            console.error('Error:', error);
+            submitBtn.disabled = false;
+        });
+    });
+
+    popup.addEventListener('click', function(event) {
+      if (event.target === this) {
+        closePopup();
+      }
+    });
+  });
+
+  function closePopup() {
+    const popup = document.getElementById('request-sample-popup');
+    popup.classList.remove('active');
+    setTimeout(() => {
+        popup.style.display = 'none';
+    }, 300);
+  }
+</script>
