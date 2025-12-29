@@ -221,7 +221,6 @@ class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
 
-
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
 async def specsheet_webhook(request: Request):
     api_key = request.headers.get("X-API-Key")
