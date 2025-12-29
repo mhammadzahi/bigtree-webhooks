@@ -105,13 +105,15 @@ class SalesforceWebToLeadService:
     # ======================================================================
     # 3. Sample Requests
     # ======================================================================
-    def insert_sample_request(self, first_name: str, last_name: str, email: str, company: str, quantity: Optional[str], other_product_interest: Optional[str]) -> Dict:
+    def insert_sample_request(self, first_name: str, last_name: str, email: str, company: str, mobile: Optional[str], project: Optional[str], quantity: Optional[str], other_product_interest: Optional[str]) -> Dict:
         
         payload = {
             "first_name": first_name,
             "last_name": last_name,
             "email": email,
             "company": company,
+            "mobile": mobile,
+            "00NWS000006el81": project,  # Project
             "00NWS000006nIef": quantity,  # Quantity
             "00N4I00000EzMsr": other_product_interest  # Other Product Interest
         }
