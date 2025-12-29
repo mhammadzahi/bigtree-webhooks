@@ -165,7 +165,7 @@ class ProductEnquiry(BaseModel):
     phone: str
     company: str
     project: str
-    company_location: str | None = None
+    country: str
     message: str | None = None
     req_sample: str
     cart_items: List[CartItem]
