@@ -32,7 +32,7 @@ def strip_html_tags(text):
 
 
 def generate_specsheet_pdf(product):
-    template_path = 'files/specsheet_template.docx'
+    template_path = 'files/Bigtree_Specsheet template_ALL_25.12.03.docx'
     output_docx = f'files/temp/{product["id"]}_specsheet.docx'
     output_pdf = f'files/temp/{product["id"]}_specsheet.pdf'
 
