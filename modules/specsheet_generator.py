@@ -31,8 +31,54 @@ def strip_html_tags(text):
     return clean.strip()
 
 
+def get_template_by_category(product):
+    """
+    Determine which template to use based on product category.
+    Returns the template file path.
+    """
+    categories = product.get('categories', [])
+    
+    if not categories:
+        return 'files/specsheet-template__ALL.docx'
+    
+    # Get primary category (first category)
+    primary_category = categories[0].get('slug', '').lower()
+    
+    # Check for Furniture subcategories
+    if primary_category == 'furniture' or any(cat.get('slug', '') == 'furniture' for cat in categories):
+        # Check for Seating subcategory
+        for cat in categories:
+            cat_slug = cat.get('slug', '').lower()
+            if cat_slug in ['seating', 'chairs', 'sidechairs', 'sofa']:
+                return 'files/specsheet-template__FURNITURE_SEATING.docx'
+        # Other furniture (Bedroom, Storage, Table, etc.)
+        return 'files/specsheet-template__FURNITURE_OTHERS.docx'
+    
+    # Map category slugs to template files
+    category_template_map = {
+        'fabric': 'files/specsheet-template__FABRIC.docx',
+        'leather': 'files/specsheet-template__LEATHER.docx',
+        'floor-covering': 'files/specsheet-template__FLOOR_COVERING.docx',
+        'wallcovering': 'files/specsheet-template__WALL_COVERING.docx',
+        'wall-covering': 'files/specsheet-template__WALL_COVERING.docx',
+        'fine-art': 'files/specsheet-template__FINE_ART.docx',
+        'lighting': 'files/specsheet-template__LIGHTING.docx',
+        'objects': 'files/specsheet-template__OBJECTS.docx',
+    }
+    
+    # Try to find matching template
+    for cat in categories:
+        cat_slug = cat.get('slug', '').lower()
+        if cat_slug in category_template_map:
+            return category_template_map[cat_slug]
+    
+    # Default template if no match found
+    return 'files/specsheet-template__ALL.docx'
+
+
 def generate_specsheet_pdf(product):
-    template_path = 'files/Bigtree_Specsheet template_ALL_25.12.03.docx'
+    # Select template based on product category
+    template_path = get_template_by_category(product)
     output_docx = f'files/temp/{product["id"]}_specsheet.docx'
     output_pdf = f'files/temp/{product["id"]}_specsheet.pdf'
 
