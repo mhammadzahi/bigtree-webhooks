@@ -170,6 +170,43 @@ class ProductEnquiry(BaseModel):
     cart_items: List[CartItem]
     account_password: str | None = None
 
+def process_product_enquiry(name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password):
+    try:
+        # 1. Append to Google Sheet
+        row = [name, email, phone, company, project, country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        append_row(SHEET_ID, "enquiries", row)
+
+        # 2. Insert into Salesforce
+        combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
+        sf_result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
+        print("Salesforce Response:", sf_result)
+
+        # 3. Generate PDFs
+        pdf_specsheet_files = []
+        for product_id in product_ids:
+            product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+            if product:
+                file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+                pdf_specsheet_files.append(file_path)
+
+        # 4. Send enquiry email
+        if pdf_specsheet_files:
+            send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
+
+        # 5. Send account creation email if password provided
+        if account_password:
+            send_account_creation_email(email, account_password)
+
+        # 6. Clean up generated PDF files
+        for file_path in pdf_specsheet_files:
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(f"Failed to remove file {file_path}: {e}")
+
+    except Exception as e:
+        print(f"Error processing product enquiry for {email}: {e}")
+
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def product_enquiry_webhook(request: Request, background_tasks: BackgroundTasks):
     api_key = request.headers.get("X-API-Key")
@@ -194,34 +231,13 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [name, email, phone, company, project, country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-    row_appended = append_row(SHEET_ID, "enquiries", row)
+    background_tasks.add_task(
+        process_product_enquiry,
+        name, email, phone, company, project, country, message,
+        req_sample, cart_items, product_ids, account_password
+    )
 
-    combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}" # Merge req_sample into message
-    # result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
-
-    # pdf_specsheet_files = []
-    # for product_id in product_ids:
-    #     product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-    #     if not product:
-    #         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
-
-    #     file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)    
-    #     pdf_specsheet_files.append(file_path)
-
-
-    # if not send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
-
-
-    # if account_password: # if created account
-    #     if not send_account_creation_email(email, account_password):
-    #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
-
-    # for file_path in pdf_specsheet_files:
-    #     background_tasks.add_task(os.remove, file_path)
-
-    return JSONResponse(status_code=200, content={"status": "success"})
+    return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
 
 
