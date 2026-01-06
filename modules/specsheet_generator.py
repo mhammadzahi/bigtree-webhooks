@@ -36,22 +36,35 @@ def get_template_by_category(product):
     Determine which template to use based on product category.
     Returns the template file path.
     """
+    print("\n=== TEMPLATE SELECTION DEBUG ===")
+    print(f"Product ID: {product.get('id', 'N/A')}")
+    print(f"Product Name: {product.get('name', 'N/A')}")
+    
     categories = product.get('categories', [])
+    print(f"Categories found: {len(categories)}")
     
     if not categories:
+        print("⚠️ No categories found - using ALL template")
         return 'files/specsheet-template__ALL.docx'
     
     # Get primary category (first category)
     primary_category = categories[0].get('slug', '').lower()
+    print(f"Primary category slug: '{primary_category}'")
+    print(f"All categories: {[(cat.get('name'), cat.get('slug')) for cat in categories]}")
     
     # Check for Furniture subcategories
-    if primary_category == 'furniture' or any(cat.get('slug', '') == 'furniture' for cat in categories):
+    is_furniture = primary_category == 'furniture' or any(cat.get('slug', '') == 'furniture' for cat in categories)
+    if is_furniture:
+        print("✓ Furniture category detected")
         # Check for Seating subcategory
         for cat in categories:
             cat_slug = cat.get('slug', '').lower()
+            print(f"  Checking subcategory: '{cat_slug}'")
             if cat_slug in ['seating', 'chairs', 'sidechairs', 'sofa']:
+                print("✓ Using FURNITURE_SEATING template")
                 return 'files/specsheet-template__FURNITURE_SEATING.docx'
         # Other furniture (Bedroom, Storage, Table, etc.)
+        print("✓ Using FURNITURE_OTHERS template")
         return 'files/specsheet-template__FURNITURE_OTHERS.docx'
     
     # Map category slugs to template files
@@ -69,18 +82,30 @@ def get_template_by_category(product):
     # Try to find matching template
     for cat in categories:
         cat_slug = cat.get('slug', '').lower()
+        print(f"  Checking category: '{cat_slug}'")
         if cat_slug in category_template_map:
-            return category_template_map[cat_slug]
+            template = category_template_map[cat_slug]
+            print(f"✓ Match found! Using template: {template}")
+            return template
     
     # Default template if no match found
+    print("⚠️ No matching template found - using ALL template")
     return 'files/specsheet-template__ALL.docx'
 
 
 def generate_specsheet_pdf(product):
+    print("\n" + "="*50)
+    print("STARTING SPECSHEET PDF GENERATION")
+    print("="*50)
+    
     # Select template based on product category
     template_path = get_template_by_category(product)
     output_docx = f'files/temp/{product["id"]}_specsheet.docx'
     output_pdf = f'files/temp/{product["id"]}_specsheet.pdf'
+    
+    print(f"\nSelected template: {template_path}")
+    print(f"Output DOCX: {output_docx}")
+    print(f"Output PDF: {output_pdf}")
 
     # Helper function to extract meta data by key
     def get_meta_value(meta_data, key, clean_html=False):
@@ -110,15 +135,25 @@ def generate_specsheet_pdf(product):
     brands = product.get('brands', [])
     images = product.get('images', [])
     
+    print(f"\n=== PRODUCT DATA EXTRACTION ===")
+    print(f"Meta data items: {len(meta_data)}")
+    print(f"Attributes: {len(attributes)}")
+    print(f"Categories: {len(categories)}")
+    print(f"Brands: {len(brands)}")
+    print(f"Images: {len(images)}")
+    
     # Load the template to create InlineImage
+    print(f"\nLoading template: {template_path}")
     doc = DocxTemplate(template_path)
+    print("✓ Template loaded successfully")
     
     # Download and prepare image
+    print(f"\n=== IMAGE PROCESSING ===")
     image_placeholder = None
     if images and images[0].get('src'):
         try:
             image_url = images[0].get('src')
-            # print(f"Downloading image from: {image_url}")
+            print(f"Downloading image from: {image_url}")
             response = requests.get(image_url, timeout=10, verify=True)
             response.raise_for_status()
             
@@ -128,9 +163,12 @@ def generate_specsheet_pdf(product):
             # Open image to get dimensions and validate format
             img = Image.open(image_stream)
             img_width, img_height = img.size
+            print(f"Image dimensions: {img_width}x{img_height} pixels")
+            print(f"Image mode: {img.mode}")
             
             # Convert image to RGB if necessary (handles RGBA, P, L, etc.)
             if img.mode not in ('RGB', 'L'):
+                print(f"Converting image from {img.mode} to RGB")
                 img = img.convert('RGB')
             
             # Calculate dimensions to limit height to 300px while maintaining aspect ratio
@@ -139,12 +177,15 @@ def generate_specsheet_pdf(product):
                 # Scale down proportionally
                 scale_factor = max_height_px / img_height
                 new_height_px = max_height_px
+                print(f"Scaling image down: {img_height}px → {new_height_px}px (scale: {scale_factor:.2f})")
             else:
                 # Use original size if already smaller than 300px
                 new_height_px = img_height
+                print(f"Image size OK: {img_height}px (no scaling needed)")
             
             # Convert pixels to inches (96 DPI standard)
             new_height_inches = new_height_px / 96
+            print(f"Final image height: {new_height_inches:.2f} inches")
             
             # Convert image to a format supported by docx (JPEG)
             converted_stream = BytesIO()
@@ -153,11 +194,12 @@ def generate_specsheet_pdf(product):
             
             # Create InlineImage with calculated height (using height parameter maintains aspect ratio)
             image_placeholder = InlineImage(doc, converted_stream, height=Inches(new_height_inches))
-            # print("Image downloaded and processed successfully")
+            print("✓ Image downloaded and processed successfully")
 
         except Exception as e:
-            print(f"Error processing image (attempt 1): {e}")
+            print(f"❌ Error processing image (attempt 1): {e}")
             # Try without SSL verification as fallback
+            print("Retrying without SSL verification...")
             try:
                 response = requests.get(image_url, timeout=10, verify=False)
                 response.raise_for_status()
@@ -187,11 +229,12 @@ def generate_specsheet_pdf(product):
                 converted_stream.seek(0)
                 
                 image_placeholder = InlineImage(doc, converted_stream, height=Inches(new_height_inches))
-                print("Image processed successfully (without SSL verification)")
+                print("✓ Image processed successfully (without SSL verification)")
             except Exception as e2:
-                print(f"Image processing failed completely: {e2}")
+                print(f"❌ Image processing failed completely: {e2}")
                 image_placeholder = ""  # Empty string instead of text
     else:
+        print("⚠️ No images found for product")
         image_placeholder = ""  # Empty string if no image
     
     # Build comprehensive context data
@@ -263,12 +306,18 @@ def generate_specsheet_pdf(product):
     }
 
     # Render and save the document
+    print(f"\n=== DOCUMENT RENDERING ===")
+    print("Rendering template with context data...")
     doc.render(context_data)
+    print(f"Saving DOCX to: {output_docx}")
     doc.save(output_docx)
+    print("✓ DOCX file saved successfully")
     
     # Convert DOCX to PDF using LibreOffice
+    print(f"\n=== PDF CONVERSION ===")
     # Detect OS and set appropriate LibreOffice path
     system = platform.system()
+    print(f"Detected OS: {system}")
     
     if system == 'Darwin':  # macOS
         soffice_path = '/Applications/LibreOffice.app/Contents/MacOS/soffice'
@@ -279,21 +328,40 @@ def generate_specsheet_pdf(product):
     else:
         soffice_path = 'libreoffice'
     
+    print(f"LibreOffice path: {soffice_path}")
+    print("Converting DOCX to PDF...")
+    
     try:
-        subprocess.run([
+        result = subprocess.run([
             soffice_path,
             '--headless',
             '--convert-to', 'pdf',
             '--outdir', os.path.dirname(output_pdf),
             output_docx
         ], check=True, capture_output=True)
+        
+        print("✓ PDF conversion successful")
+        if result.stdout:
+            print(f"LibreOffice output: {result.stdout.decode()}")
 
     except FileNotFoundError:
+        print("❌ LibreOffice not found")
         raise RuntimeError("LibreOffice is not installed. Please install it: "
                           "macOS: brew install --cask libreoffice | "
                           "Linux: sudo apt-get install libreoffice")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ PDF conversion failed: {e}")
+        if e.stderr:
+            print(f"Error details: {e.stderr.decode()}")
+        raise
     
     # Clean up the temporary DOCX file
+    print(f"\n=== CLEANUP ===")
     if os.path.exists(output_docx):
+        print(f"Removing temporary DOCX: {output_docx}")
         os.remove(output_docx)
+        print("✓ Cleanup complete")
+    
+    print(f"\n✅ PDF generated successfully: {output_pdf}")
+    print("="*50 + "\n")
     return output_pdf
