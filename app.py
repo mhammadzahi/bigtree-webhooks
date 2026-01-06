@@ -131,16 +131,20 @@ async def request_sample_webhook(request: Request, background_tasks: BackgroundT
     result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
 
     async def fetch_and_generate(product_id):
-        product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-        if not product:
+        try:
+            product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+            if not product:
+                return None
+            file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+            return file_path
+        except Exception as e:
+            print(f"Error generating PDF for product {product_id}: {e}")
             return None
-        file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
-        return file_path
     
     results = await asyncio.gather(*[fetch_and_generate(pid) for pid in product_ids])
     
     if None in results:
-        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found or PDF generation failed"})
     
     pdf_specsheet_files = results
 
@@ -206,18 +210,23 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
     result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
 
     async def fetch_and_generate(product_id):
-        product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-        if not product:
+        try:
+            product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+            if not product:
+                return None
+            file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+            return file_path
+        except Exception as e:
+            print(f"Error generating PDF for product {product_id}: {e}")
             return None
-        file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
-        return file_path
     
     results = await asyncio.gather(*[fetch_and_generate(pid) for pid in product_ids])
     
-    if None in results:
-        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+    # Filter out None values (failed PDFs) and only use successfully generated ones
+    pdf_specsheet_files = [f for f in results if f is not None]
     
-    pdf_specsheet_files = results
+    if not pdf_specsheet_files:
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to generate any PDFs"})
 
     if not send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
