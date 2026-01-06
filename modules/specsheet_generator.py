@@ -32,17 +32,17 @@ def strip_html_tags(text):
     return clean.strip()
 
 
-# Initialize WooCommerce API (will be set by get_root_parent_category)
+# Global WooCommerce API instance
 wcapi = None
 
-def init_woocommerce_api():
-    """Initialize WooCommerce API with credentials from environment"""
+def init_woocommerce_api(url, consumer_key, consumer_secret):
+    """Initialize WooCommerce API with provided credentials"""
     global wcapi
     if wcapi is None:
         wcapi = API(
-            url=os.getenv('WOOCOMMERCE_URL'),
-            consumer_key=os.getenv('WOOCOMMERCE_KEY'),
-            consumer_secret=os.getenv('WOOCOMMERCE_SECRET'),
+            url=url,
+            consumer_key=consumer_key,
+            consumer_secret=consumer_secret,
             version="wc/v3",
             timeout=10
         )
@@ -53,10 +53,15 @@ def get_root_parent_category(category_id):
     Recursively find the root parent category by querying the WooCommerce API.
     Returns the root category object.
     """
+    global wcapi
+    
+    if wcapi is None:
+        print("  ⚠️ WooCommerce API not initialized, cannot fetch parent category")
+        return None
+    
     try:
-        api = init_woocommerce_api()
         # Get category details from API
-        response = api.get(f"products/categories/{category_id}")
+        response = wcapi.get(f"products/categories/{category_id}")
         
         if response.status_code != 200:
             print(f"  ❌ API error fetching category {category_id}: {response.status_code}")
@@ -79,12 +84,16 @@ def get_root_parent_category(category_id):
         return None
 
 
-def get_template_by_category(product):
+def get_template_by_category(product, wc_url=None, wc_key=None, wc_secret=None):
     """
     Determine which template to use based on product category.
     Traverses the category hierarchy to find the root parent category.
     Returns the template file path.
     """
+    # Initialize WooCommerce API if credentials provided
+    if wc_url and wc_key and wc_secret:
+        init_woocommerce_api(wc_url, wc_key, wc_secret)
+    
     print("\n=== TEMPLATE SELECTION DEBUG ===")
     print(f"Product ID: {product.get('id', 'N/A')}")
     print(f"Product Name: {product.get('name', 'N/A')}")
@@ -152,13 +161,13 @@ def get_template_by_category(product):
     return 'files/specsheet-template__ALL.docx'
 
 
-def generate_specsheet_pdf(product):
+def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
     print("\n" + "="*50)
     print("STARTING SPECSHEET PDF GENERATION")
     print("="*50)
     
     # Select template based on product category
-    template_path = get_template_by_category(product)
+    template_path = get_template_by_category(product, wc_url, wc_key, wc_secret)
     output_docx = f'files/temp/{product["id"]}_specsheet.docx'
     output_pdf = f'files/temp/{product["id"]}_specsheet.pdf'
     

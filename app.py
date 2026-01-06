@@ -136,7 +136,7 @@ async def request_sample_webhook(request: Request):
         if not product:
             return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-        file_path = generate_specsheet_pdf(product)    
+        file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)    
         pdf_specsheet_files.append(file_path)
 
     # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
@@ -208,7 +208,7 @@ async def product_enquiry_webhook(request: Request):
         if not product:
             return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-        file_path = generate_specsheet_pdf(product)    
+        file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)    
         pdf_specsheet_files.append(file_path)
 
 
@@ -252,7 +252,7 @@ async def specsheet_webhook(request: Request):
     row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
     row_appended = append_row(SHEET_ID, "specsheets", row)
 
-    file_path = generate_specsheet_pdf(product)
+    file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
     if not send_single_product_specsheet_email(email, file_path):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
