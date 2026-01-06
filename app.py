@@ -98,8 +98,44 @@ class RequestSample(BaseModel):
     qte: str
     message: str | None = None
 
+def process_request_sample(first_name, last_name, email, phone, company, project, country, quantity, message, product_ids, account_password):
+    try:
+        # 1. Append to Google Sheet
+        row = [first_name, last_name, phone, email, company, project, country, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        append_row(SHEET_ID, "sample_requests", row)
+        
+        # 2. Insert into Salesforce
+        other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
+        sf_result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
+        print("Salesforce Response:", sf_result)
 
-@app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
+        # 3. Generate PDFs
+        pdf_specsheet_files = []
+        for product_id in product_ids:
+            product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+            if product:
+                file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+                pdf_specsheet_files.append(file_path)
+
+        # 4. Send request sample email
+        if pdf_specsheet_files:
+            send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
+
+        # 5. Send account creation email if password provided
+        if account_password:
+            send_account_creation_email(email, account_password)
+
+        # 6. Clean up generated PDF files
+        for file_path in pdf_specsheet_files:
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(f"Failed to remove file {file_path}: {e}")
+
+    except Exception as e:
+        print(f"Error processing sample request for {email}: {e}")
+
+@app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample --  -- [single product page] 
 async def request_sample_webhook(request: Request, background_tasks: BackgroundTasks):
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
@@ -123,34 +159,14 @@ async def request_sample_webhook(request: Request, background_tasks: BackgroundT
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [first_name, last_name, phone, email, company, project, country, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-    row_appended = append_row(SHEET_ID, "sample_requests", row)
-    
-    # Combine product_ids and message into other_product_interest field
-    other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
-    result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
+    # Add all processing to background task
+    background_tasks.add_task(
+        process_request_sample,
+        first_name, last_name, email, phone, company, project, country,
+        quantity, message, product_ids, account_password
+    )
 
-    pdf_specsheet_files = []
-    for product_id in product_ids:
-        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-
-        if not product:
-            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
-
-        file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)    
-        pdf_specsheet_files.append(file_path)
-
-    # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
-
-    # if account_password:
-    #     if not send_account_creation_email(email, account_password):
-    #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
-
-    for file_path in pdf_specsheet_files:
-        background_tasks.add_task(os.remove, file_path)
-
-    return JSONResponse(status_code=200, content={"status": "success"})
+    return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
 
 
