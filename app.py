@@ -35,6 +35,9 @@ app.add_middleware(
 
 sf = SalesforceWebToLeadService(debug_mode=True, debug_email="mzahi@bigtree-group.com")
 
+# Semaphore to limit concurrent LibreOffice conversions (prevents race conditions)
+libreoffice_semaphore = asyncio.Semaphore(1)
+
 
 
 
@@ -135,7 +138,9 @@ async def request_sample_webhook(request: Request, background_tasks: BackgroundT
             product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
             if not product:
                 return None
-            file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+            # Use semaphore to prevent concurrent LibreOffice conversions
+            async with libreoffice_semaphore:
+                file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
             return file_path
         except Exception as e:
             print(f"Error generating PDF for product {product_id}: {e}")
@@ -214,7 +219,9 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
             product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
             if not product:
                 return None
-            file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+            # Use semaphore to prevent concurrent LibreOffice conversions
+            async with libreoffice_semaphore:
+                file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
             return file_path
         except Exception as e:
             print(f"Error generating PDF for product {product_id}: {e}")
