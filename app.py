@@ -9,7 +9,7 @@ from modules.google_sheet_service import append_row
 from modules.woocommerce_service import get_product
 from modules.salesforce import SalesforceWebToLeadService
 from modules.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_account_creation_email
-import uvicorn, os, json
+import uvicorn, os, json, asyncio
 from typing import List
 from datetime import datetime, timezone, timedelta
 
@@ -100,7 +100,7 @@ class RequestSample(BaseModel):
 
 
 @app.post("/bt-send-request-sample-webhook-v2-1")#4. Request Sample -- ??? -- [single product page] 
-async def request_sample_webhook(request: Request):
+async def request_sample_webhook(request: Request, background_tasks: BackgroundTasks):
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -130,15 +130,19 @@ async def request_sample_webhook(request: Request):
     other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
     result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
 
-    pdf_specsheet_files = []
-    for product_id in product_ids:
-        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-
+    async def fetch_and_generate(product_id):
+        product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
         if not product:
-            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
-
-        file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)    
-        pdf_specsheet_files.append(file_path)
+            return None
+        file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+        return file_path
+    
+    results = await asyncio.gather(*[fetch_and_generate(pid) for pid in product_ids])
+    
+    if None in results:
+        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+    
+    pdf_specsheet_files = results
 
     # if not send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL):
     #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send sample request email"})
@@ -148,8 +152,7 @@ async def request_sample_webhook(request: Request):
     #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
 
     for file_path in pdf_specsheet_files:
-        os.remove(file_path)
-
+        background_tasks.add_task(os.remove, file_path)
 
     return JSONResponse(status_code=200, content={"status": "success"})
 
@@ -160,7 +163,7 @@ class CartItem(BaseModel):
     quantity: int
 
 class ProductEnquiry(BaseModel):
-    name: str # fname + lname
+    name: str
     email: EmailStr
     phone: str
     company: str
@@ -172,7 +175,7 @@ class ProductEnquiry(BaseModel):
     account_password: str | None = None
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
-async def product_enquiry_webhook(request: Request):
+async def product_enquiry_webhook(request: Request, background_tasks: BackgroundTasks):
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -202,26 +205,30 @@ async def product_enquiry_webhook(request: Request):
     combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}" 
     result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
 
-
-    pdf_specsheet_files = []
-    for product_id in product_ids:
-        product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+    async def fetch_and_generate(product_id):
+        product = await asyncio.to_thread(get_product, store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
         if not product:
-            return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+            return None
+        file_path = await asyncio.to_thread(generate_specsheet_pdf, product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+        return file_path
+    
+    results = await asyncio.gather(*[fetch_and_generate(pid) for pid in product_ids])
+    
+    if None in results:
+        return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
+    
+    pdf_specsheet_files = results
 
-        file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)    
-        pdf_specsheet_files.append(file_path)
+    if not send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL):
+        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
 
 
-    # if not send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL):
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send enquiry email"})
-
-    # if account_password:
+    # if account_password: # if created account
     #     if not send_account_creation_email(email, account_password):
     #         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send account creation email"})
 
     for file_path in pdf_specsheet_files:
-        os.remove(file_path)
+        background_tasks.add_task(os.remove, file_path)
 
     return JSONResponse(status_code=200, content={"status": "success"})
 
