@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, Request
+from fastapi import FastAPI, Response, status, Request, FileResponse, BackgroundTasks
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -231,7 +231,7 @@ class SpecSheetWebhook(BaseModel):
     email: EmailStr
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
-async def specsheet_webhook(request: Request):
+async def specsheet_webhook(request: Request, background_tasks: BackgroundTasks):
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -256,18 +256,11 @@ async def specsheet_webhook(request: Request):
     if not send_single_product_specsheet_email(email, file_path):
         return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
 
-    os.remove(file_path)
-
-    # with open(f'product_{product["id"]}_data.json', 'w') as f:
-    #    json.dump(product, f, indent=2)
+    background_tasks.add_task(os.remove, file_path)
     
-
-    # response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
-    # response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
-    # return response
-
-    return JSONResponse(status_code=200, content={"status": "success"})
-
+    response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
+    response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+    return response
 
 
 class NewsletterWebhook(BaseModel):
