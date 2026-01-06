@@ -240,7 +240,7 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
                 img = img.convert('RGB')
             
             # Calculate dimensions to limit height to 300px while maintaining aspect ratio
-            max_height_px = 300
+            max_height_px = 342.42519685
             if img_height > max_height_px:
                 # Scale down proportionally
                 scale_factor = max_height_px / img_height
@@ -281,8 +281,8 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
                 if img.mode not in ('RGB', 'L'):
                     img = img.convert('RGB')
                 
-                # Calculate dimensions to limit height to 300px while maintaining aspect ratio
-                max_height_px = 300
+                # Calculate dimensions to limit height to 342.42519685px while maintaining aspect ratio
+                max_height_px = 342.42519685
                 if img_height > max_height_px:
                     new_height_px = max_height_px
                 else:
