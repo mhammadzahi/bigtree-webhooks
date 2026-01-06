@@ -67,65 +67,57 @@ def get_template_by_category(product):
     categories_info = [(cat.get('name'), cat.get('slug'), f"parent={cat.get('parent', 0)}") for cat in categories]
     print(f"All categories: {categories_info}")
     
-    # Find the parent (root) category - the one with parent=0 or highest in hierarchy
-    parent_categories = [cat for cat in categories if cat.get('parent', 0) == 0]
-    
-    if parent_categories:
-        # Use the first parent category found
-        parent_category = parent_categories[0]
-        print(f"Root parent category found: {parent_category.get('name')} (slug: {parent_category.get('slug')})")
-    else:
-        # If no parent=0 found, find the one with the lowest parent ID (closest to root)
-        # Sort by parent ID and take the first one
-        sorted_cats = sorted(categories, key=lambda x: x.get('parent', 999999))
-        parent_category = sorted_cats[0]
-        print(f"Using category with lowest parent ID: {parent_category.get('name')} (slug: {parent_category.get('slug')}, parent={parent_category.get('parent', 0)})")
-    
-    parent_slug = parent_category.get('slug', '').lower()
-    parent_name = parent_category.get('name', '').lower()
-    
-    # Map category names/slugs to template files (using name for matching, not slug)
-    category_template_map = {
+    # Map of known parent category names to template files
+    # These are the actual parent categories from WooCommerce
+    known_parent_categories = {
         'fabric': 'files/specsheet-template__FABRIC.docx',
         'leather': 'files/specsheet-template__LEATHER.docx',
         'floor covering': 'files/specsheet-template__FLOOR_COVERING.docx',
-        'floor-covering': 'files/specsheet-template__FLOOR_COVERING.docx',
         'wallcovering': 'files/specsheet-template__WALL_COVERING.docx',
         'wall covering': 'files/specsheet-template__WALL_COVERING.docx',
         'fine art': 'files/specsheet-template__FINE_ART.docx',
-        'fine-art': 'files/specsheet-template__FINE_ART.docx',
         'lighting': 'files/specsheet-template__LIGHTING.docx',
         'objects': 'files/specsheet-template__OBJECTS.docx',
         'furniture': None,  # Special handling below
     }
     
-    # Check for Furniture category with special subcategory handling
-    if 'furniture' in parent_name or 'furniture' in parent_slug:
-        print("✓ Furniture parent category detected")
-        # Check all categories (including subcategories) for seating-related ones
-        for cat in categories:
-            cat_name = cat.get('name', '').lower()
-            cat_slug = cat.get('slug', '').lower()
-            print(f"  Checking subcategory: {cat.get('name')} (slug: {cat_slug})")
-            if any(keyword in cat_name or keyword in cat_slug for keyword in ['seating', 'chair', 'sofa']):
-                print("✓ Using FURNITURE_SEATING template")
-                return 'files/specsheet-template__FURNITURE_SEATING.docx'
-        # Other furniture (Bedroom, Storage, Table, etc.)
-        print("✓ Using FURNITURE_OTHERS template")
-        return 'files/specsheet-template__FURNITURE_OTHERS.docx'
+    # Search through ALL categories to find which one matches our known parent categories
+    print("\nSearching for matching parent category...")
+    matched_category = None
+    matched_template = None
     
-    # Try to match parent category name first, then slug
-    print(f"Matching parent category name: '{parent_name}'")
-    if parent_name in category_template_map and category_template_map[parent_name]:
-        template = category_template_map[parent_name]
-        print(f"✓ Parent category name matched! Using template: {template}")
-        return template
+    for cat in categories:
+        cat_name = cat.get('name', '').lower()
+        cat_slug = cat.get('slug', '').lower()
+        print(f"  Checking: {cat.get('name')} (slug: {cat_slug})")
+        
+        # Check for Furniture first (needs special subcategory handling)
+        if cat_name == 'furniture':
+            print("✓ Furniture category detected")
+            matched_category = cat
+            # Check all categories (including subcategories) for seating-related ones
+            for subcat in categories:
+                subcat_name = subcat.get('name', '').lower()
+                subcat_slug = subcat.get('slug', '').lower()
+                print(f"    Checking furniture subcategory: {subcat.get('name')}")
+                if any(keyword in subcat_name or keyword in subcat_slug for keyword in ['seating', 'chair', 'sofa']):
+                    print("✓ Using FURNITURE_SEATING template")
+                    return 'files/specsheet-template__FURNITURE_SEATING.docx'
+            # Other furniture (Bedroom, Storage, Table, etc.)
+            print("✓ Using FURNITURE_OTHERS template")
+            return 'files/specsheet-template__FURNITURE_OTHERS.docx'
+        
+        # Check if this category name matches any known parent category
+        if cat_name in known_parent_categories and known_parent_categories[cat_name]:
+            matched_category = cat
+            matched_template = known_parent_categories[cat_name]
+            print(f"✓ Match found! {cat.get('name')} → {matched_template}")
+            return matched_template
     
-    print(f"Matching parent category slug: '{parent_slug}'")
-    if parent_slug in category_template_map and category_template_map[parent_slug]:
-        template = category_template_map[parent_slug]
-        print(f"✓ Parent category slug matched! Using template: {template}")
-        return template
+    # If no match found by exact name, log all categories for debugging
+    print("\nNo exact match found. Searched categories:")
+    for cat in categories:
+        print(f"  - {cat.get('name')} (slug: {cat.get('slug')})")
     
     # Default template if no match found
     print("⚠️ No matching template found - using ALL template")
