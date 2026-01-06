@@ -64,7 +64,8 @@ def get_template_by_category(product):
         return 'files/specsheet-template__ALL.docx'
     
     # Display all categories with their hierarchy info
-    print(f"All categories: {[(cat.get('name'), cat.get('slug'), f\"parent={cat.get('parent', 0)}\") for cat in categories]}")
+    categories_info = [(cat.get('name'), cat.get('slug'), f"parent={cat.get('parent', 0)}") for cat in categories]
+    print(f"All categories: {categories_info}")
     
     # Find the parent (root) category - the one with parent=0 or highest in hierarchy
     parent_categories = [cat for cat in categories if cat.get('parent', 0) == 0]
