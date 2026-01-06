@@ -26,10 +26,27 @@ def strip_html_tags(text):
     clean = clean.replace('\\n', '\n')
     # Clean up multiple spaces but preserve newlines
     clean = re.sub(r' +', ' ', clean)
-    # Remove excessive newlines (more than 2)
+    # Remove excessive newlines (more than 2 consecutive newlines)
     clean = re.sub(r'\n{3,}', '\n\n', clean)
+    # Remove trailing newlines at the end of each line
+    clean = re.sub(r'\n\s*\n', '\n\n', clean)
+    # Remove leading/trailing whitespace on each line
+    lines = clean.split('\n')
+    lines = [line.strip() for line in lines]
+    # Remove empty lines at the start and end, keep max 1 blank line between content
+    cleaned_lines = []
+    prev_empty = False
+    for line in lines:
+        if not line:
+            if not prev_empty and cleaned_lines:  # Allow one blank line
+                cleaned_lines.append(line)
+            prev_empty = True
+        else:
+            cleaned_lines.append(line)
+            prev_empty = False
     
-    return clean.strip()
+    # Join and strip final result
+    return '\n'.join(cleaned_lines).strip()
 
 
 # Global WooCommerce API instance
