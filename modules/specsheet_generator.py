@@ -3,6 +3,7 @@ from docx.shared import Inches, Mm
 import subprocess, re, os, requests, platform
 from io import BytesIO
 from PIL import Image
+from woocommerce import API
 
 
 
@@ -31,19 +32,51 @@ def strip_html_tags(text):
     return clean.strip()
 
 
-def get_parent_category(category):
+# Initialize WooCommerce API (will be set by get_root_parent_category)
+wcapi = None
+
+def init_woocommerce_api():
+    """Initialize WooCommerce API with credentials from environment"""
+    global wcapi
+    if wcapi is None:
+        wcapi = API(
+            url=os.getenv('WOOCOMMERCE_URL'),
+            consumer_key=os.getenv('WOOCOMMERCE_KEY'),
+            consumer_secret=os.getenv('WOOCOMMERCE_SECRET'),
+            version="wc/v3",
+            timeout=10
+        )
+    return wcapi
+
+def get_root_parent_category(category_id):
     """
-    Traverse up the category hierarchy to find the root/parent category.
-    Returns the parent category object or the category itself if it's already a parent.
+    Recursively find the root parent category by querying the WooCommerce API.
+    Returns the root category object.
     """
-    # If category has no parent (parent=0 or parent not set), it's already a parent category
-    parent_id = category.get('parent', 0)
-    if parent_id == 0:
-        return category
-    
-    # If the category object doesn't have parent info embedded, return it as is
-    # (The parent traversal would need to be done via API calls, which we'll handle differently)
-    return category
+    try:
+        api = init_woocommerce_api()
+        # Get category details from API
+        response = api.get(f"products/categories/{category_id}")
+        
+        if response.status_code != 200:
+            print(f"  ❌ API error fetching category {category_id}: {response.status_code}")
+            return None
+            
+        category = response.json()
+        parent_id = category.get('parent', 0)
+        
+        # If no parent, this IS the root category
+        if parent_id == 0:
+            print(f"  ✓ Found root category: {category.get('name')} (ID: {category_id})")
+            return category
+        
+        # Otherwise, recursively check the parent
+        print(f"  → Category '{category.get('name')}' has parent ID {parent_id}, checking parent...")
+        return get_root_parent_category(parent_id)
+        
+    except Exception as e:
+        print(f"  ❌ Error fetching category {category_id}: {e}")
+        return None
 
 
 def get_template_by_category(product):
@@ -63,12 +96,11 @@ def get_template_by_category(product):
         print("⚠️ No categories found - using ALL template")
         return 'files/specsheet-template__ALL.docx'
     
-    # Display all categories with their hierarchy info
-    categories_info = [(cat.get('name'), cat.get('slug'), f"parent={cat.get('parent', 0)}") for cat in categories]
+    # Display all categories
+    categories_info = [(cat.get('name'), cat.get('id')) for cat in categories]
     print(f"All categories: {categories_info}")
     
     # Map of known parent category names to template files
-    # These are the actual parent categories from WooCommerce
     known_parent_categories = {
         'fabric': 'files/specsheet-template__FABRIC.docx',
         'leather': 'files/specsheet-template__LEATHER.docx',
@@ -81,43 +113,39 @@ def get_template_by_category(product):
         'furniture': None,  # Special handling below
     }
     
-    # Search through ALL categories to find which one matches our known parent categories
-    print("\nSearching for matching parent category...")
-    matched_category = None
-    matched_template = None
+    # Use API to find the root parent category
+    print("\nFinding root parent category via API...")
+    first_category_id = categories[0].get('id')
+    print(f"Starting with category ID: {first_category_id} ({categories[0].get('name')})")
     
-    for cat in categories:
-        cat_name = cat.get('name', '').lower()
-        cat_slug = cat.get('slug', '').lower()
-        print(f"  Checking: {cat.get('name')} (slug: {cat_slug})")
-        
-        # Check for Furniture first (needs special subcategory handling)
-        if cat_name == 'furniture':
-            print("✓ Furniture category detected")
-            matched_category = cat
-            # Check all categories (including subcategories) for seating-related ones
-            for subcat in categories:
-                subcat_name = subcat.get('name', '').lower()
-                subcat_slug = subcat.get('slug', '').lower()
-                print(f"    Checking furniture subcategory: {subcat.get('name')}")
-                if any(keyword in subcat_name or keyword in subcat_slug for keyword in ['seating', 'chair', 'sofa']):
-                    print("✓ Using FURNITURE_SEATING template")
-                    return 'files/specsheet-template__FURNITURE_SEATING.docx'
-            # Other furniture (Bedroom, Storage, Table, etc.)
-            print("✓ Using FURNITURE_OTHERS template")
-            return 'files/specsheet-template__FURNITURE_OTHERS.docx'
-        
-        # Check if this category name matches any known parent category
-        if cat_name in known_parent_categories and known_parent_categories[cat_name]:
-            matched_category = cat
-            matched_template = known_parent_categories[cat_name]
-            print(f"✓ Match found! {cat.get('name')} → {matched_template}")
-            return matched_template
+    root_category = get_root_parent_category(first_category_id)
     
-    # If no match found by exact name, log all categories for debugging
-    print("\nNo exact match found. Searched categories:")
-    for cat in categories:
-        print(f"  - {cat.get('name')} (slug: {cat.get('slug')})")
+    if not root_category:
+        print("⚠️ Could not determine root category via API - using ALL template")
+        return 'files/specsheet-template__ALL.docx'
+    
+    root_name = root_category.get('name', '').lower()
+    print(f"\n✓ Root parent category: {root_category.get('name')}")
+    
+    # Check for Furniture (needs special subcategory handling)
+    if root_name == 'furniture':
+        print("✓ Furniture category detected, checking subcategories...")
+        # Check all product categories for seating-related ones
+        for cat in categories:
+            cat_name = cat.get('name', '').lower()
+            cat_slug = cat.get('slug', '').lower()
+            if any(keyword in cat_name or keyword in cat_slug for keyword in ['seating', 'chair', 'sofa']):
+                print(f"  ✓ Found seating subcategory: {cat.get('name')}")
+                print("✓ Using FURNITURE_SEATING template")
+                return 'files/specsheet-template__FURNITURE_SEATING.docx'
+        print("✓ Using FURNITURE_OTHERS template")
+        return 'files/specsheet-template__FURNITURE_OTHERS.docx'
+    
+    # Check if root category matches known categories
+    if root_name in known_parent_categories and known_parent_categories[root_name]:
+        template = known_parent_categories[root_name]
+        print(f"✓ Match found! {root_category.get('name')} → {template}")
+        return template
     
     # Default template if no match found
     print("⚠️ No matching template found - using ALL template")
