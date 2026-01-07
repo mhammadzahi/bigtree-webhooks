@@ -186,7 +186,7 @@ class ProductEnquiry(BaseModel):
     cart_items: List[CartItem]
     account_password: str | None = None
 
-def process_product_enquiry(name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password):
+def process_enquiry(name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password):
     try:
         # 1. Append to Google Sheet
         row = [name, email, phone, company, project, country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
@@ -248,7 +248,7 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
     background_tasks.add_task(
-        process_product_enquiry,
+        process_enquiry,
         name, email, phone, company, project, country, message,
         req_sample, cart_items, product_ids, account_password
     )
@@ -260,6 +260,20 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
 class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
+
+def process_specsheet(name, email, product_id, file_path):
+    try:
+        row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        append_row(SHEET_ID, "specsheets", row)
+        send_single_product_specsheet_email(email, file_path)
+        try:
+            os.remove(file_path)
+
+        except Exception as e:
+            print(f"Failed to remove file. {e}")
+
+    except Exception as e:
+        print(f"Error processing specsheet. {e}")
 
 @app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
 async def specsheet_webhook(request: Request, background_tasks: BackgroundTasks):
@@ -280,43 +294,38 @@ async def specsheet_webhook(request: Request, background_tasks: BackgroundTasks)
     if not product:
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
-    row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-    row_appended = append_row(SHEET_ID, "specsheets", row)
-
     file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
-    if not send_single_product_specsheet_email(email, file_path):
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send specsheet email"})
+    background_tasks.add_task(process_specsheet, name, email, product_id, file_path)
 
-    background_tasks.add_task(os.remove, file_path)
-    
     response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
     response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
     return response
 
 
+
 class NewsletterWebhook(BaseModel):
     Email: EmailStr
 
-@app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")#1. Newsletter -- done -- [footer]
-async def newsletter_webhook(request: Request):
-    # api_key = request.headers.get("X-API-Key")
-    # if not api_key or api_key != API_KEY:
-    #     return JSONResponse(status_code=422, content={"status": "fail", "detail": "Unauthorized"})
-    
+def process_newsletter(name, email):
+    try:
+        row = [name, email, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        append_row(SHEET_ID, "subscribers", row)
+
+    except Exception as e:
+        print(f"Error processing newsletter subscription for {email}: {e}")
+
+@app.post("/bigtree-newsletter-email-webhook-v2-1-webhook")
+async def newsletter_webhook(request: Request, background_tasks: BackgroundTasks):
     form_data = await request.form()
     try:
         validated_data = NewsletterWebhook.model_validate(dict(form_data))
         email = validated_data.Email
-        name = form_data.get("Name", "")
+        name = form_data.get('Name', '')
 
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid or missing email field"})
 
-    row = [name, email, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-    success = append_row(SHEET_ID, "subscribers", row)
-    if not success:
-        return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to append row to Google Sheet"})
-
+    background_tasks.add_task(process_newsletter, name, email)
     return Response(status_code=status.HTTP_200_OK)
 
 
