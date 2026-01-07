@@ -122,8 +122,8 @@ def process_request_sample(first_name, last_name, email, phone, company, project
         #     send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 5. Send account creation email if password provided
-        if account_password:
-            send_account_creation_email(email, account_password)
+        # if account_password:
+        #     send_account_creation_email(email, account_password)
 
         # 6. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
@@ -210,8 +210,8 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
         #     send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 5. Send account creation email if password provided
-        if account_password:
-            send_account_creation_email(email, account_password)
+        # if account_password:
+            # send_account_creation_email(email, account_password)
 
         # 6. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
