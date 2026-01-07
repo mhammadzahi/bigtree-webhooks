@@ -53,7 +53,6 @@ class ContactRequest(BaseModel):
 
 def process_contact_request(fname, lname, email, phone, company, project, project_location, message, src):
     try:
-        print(project_location)
         row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "contact", row)
         
@@ -85,6 +84,7 @@ async def contact_request_webhook(request: Request, background_tasks: Background
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
+    print(project_location)
     background_tasks.add_task(process_contact_request, fname, lname, email, phone, company, project, project_location, message, src)
     return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
