@@ -233,7 +233,7 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
-    
+
     payload = await request.json()
     try:
         validated_data = ProductEnquiry.model_validate(payload)
