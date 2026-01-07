@@ -51,8 +51,19 @@ class ContactRequest(BaseModel):
     message: str | None = None
     src: str | None = None
 
+def process_contact_request(fname, lname, email, phone, company, project, project_location, message, src):
+    try:
+        row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        append_row(SHEET_ID, "contact", row)
+        
+        sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
+        print("Salesforce Response:", sf_result)
+
+    except Exception as e:
+        print(f"Error processing contact request for {email}: {e}")
+
 @app.post("/bt-contact-webhook-v2-1")#5. Contact Request -- done -- [contact page]
-async def contact_request_webhook(request: Request):
+async def contact_request_webhook(request: Request, background_tasks: BackgroundTasks):
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
@@ -73,16 +84,9 @@ async def contact_request_webhook(request: Request):
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-    row_appended = append_row(SHEET_ID, "contact", row)
+    background_tasks.add_task(process_contact_request, fname, lname, email, phone, company, project, project_location, message, src)
+    return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
-    result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
-    # print("Salesforce Response:", result)
-
-    # if not send_product_enquiry_ _admin(name, email): # or send to salesforce
-    #     return JSONResponse(status_code=500, content={"status": "fail", "detail": "Failed to send contact request email to admin"})
-
-    return JSONResponse(status_code=200, content={"status": "success"})
 
 
 class RequestSample(BaseModel):
