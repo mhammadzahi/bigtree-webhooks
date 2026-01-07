@@ -57,15 +57,15 @@ class SalesforceWebToLeadService:
     # ======================================================================
     # 1. Contact Form (Directly maps to your HTML)
     # ======================================================================
-    def insert_contact_form(self, first_name: str, last_name: str, email: str, mobile: str, company: str, project: Optional[str], general_notes: Optional[str]) -> Dict:
+    def insert_contact_form(self, first_name: str, last_name: str, email: str, mobile: str, company: str, project: str, country_code: str, general_notes: Optional[str]) -> Dict:
         
         payload = {
             "first_name": first_name,
             "last_name": last_name,
             "email": email,
-            "mobile": mobile,         # HTML used 'mobile', standard API often uses 'phone'
+            "mobile": mobile,
             "company": company,
-            # "country_code": country_code, # e.g. 'AE', 'SA'
+            "country_code": country_code, # e.g. 'AE', 'SA'
             self.FIELD_PROJECT: project,
             self.FIELD_NOTES: general_notes
         }
