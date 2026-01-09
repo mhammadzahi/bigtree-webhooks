@@ -55,9 +55,7 @@ def process_contact_request(fname, lname, email, phone, company, project, projec
     try:
         row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "contact", row)
-        
         sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
-        print("Salesforce Response:", sf_result)
 
     except Exception as e:
         print(f"Error processing contact request for {email}: {e}")
@@ -84,7 +82,7 @@ async def contact_request_webhook(request: Request, background_tasks: Background
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    print(project_location)
+
     background_tasks.add_task(process_contact_request, fname, lname, email, phone, company, project, project_location, message, src)
     return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
@@ -164,13 +162,7 @@ async def request_sample_webhook(request: Request, background_tasks: BackgroundT
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    # Add all processing to background task
-    background_tasks.add_task(
-        process_request_sample,
-        first_name, last_name, email, phone, company, project, country,
-        quantity, message, product_ids, account_password
-    )
-
+    background_tasks.add_task(process_request_sample, first_name, last_name, email, phone, company, project, country, quantity, message, product_ids, account_password)
     return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
 
@@ -200,7 +192,6 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
         # 2. Insert into Salesforce
         combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
         sf_result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
-        print("Salesforce Response:", sf_result)
 
         # 3. Generate PDFs
         pdf_specsheet_files = []
@@ -252,12 +243,7 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    background_tasks.add_task(
-        process_enquiry,
-        name, email, phone, company, project, country, message,
-        req_sample, cart_items, product_ids, account_password
-    )
-
+    background_tasks.add_task(process_enquiry, name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password)
     return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
 
