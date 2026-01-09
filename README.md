@@ -319,13 +319,13 @@ WantedBy=multi-user.target
 
 ## 📄 License
 
-This project is proprietary software owned by BigTree Group.
+This project is proprietary software owned by [Mohamed Zahi](https://github.com/mhammadzahi)
 
 ## 📧 Contact
 
-BigTree Group - sales@bigtree-group.com
+Mohamed Zahi - mohamedzahi33@gmail.com
 
-Project Link: [https://github.com/bigtree-group/bigtree-webhooks](https://github.com/bigtree-group/bigtree-webhooks)
+Project Link: [https://github.com/mhammadzahi/bigtree-webhooks](https://github.com/mhammadzahi/bigtree-webhooks)
 
 ---
 
