@@ -1,19 +1,20 @@
 from fastapi import FastAPI, Response, status, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
-
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, EmailStr, ValidationError
+from typing import List
+
 from modules.specsheet_generator import generate_specsheet_pdf
 from modules.google_sheet_service import append_row
 from modules.woocommerce_service import get_product
-from modules.salesforce import SalesforceWebToLeadService
+from modules.salesforce_service import SalesforceWebToLeadService
 from modules.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_account_creation_email
-import uvicorn, os, json
-from typing import List
-from datetime import datetime, timezone, timedelta
 
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
+import uvicorn, os, json
+
 
 load_dotenv()
 SHEET_ID = os.getenv("SHEET_ID")
@@ -34,8 +35,6 @@ app.add_middleware(
 )
 
 sf = SalesforceWebToLeadService(debug_mode=True, debug_email="mzahi@bigtree-group.com")
-
-
 
 
 
@@ -335,6 +334,6 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev mode
-    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod mode
+    # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev
+    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod
 
