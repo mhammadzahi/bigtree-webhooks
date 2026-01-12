@@ -335,6 +335,8 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         # Create clickable hyperlink using RichText with "REQUEST INQUIRY" as display text
         request_inquiry_link = RichText('REQUEST INQUIRY', url_id=doc.build_url_id(request_inquiry_url), color='0563C1', underline=True)
         print(f"✓ REQUEST_INQUIRY link created: 'REQUEST INQUIRY' → {request_inquiry_url}")
+        print(f"✓ RichText object type: {type(request_inquiry_link)}")
+        print(f"⚠️ IMPORTANT: Template must use {{{{ r REQUEST_INQUIRY }}}} or {{% r 'REQUEST_INQUIRY' %}} syntax for RichText!")
     else:
         request_inquiry_link = 'REQUEST INQUIRY'
         print(f"⚠️ REQUEST_INQUIRY created without link - missing slug or wc_url")
