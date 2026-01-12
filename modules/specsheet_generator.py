@@ -1,4 +1,4 @@
-from docxtpl import DocxTemplate, InlineImage
+from docxtpl import DocxTemplate, InlineImage, RichText
 from docx.shared import Inches, Mm
 import subprocess, re, os, requests, platform
 from io import BytesIO
@@ -322,15 +322,18 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         print("⚠️ No images found for product")
         image_placeholder = ""  # Empty string if no image
     
-    # Build REQUEST_INQUIRY URL
+    # Build REQUEST_INQUIRY URL as clickable hyperlink
     product_slug = product.get('slug', '')
     if wc_url and product_slug:
         # Remove trailing slash from wc_url if present
         base_url = wc_url.rstrip('/')
-        request_inquiry_url = f"{base_url}/{product_slug}"
-        print(f"✓ REQUEST_INQUIRY URL: {request_inquiry_url}")
+        request_inquiry_url_text = f"{base_url}/{product_slug}"
+        # Create clickable hyperlink using RichText
+        request_inquiry_link = RichText()
+        request_inquiry_link.add(request_inquiry_url_text, url_id=doc.build_url_id(request_inquiry_url_text), color='0563C1', underline=True)
+        print(f"✓ REQUEST_INQUIRY URL: {request_inquiry_url_text}")
     else:
-        request_inquiry_url = 'N/A'
+        request_inquiry_link = 'N/A'
         print("⚠️ REQUEST_INQUIRY placeholder not generated (missing wc_url or product slug)")
     
     # Build comprehensive context data
@@ -341,8 +344,8 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         'product_sku': product.get('sku', 'N/A'),
         'product_price': product.get('price', 'N/A'),
         'prdct_description': strip_html_tags(product.get('description', 'N/A')),
-        'product_description': strip_html_tags(product.get('description', 'N/A')),
-        'short_description': strip_html_tags(product.get('short_description', 'N/A')),
+        'product_description' (clickable hyperlink)
+        'REQUEST_INQUIRY': request_inquiry_linkroduct.get('short_description', 'N/A')),
         
         # REQUEST_INQUIRY URL
         'REQUEST_INQUIRY': request_inquiry_url,
