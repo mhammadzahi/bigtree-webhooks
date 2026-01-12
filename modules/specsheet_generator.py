@@ -1,5 +1,6 @@
-from docxtpl import DocxTemplate, InlineImage, RichText
+from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches, Mm
+from docx import oxml
 import subprocess, re, os, requests, platform
 from io import BytesIO
 from PIL import Image
@@ -322,7 +323,7 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         print("⚠️ No images found for product")
         image_placeholder = ""  # Empty string if no image
     
-    # Build REQUEST_INQUIRY URL as clickable "Request Inquiry" text
+    # Build REQUEST_INQUIRY - provide both URL and display text separately
     print(f"\n=== REQUEST_INQUIRY URL GENERATION ===")
     product_slug = product.get('slug', '')
     print(f"Product slug: {product_slug}")
@@ -332,11 +333,12 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         # Remove trailing slash from wc_url if present
         base_url = wc_url.rstrip('/')
         request_inquiry_url = f"{base_url}/product/{product_slug}/"
-        # Create clickable hyperlink with "Request Inquiry" as display text
-        request_inquiry_link = RichText('Request Inquiry', url_id=doc.build_url_id(request_inquiry_url), color='0563C1', underline=True)
-        print(f"✓ REQUEST_INQUIRY link created: 'Request Inquiry' → {request_inquiry_url}")
+        request_inquiry_text = 'Request Inquiry'
+        print(f"✓ REQUEST_INQUIRY URL created: {request_inquiry_url}")
+        print(f"✓ Use in template: {{{{ REQUEST_INQUIRY_URL }}}} for URL or {{{{ REQUEST_INQUIRY_TEXT }}}} for text")
     else:
-        request_inquiry_link = 'Request Inquiry'
+        request_inquiry_url = 'N/A'
+        request_inquiry_text = 'Request Inquiry'
         print(f"⚠️ REQUEST_INQUIRY not generated - missing slug or wc_url")
     
     # Build comprehensive context data
@@ -349,8 +351,10 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         'prdct_description': strip_html_tags(product.get('description', 'N/A')),
         'product_description': strip_html_tags(product.get('description', 'N/A')),
         'short_description': strip_html_tags(product.get('short_description', 'N/A')),
-        
-        # REQUEST_INQUIRY URL (clickable "Request Inquiry" text)
+        - URL and text separately (use URL for clickable link in Word)
+        'REQUEST_INQUIRY': request_inquiry_url,
+        'REQUEST_INQUIRY_URL': request_inquiry_url,
+        'REQUEST_INQUIRY_TEXT': request_inquiry_textst Inquiry" text)
         'REQUEST_INQUIRY': request_inquiry_link,
         
         # Categories and Brand (matching template placeholders)
