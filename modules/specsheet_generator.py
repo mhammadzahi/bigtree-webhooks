@@ -333,12 +333,10 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         base_url = wc_url.rstrip('/')
         request_inquiry_url = f"{base_url}/product/{product_slug}/"
         # Create clickable hyperlink using RichText with "REQUEST INQUIRY" as display text
-        request_inquiry_link = RichText()
-        request_inquiry_link.add('REQUEST INQUIRY', url_id=doc.build_url_id(request_inquiry_url), color='0563C1', underline=True)
+        request_inquiry_link = RichText('REQUEST INQUIRY', url_id=doc.build_url_id(request_inquiry_url), color='0563C1', underline=True)
         print(f"✓ REQUEST_INQUIRY link created: 'REQUEST INQUIRY' → {request_inquiry_url}")
     else:
-        request_inquiry_link = RichText()
-        request_inquiry_link.add('REQUEST INQUIRY')
+        request_inquiry_link = 'REQUEST INQUIRY'
         print(f"⚠️ REQUEST_INQUIRY created without link - missing slug or wc_url")
     
     # Build comprehensive context data
