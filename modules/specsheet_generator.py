@@ -322,6 +322,17 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         print("⚠️ No images found for product")
         image_placeholder = ""  # Empty string if no image
     
+    # Build REQUEST_INQUIRY URL
+    product_slug = product.get('slug', '')
+    if wc_url and product_slug:
+        # Remove trailing slash from wc_url if present
+        base_url = wc_url.rstrip('/')
+        request_inquiry_url = f"{base_url}/{product_slug}"
+        print(f"✓ REQUEST_INQUIRY URL: {request_inquiry_url}")
+    else:
+        request_inquiry_url = 'N/A'
+        print("⚠️ REQUEST_INQUIRY placeholder not generated (missing wc_url or product slug)")
+    
     # Build comprehensive context data
     context_data = {
         # Basic Information (matching template placeholders)
@@ -332,6 +343,9 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         'prdct_description': strip_html_tags(product.get('description', 'N/A')),
         'product_description': strip_html_tags(product.get('description', 'N/A')),
         'short_description': strip_html_tags(product.get('short_description', 'N/A')),
+        
+        # REQUEST_INQUIRY URL
+        'REQUEST_INQUIRY': request_inquiry_url,
         
         # Categories and Brand (matching template placeholders)
         'prdct_category': categories[0].get('name', 'N/A') if categories else 'N/A',
