@@ -325,19 +325,21 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
     # Build REQUEST_INQUIRY URL as clickable hyperlink
     print(f"\n=== REQUEST_INQUIRY URL GENERATION ===")
     product_slug = product.get('slug', '')
+    print(f"Product slug: {product_slug}")
+    print(f"WC Store URL: {wc_url}")
+    
     if wc_url and product_slug:
         # Remove trailing slash from wc_url if present
         base_url = wc_url.rstrip('/')
-        request_inquiry_url_text = f"{base_url}/{product_slug}"
+        request_inquiry_url_text = f"{base_url}/product/{product_slug}/"
         # Create clickable hyperlink using RichText
         request_inquiry_link = RichText()
         request_inquiry_link.add(request_inquiry_url_text, url_id=doc.build_url_id(request_inquiry_url_text), color='0563C1', underline=True)
         print(f"✓ REQUEST_INQUIRY URL created: {request_inquiry_url_text}")
     else:
-        request_inquiry_link = ''
-        print(f"⚠️ REQUEST_INQUIRY placeholder not generated")
-        print(f"   - wc_url: {wc_url}")
-        print(f"   - product_slug: {product_slug}")
+        request_inquiry_link = RichText()
+        request_inquiry_link.add('N/A')
+        print(f"⚠️ REQUEST_INQUIRY placeholder not generated - missing slug or wc_url")
     
     # Build comprehensive context data
     context_data = {
