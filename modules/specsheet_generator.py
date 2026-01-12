@@ -1,4 +1,4 @@
-from docxtpl import DocxTemplate, InlineImage
+from docxtpl import DocxTemplate, InlineImage, RichText
 from docx.shared import Inches, Mm
 import subprocess, re, os, requests, platform
 from io import BytesIO
@@ -322,7 +322,7 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         print("⚠️ No images found for product")
         image_placeholder = ""  # Empty string if no image
     
-    # Build REQUEST_INQUIRY URL
+    # Build REQUEST_INQUIRY URL as clickable "Request Inquiry" text
     print(f"\n=== REQUEST_INQUIRY URL GENERATION ===")
     product_slug = product.get('slug', '')
     print(f"Product slug: {product_slug}")
@@ -332,10 +332,11 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         # Remove trailing slash from wc_url if present
         base_url = wc_url.rstrip('/')
         request_inquiry_url = f"{base_url}/product/{product_slug}/"
-        print(f"✓ REQUEST_INQUIRY URL created: {request_inquiry_url}")
-        print(f"✓ Template should use: {{{{ REQUEST_INQUIRY }}}} (standard syntax)")
+        # Create clickable hyperlink with "Request Inquiry" as display text
+        request_inquiry_link = RichText('Request Inquiry', url_id=doc.build_url_id(request_inquiry_url), color='0563C1', underline=True)
+        print(f"✓ REQUEST_INQUIRY link created: 'Request Inquiry' → {request_inquiry_url}")
     else:
-        request_inquiry_url = 'N/A'
+        request_inquiry_link = 'Request Inquiry'
         print(f"⚠️ REQUEST_INQUIRY not generated - missing slug or wc_url")
     
     # Build comprehensive context data
@@ -349,8 +350,8 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         'product_description': strip_html_tags(product.get('description', 'N/A')),
         'short_description': strip_html_tags(product.get('short_description', 'N/A')),
         
-        # REQUEST_INQUIRY URL (plain URL that becomes clickable)
-        'REQUEST_INQUIRY': request_inquiry_url,
+        # REQUEST_INQUIRY URL (clickable "Request Inquiry" text)
+        'REQUEST_INQUIRY': request_inquiry_link,
         
         # Categories and Brand (matching template placeholders)
         'prdct_category': categories[0].get('name', 'N/A') if categories else 'N/A',
