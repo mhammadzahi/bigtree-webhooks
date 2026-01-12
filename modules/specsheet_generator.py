@@ -351,11 +351,11 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         'prdct_description': strip_html_tags(product.get('description', 'N/A')),
         'product_description': strip_html_tags(product.get('description', 'N/A')),
         'short_description': strip_html_tags(product.get('short_description', 'N/A')),
-        - URL and text separately (use URL for clickable link in Word)
+        
+        # REQUEST_INQUIRY - URL and text separately (use URL for clickable link in Word)
         'REQUEST_INQUIRY': request_inquiry_url,
         'REQUEST_INQUIRY_URL': request_inquiry_url,
-        'REQUEST_INQUIRY_TEXT': request_inquiry_textst Inquiry" text)
-        'REQUEST_INQUIRY': request_inquiry_link,
+        'REQUEST_INQUIRY_TEXT': request_inquiry_text,
         
         # Categories and Brand (matching template placeholders)
         'prdct_category': categories[0].get('name', 'N/A') if categories else 'N/A',
