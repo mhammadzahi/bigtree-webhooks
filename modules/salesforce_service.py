@@ -1,15 +1,30 @@
-import requests
+import requests, os
+from dotenv import load_dotenv
 from typing import Dict, Optional, List, Union
 
+load_dotenv()
+SF_ORG_ID = os.getenv("SF_ORG_ID")
+SF_RET_URL = os.getenv("SF_RET_URL")
+SF_ENDPOINT = os.getenv("SF_ENDPOINT")
+SF_FIELD_PROJECT = os.getenv("SF_FIELD_PROJECT")
+SF_FIELD_NOTES = os.getenv("SF_FIELD_NOTES")
+
+print('SF_ORG_ID:', SF_ORG_ID)
+print('SF_RET_URL:', SF_RET_URL)
+print('SF_ENDPOINT:', SF_ENDPOINT)
+print('SF_FIELD_PROJECT:', SF_FIELD_PROJECT)
+print('SF_FIELD_NOTES:', SF_FIELD_NOTES)
+
+
 class SalesforceWebToLeadService:
-    # Constants based on your HTML Form
-    ORG_ID = "00D58000000YppW"
-    RET_URL = "https://yallaiot.com/"
-    ENDPOINT = "https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8"
+    
+    ORG_ID = SF_ORG_ID
+    RET_URL = SF_RET_URL
+    ENDPOINT = SF_ENDPOINT
 
     # Custom Field Mappings (From your HTML)
-    FIELD_PROJECT = "00NWS000006el81"
-    FIELD_NOTES   = "00N4I00000EzMsn" # Used for "General Notes" or "Message"
+    FIELD_PROJECT = SF_FIELD_PROJECT
+    FIELD_NOTES   = SF_FIELD_NOTES
 
     def __init__(self, org_id: str = None, debug_mode: bool = False, debug_email: str = None):
         """

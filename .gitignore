@@ -4,7 +4,9 @@ token.json
 *.json
 # *.docx
 *.pdf
-.DS_Store
+*.DS_Store
+*.backup
+
 
 backup_contact_form.txt
 
