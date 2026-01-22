@@ -19,7 +19,7 @@ load_dotenv()
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/spreadsheets"]
 FROM = "BigTree Group <" + os.getenv("WEB_EMAIL") + ">"
-print(FROM)
+
 
 def load_email_template(template_name):
     template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "email_templates", template_name)

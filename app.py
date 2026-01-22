@@ -25,9 +25,6 @@ CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 SALES_EMAIL = os.getenv("SALES_EMAIL")
 DEVELOPER_EMAIL = os.getenv("DEVELOPER_EMAIL")
 
-print("Sales Email:", SALES_EMAIL)
-print("Developer Email:", DEVELOPER_EMAIL)
-
 API_KEY = os.getenv("API_KEY")
 
 app = FastAPI()
