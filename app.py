@@ -22,8 +22,7 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
-# SALES_EMAIL = os.getenv("SALES_EMAIL")
-SALES_EMAIL = 'mohamedzahi678@gmail.com'
+SALES_EMAIL = os.getenv("SALES_EMAIL")
 DEVELOPER_EMAIL = os.getenv("DEVELOPER_EMAIL")
 
 API_KEY = os.getenv("API_KEY")
@@ -204,12 +203,12 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
                 pdf_specsheet_files.append(file_path)
 
         # 4. Send enquiry email
-        if pdf_specsheet_files:
-            send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
+        # if pdf_specsheet_files:
+        #     send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 5. Send account creation email if password provided
-        if account_password:
-            send_account_creation_email(email, account_password)
+        # if account_password:
+        #     send_account_creation_email(email, account_password)
 
         # 6. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
