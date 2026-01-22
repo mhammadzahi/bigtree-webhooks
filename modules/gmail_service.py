@@ -9,12 +9,17 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
+import os
+from dotenv import load_dotenv
+
 
 main_creds = "main-credentials.json"
 token_file = "token.json"
+load_dotenv()
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/spreadsheets"]
-FROM = "BigTree Group <web@bigtree-group.com>"
+FROM = "BigTree Group <" + os.getenv("WEB_EMAIL") + ">"
+print(FROM)
 
 def load_email_template(template_name):
     template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "email_templates", template_name)

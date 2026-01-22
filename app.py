@@ -22,7 +22,12 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
-SALES_EMAIL = "sales@bigtree-group.com"
+SALES_EMAIL = os.getenv("SALES_EMAIL")
+DEVELOPER_EMAIL = os.getenv("DEVELOPER_EMAIL")
+
+print("Sales Email:", SALES_EMAIL)
+print("Developer Email:", DEVELOPER_EMAIL)
+
 API_KEY = os.getenv("API_KEY")
 
 app = FastAPI()
@@ -34,7 +39,7 @@ app.add_middleware(
     allow_headers=["*"],  # Or ["Content-Type"]
 )
 
-sf = SalesforceWebToLeadService(debug_mode=True, debug_email="mzahi@bigtree-group.com")
+sf = SalesforceWebToLeadService(debug_mode=True, debug_email=DEVELOPER_EMAIL)
 
 
 
