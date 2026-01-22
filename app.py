@@ -22,7 +22,8 @@ STORE_URL = os.getenv("WC_STORE_URL")
 CUNSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
 CUNSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
 
-SALES_EMAIL = os.getenv("SALES_EMAIL")
+# SALES_EMAIL = os.getenv("SALES_EMAIL")
+SALES_EMAIL = 'mohamedzahi678@gmail.com'
 DEVELOPER_EMAIL = os.getenv("DEVELOPER_EMAIL")
 
 API_KEY = os.getenv("API_KEY")
