@@ -191,81 +191,93 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
     Convert DOCX to PDF using the best available method for each platform.
     
     Priority:
-    - macOS/Windows: docx2pdf (uses native Word) > unoconv > LibreOffice
-    - Linux/Ubuntu: unoconv > LibreOffice
+    - Linux/Ubuntu: LibreOffice (fast, reliable, no dependencies)
+    - macOS/Windows: docx2pdf (uses native Word) > LibreOffice
     
     Returns: True if successful, False otherwise
     """
     system = platform.system()
     print(f"Attempting PDF conversion using best available method...")
     
-    # Method 1: Try docx2pdf (macOS/Windows only - uses native Word for BEST quality)
+    # On Linux/Ubuntu: Use LibreOffice directly (most reliable)
+    if system == 'Linux':
+    # On Linux/Ubuntu: Use LibreOffice directly (most reliable)
+    if system == 'Linux':
+        print("→ Using LibreOffice (optimized for Ubuntu)...")
+        soffice_paths = [
+            '/usr/bin/soffice',
+            '/usr/bin/libreoffice',
+            'soffice',
+            'libreoffice'
+        ]
+        
+        soffice_path = None
+        for path in soffice_paths:
+            if os.path.isfile(path) or shutil.which(path):
+                soffice_path = path
+                break
+        
+        if not soffice_path:
+            raise RuntimeError(
+                "❌ LibreOffice not found!\n"
+                "Please install: sudo apt-get install libreoffice-writer"
+            )
+        
+        abs_docx = os.path.abspath(docx_path)
+        abs_outdir = os.path.abspath(os.path.dirname(pdf_path))
+        
+        try:
+            result = subprocess.run([
+                soffice_path,
+                '--headless',
+                '--invisible',
+                '--nocrashreport',
+                '--nodefault',
+                '--nofirststartwizard',
+                '--nolockcheck',
+                '--nologo',
+                '--norestore',
+                '--convert-to', 'pdf:writer_pdf_Export',
+                '--outdir', abs_outdir,
+                abs_docx
+            ], check=True, capture_output=True, timeout=45, env={**os.environ, 'HOME': os.path.expanduser('~')})
+            
+            if os.path.exists(pdf_path):
+                print("✓ PDF conversion successful using LibreOffice")
+                if result.stdout:
+                    output_text = result.stdout.decode().strip()
+                    if output_text:
+                        print(f"  {output_text}")
+                return True
+                
+        except subprocess.TimeoutExpired:
+            print("❌ LibreOffice conversion timed out after 45 seconds")
+            raise RuntimeError("PDF conversion took too long")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ LibreOffice conversion failed: {e}")
+            if e.stderr:
+                stderr = e.stderr.decode().strip()
+                if stderr:
+                    print(f"  Error: {stderr}")
+            raise
+    
+    # On macOS/Windows: Try docx2pdf first (uses native Word)
     if HAS_DOCX2PDF and system in ['Darwin', 'Windows']:
         try:
-            print("→ Trying docx2pdf (Microsoft Word native converter - highest quality)...")
+            print("→ Using docx2pdf (Microsoft Word native converter)...")
             docx2pdf_convert(docx_path, pdf_path)
             if os.path.exists(pdf_path):
                 print("✓ PDF conversion successful using docx2pdf (Word)")
                 return True
         except Exception as e:
             print(f"⚠️ docx2pdf failed: {e}")
-            print("  Falling back to next method...")
-    
-    # Method 2: Try unoconv (works on all platforms, better than direct LibreOffice calls)
-    if shutil.which('unoconv'):
-        try:
-            print("→ Using unoconv (recommended for production)...")
-            result = subprocess.run([
-                'unoconv',
-                '-f', 'pdf',
-                '-o', pdf_path,
-                docx_path
-            ], check=False, capture_output=True, timeout=45)
-            
-            if result.returncode == 0 and os.path.exists(pdf_path):
-                print("✓ PDF conversion successful using unoconv")
-                if result.stdout:
-                    output = result.stdout.decode().strip()
-                    if output:
-                        print(f"  Output: {output}")
-                return True
-            else:
-                # Detailed error reporting
-                print(f"⚠️ unoconv failed (exit code: {result.returncode})")
-                if result.stderr:
-                    stderr = result.stderr.decode().strip()
-                    if stderr:
-                        print(f"  Error: {stderr}")
-                if result.stdout:
-                    stdout = result.stdout.decode().strip()
-                    if stdout:
-                        print(f"  Output: {stdout}")
-                
-                # Check for common issues
-                if "python3-uno" in result.stderr.decode().lower() or "import uno" in result.stderr.decode().lower():
-                    print("  💡 Hint: Install Python UNO bridge: sudo apt-get install python3-uno")
-                elif "office installation" in result.stderr.decode().lower():
-                    print("  💡 Hint: LibreOffice may not be properly installed")
-                
-                print("  Falling back to LibreOffice...")
-        except subprocess.TimeoutExpired:
-            print("⚠️ unoconv timed out after 45 seconds, trying LibreOffice...")
-        except Exception as e:
-            print(f"⚠️ unoconv failed with exception: {e}")
             print("  Falling back to LibreOffice...")
     
-    # Method 3: LibreOffice direct call with optimized settings (universal fallback)
+    # Fallback: LibreOffice for macOS/Windows
     if system == 'Darwin':  # macOS
         soffice_paths = [
             '/Applications/LibreOffice.app/Contents/MacOS/soffice',
             '/usr/local/bin/soffice'
-        ]
-    elif system == 'Linux':
-        soffice_paths = [
-            '/usr/bin/soffice',
-            '/usr/bin/libreoffice',
-            'soffice',
-            'libreoffice'
         ]
     elif system == 'Windows':
         soffice_paths = ['soffice', 'soffice.exe']
@@ -282,12 +294,10 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
     if not soffice_path:
         raise RuntimeError(
             "❌ No PDF conversion tool found!\n"
-            "Please install one of the following:\n"
-            "  Ubuntu/Linux: sudo apt-get install libreoffice unoconv\n"
-            "  macOS: brew install --cask libreoffice && brew install unoconv\n"
-            "  Windows: Download LibreOffice from https://www.libreoffice.org/\n"
-            "\nFor production Ubuntu servers, unoconv is highly recommended:\n"
-            "  sudo apt-get install -y unoconv libreoffice-writer"
+            "Please install LibreOffice:\n"
+            "  Ubuntu: sudo apt-get install libreoffice-writer\n"
+            "  macOS: brew install --cask libreoffice\n"
+            "  Windows: Download from https://www.libreoffice.org/"
         )
     
     abs_docx = os.path.abspath(docx_path)
@@ -296,7 +306,6 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
     try:
         print(f"→ Using LibreOffice: {soffice_path}")
         
-        # First try: Enhanced PDF export settings
         result = subprocess.run([
             soffice_path,
             '--headless',
@@ -317,7 +326,7 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
             if result.stdout:
                 output_text = result.stdout.decode().strip()
                 if output_text:
-                    print(f"  Output: {output_text}")
+                    print(f"  {output_text}")
             return True
             
     except subprocess.TimeoutExpired:
@@ -329,24 +338,7 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
             stderr = e.stderr.decode().strip()
             if stderr:
                 print(f"  Error details: {stderr}")
-        
-        # Try again with simpler settings as last resort
-        print("→ Retrying with basic settings...")
-        try:
-            result = subprocess.run([
-                soffice_path,
-                '--headless',
-                '--convert-to', 'pdf',
-                '--outdir', abs_outdir,
-                abs_docx
-            ], check=True, capture_output=True, timeout=45)
-            
-            if os.path.exists(pdf_path):
-                print("✓ PDF conversion successful using LibreOffice (basic mode)")
-                return True
-        except Exception as e2:
-            print(f"❌ Final conversion attempt failed: {e2}")
-            raise RuntimeError(f"PDF conversion failed: {e}")
+        raise
     
     return False
 
@@ -598,19 +590,6 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
     print(f"\n=== PDF CONVERSION ===")
     system = platform.system()
     print(f"Detected OS: {system}")
-    
-    # Show available conversion methods
-    methods = []
-    if HAS_DOCX2PDF and system in ['Darwin', 'Windows']:
-        methods.append("docx2pdf (Word - best quality)")
-    if shutil.which('unoconv'):
-        methods.append("unoconv (recommended for production)")
-    methods.append("LibreOffice (fallback)")
-    print(f"Available methods: {', '.join(methods)}")
-    
-    if system == 'Linux':
-        print("\n💡 TIP: For best PDF quality on Ubuntu, install unoconv:")
-        print("   sudo apt-get install -y unoconv libreoffice-writer")
     
     convert_docx_to_pdf_best_method(output_docx, output_pdf)
     
