@@ -201,8 +201,6 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
     
     # On Linux/Ubuntu: Use LibreOffice directly (most reliable)
     if system == 'Linux':
-    # On Linux/Ubuntu: Use LibreOffice directly (most reliable)
-    if system == 'Linux':
         print("→ Using LibreOffice (optimized for Ubuntu)...")
         soffice_paths = [
             '/usr/bin/soffice',
