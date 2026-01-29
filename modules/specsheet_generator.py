@@ -296,7 +296,7 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
     try:
         print(f"→ Using LibreOffice: {soffice_path}")
         
-        # Enhanced command with better PDF export settings
+        # First try: Enhanced PDF export settings
         result = subprocess.run([
             soffice_path,
             '--headless',
@@ -307,7 +307,7 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
             '--nolockcheck',
             '--nologo',
             '--norestore',
-            '--convert-to', 'pdf:writer_pdf_Export:{"SelectPdfVersion":{"type":"long","value":"1"},"UseTaggedPDF":{"type":"boolean","value":"true"},"ExportNotesPages":{"type":"boolean","value":"false"},"Quality":{"type":"long","value":"100"}}',
+            '--convert-to', 'pdf:writer_pdf_Export',
             '--outdir', abs_outdir,
             abs_docx
         ], check=True, capture_output=True, timeout=45, env={**os.environ, 'HOME': os.path.expanduser('~')})

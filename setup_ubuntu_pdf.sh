@@ -36,7 +36,10 @@ sudo apt-get install -y \
 
 # Install Python UNO bridge (critical for unoconv) - Ubuntu 24.04 compatible
 echo -e "${YELLOW}[3/7] Installing Python UNO bridge...${NC}"
-sudo apt-get install -y python3-uno
+# Remove any broken installations first
+sudo apt-get remove --purge -y python3-uno 2>/dev/null || true
+# Install fresh
+sudo apt-get install -y python3-uno libreoffice-script-provider-python
 
 # Install UNO libs for Ubuntu 24.04
 echo -e "${YELLOW}[4/7] Installing UNO libraries...${NC}"
@@ -47,6 +50,26 @@ sudo apt-get install -y \
     libuno-purpenvhelpergcc3-3t64 \
     libuno-salhelpergcc3-3t64 \
     uno-libs-private 2>/dev/null || echo "Some UNO libs already installed"
+
+# Verify Python UNO installation
+echo ""
+echo "Verifying Python UNO installation..."
+if python3 -c "import uno; print('  ✓ UNO module found')" 2>/dev/null; then
+    echo -e "${GREEN}  ✓ Python UNO working${NC}"
+else
+    echo -e "${RED}  ✗ Python UNO not working, trying alternative installation...${NC}"
+    # Try installing with specific Python version
+    PYTHON_VERSION=$(python3 --version | grep -oP '\d+\.\d+')
+    sudo apt-get install -y python3-uno python${PYTHON_VERSION}-uno 2>/dev/null || true
+    
+    # Check again
+    if python3 -c "import uno; print('  ✓ UNO module found')" 2>/dev/null; then
+        echo -e "${GREEN}  ✓ Python UNO working after reinstall${NC}"
+    else
+        echo -e "${RED}  ✗ Python UNO still not working - unoconv will fail${NC}"
+        echo -e "${YELLOW}  System will use LibreOffice fallback${NC}"
+    fi
+fi
 
 # Install unoconv
 echo -e "${YELLOW}[5/7] Installing unoconv...${NC}"

@@ -1,14 +1,43 @@
 # PDF Generation Setup for Ubuntu Production Server
 
-## Problem
-LibreOffice's direct `soffice --convert-to pdf` command often produces poor quality PDFs with formatting issues.
+## Current Status ✅
 
-## Solution: Install unoconv (RECOMMENDED)
+**LibreOffice is working** - The system successfully generates PDFs using LibreOffice's direct conversion.
 
-### What is unoconv?
-`unoconv` is a better interface to LibreOffice that produces higher quality PDFs with better formatting preservation.
+## Why PDFs Look "Ugly"
 
-### Installation on Ubuntu
+The issue is **NOT** the conversion tool - it's the **DOCX template formatting**. LibreOffice's PDF engine cannot perfectly replicate Microsoft Word's complex formatting, especially:
+
+- Complex nested tables
+- Custom fonts not available on Ubuntu
+- Advanced Word styles and effects
+- Precise spacing and alignment
+
+## BEST SOLUTION: Optimize Your DOCX Templates
+
+### 1. Simplify Template Formatting
+
+Open your DOCX templates in LibreOffice Writer on your local machine and:
+
+- **Remove complex tables** - Use simple tables without merged cells
+- **Use standard fonts** - Arial, Times New Roman, Liberation Sans/Serif
+- **Remove Word-specific features** - SmartArt, WordArt, special effects
+- **Test locally** - File → Export as PDF in LibreOffice to preview
+
+### 2. Install Fonts on Ubuntu (Critical)
+
+```bash
+# Install Microsoft-compatible fonts
+sudo apt-get install -y ttf-mscorefonts-installer fonts-liberation fonts-liberation2
+
+# Update font cache
+sudo fc-cache -f -v
+
+# Verify fonts
+fc-list | grep -i "arial\|times\|calibri"
+```
+
+### 3. Current Setup (Already Working)
 
 ```bash
 # Update package list
