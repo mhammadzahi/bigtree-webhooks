@@ -220,19 +220,38 @@ def convert_docx_to_pdf_best_method(docx_path, pdf_path):
                 '-f', 'pdf',
                 '-o', pdf_path,
                 docx_path
-            ], check=True, capture_output=True, timeout=45)
+            ], check=False, capture_output=True, timeout=45)
             
-            if os.path.exists(pdf_path):
+            if result.returncode == 0 and os.path.exists(pdf_path):
                 print("✓ PDF conversion successful using unoconv")
                 if result.stdout:
                     output = result.stdout.decode().strip()
                     if output:
                         print(f"  Output: {output}")
                 return True
+            else:
+                # Detailed error reporting
+                print(f"⚠️ unoconv failed (exit code: {result.returncode})")
+                if result.stderr:
+                    stderr = result.stderr.decode().strip()
+                    if stderr:
+                        print(f"  Error: {stderr}")
+                if result.stdout:
+                    stdout = result.stdout.decode().strip()
+                    if stdout:
+                        print(f"  Output: {stdout}")
+                
+                # Check for common issues
+                if "python3-uno" in result.stderr.decode().lower() or "import uno" in result.stderr.decode().lower():
+                    print("  💡 Hint: Install Python UNO bridge: sudo apt-get install python3-uno")
+                elif "office installation" in result.stderr.decode().lower():
+                    print("  💡 Hint: LibreOffice may not be properly installed")
+                
+                print("  Falling back to LibreOffice...")
         except subprocess.TimeoutExpired:
-            print("⚠️ unoconv timed out, trying LibreOffice...")
+            print("⚠️ unoconv timed out after 45 seconds, trying LibreOffice...")
         except Exception as e:
-            print(f"⚠️ unoconv failed: {e}")
+            print(f"⚠️ unoconv failed with exception: {e}")
             print("  Falling back to LibreOffice...")
     
     # Method 3: LibreOffice direct call with optimized settings (universal fallback)
