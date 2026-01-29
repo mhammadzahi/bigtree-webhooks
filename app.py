@@ -267,7 +267,7 @@ def process_specsheet(name, email, product_id, file_path):
     except Exception as e:
         print(f"Error processing specsheet. {e}")
 
-@app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page] --done--
+@app.post("/bt-single-product-specsheet-webhook-v2-1")#2. Product Specsheet [single product page]
 async def specsheet_webhook(request: Request, background_tasks: BackgroundTasks):
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != API_KEY:
@@ -287,7 +287,7 @@ async def specsheet_webhook(request: Request, background_tasks: BackgroundTasks)
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
     file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
-    background_tasks.add_task(process_specsheet, name, email, product_id, file_path)
+    # background_tasks.add_task(process_specsheet, name, email, product_id, file_path)
 
     response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
     response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
@@ -336,6 +336,6 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev
-    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod
+    uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev
+    # uvicorn.run(app, host="0.0.0.0", port=8001) # Prod
 
