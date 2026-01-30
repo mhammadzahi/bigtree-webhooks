@@ -386,8 +386,9 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
             print("[DEBUG] Browser launched successfully")
             
             print("[DEBUG] Creating new page")
-            # Set viewport to A4 dimensions (595x842 at 72dpi)
-            page = await browser.new_page(viewport={"width": 595, "height": 842})
+            # Set viewport to A4 dimensions in pixels at 96dpi (standard screen DPI)
+            # A4 = 210mm x 297mm = 794px x 1123px at 96dpi
+            page = await browser.new_page(viewport={"width": 794, "height": 1123})
             print("[DEBUG] Page created with A4 viewport")
             
             # Set content
