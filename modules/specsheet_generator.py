@@ -8,7 +8,8 @@ from datetime import datetime
 from PIL import Image
 
 # Templating and PDF Generation
-from jinja2 import Environment, FileSystemLoader, select_autoescape, Markup
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from markupsafe import Markup
 from playwright.async_api import async_playwright
 from woocommerce import API
 
