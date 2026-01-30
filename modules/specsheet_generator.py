@@ -386,8 +386,9 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
             print("[DEBUG] Browser launched successfully")
             
             print("[DEBUG] Creating new page")
-            page = await browser.new_page()
-            print("[DEBUG] Page created")
+            # Set viewport to A4 dimensions (595x842 at 72dpi)
+            page = await browser.new_page(viewport={"width": 595, "height": 842})
+            print("[DEBUG] Page created with A4 viewport")
             
             # Set content
             print("[DEBUG] Setting page content (waiting for networkidle)")
@@ -395,14 +396,17 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
             print("[DEBUG] Page content set, network idle")
             
             # Generate PDF
-            # A4 dimensions are roughly 595px x 842px at 72dpi, but Playwright handles 'format="A4"' well
+            # A4 dimensions: 210mm x 297mm = 8.27in x 11.69in
             # print_background=True ensures CSS background colors/images are visible
+            # scale=1 ensures no scaling is applied
             print("[DEBUG] Generating PDF (A4 format, with background)")
             await page.pdf(
                 path=output_pdf,
                 format="A4",
                 print_background=True,
-                margin={"top": "0px", "right": "0px", "bottom": "0px", "left": "0px"}
+                margin={"top": "0mm", "right": "0mm", "bottom": "0mm", "left": "0mm"},
+                scale=1.0,
+                prefer_css_page_size=False
             )
             print("[DEBUG] PDF generated successfully")
             
