@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ prdct_name }}</title>
+
+  <!-- PRINT CONFIG -->
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", Arial, Helvetica, sans-serif;
+      color: #111;
+      background: #ffffff;
+    }
+
+    .page {
+      width: 100%;
+      height: 100%;
+      padding: 32px 40px 0 40px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------- HEADER ---------- */
+    .header {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 32px;
+      margin-bottom: 24px;
+    }
+
+    .image-box {
+      width: 100%;
+      height: 360px;
+      background: #e5e5e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #777;
+      font-size: 14px;
+    }
+
+    .image-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .title-block h1 {
+      margin: 0 0 6px 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .title-block .collection {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 18px 0 6px 0;
+    }
+
+    .kv {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .kv div {
+      margin-bottom: 4px;
+    }
+
+    /* ---------- CONTENT ---------- */
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      flex: 1;
+    }
+
+    .block {
+      margin-bottom: 16px;
+    }
+
+    .block-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .text {
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+
+    .table {
+      font-size: 13px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 4px;
+    }
+
+    .row span:first-child {
+      color: #444;
+    }
+
+    /* ---------- FOOTER ---------- */
+    .footer {
+      margin-top: auto;
+      height: 90px;
+      background: #5a2d44;
+      color: #ffffff;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 16px 40px;
+      font-size: 12px;
+      align-items: center;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-right {
+      text-align: right;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="image-box">
+        {{ IMAGE_PLACEHOLDER }}
+      </div>
+
+      <div class="title-block">
+        <h1>{{ prdct_name }}</h1>
+        <div class="collection">Collection: {{ prdct_category }}</div>
+
+        <div class="section-title">TECHNICAL DATA:</div>
+        <div class="kv">
+          <div>Durability<br>{{ durability }}</div>
+          <div>Color Resistance<br>{{ color_resistance }}</div>
+          <div>Color Fastness<br>{{ color_fastness }}</div>
+          <div>Flame Retardant<br>{{ flame_retardant }}</div>
+          <div>Structural Compliance<br>{{ structural_compliance }}</div>
+          <div>Weather Resistance<br>{{ weather_resistance }}</div>
+          <div>Antibacterial<br>{{ antibacterial }}</div>
+          <div>Other Certifications<br>{{ other_certifications }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- LEFT COLUMN -->
+      <div>
+        <div class="block">
+          <div class="block-title">DESCRIPTION</div>
+          <div class="text">{{ prdct_description }}</div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">PRODUCT DETAIL</div>
+          <div class="table">
+            <div class="row"><span>Type</span><span>{{ type }}</span></div>
+            <div class="row"><span>Size</span><span>{{ size }}</span></div>
+            <div class="row"><span>Armrest Height</span><span>{{ armrest_height }}</span></div>
+            <div class="row"><span>Seat Height</span><span>{{ seat_height }}</span></div>
+            <div class="row"><span>Seat Depth</span><span>{{ seat_depth }}</span></div>
+            <div class="row"><span>Weight</span><span>{{ weight }}</span></div>
+            <div class="row"><span>Color</span><span>{{ color }}</span></div>
+            <div class="row"><span>Origin</span><span>{{ origin }}</span></div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">MATERIAL & FINISHES</div>
+          <div class="table">
+            <div class="row"><span>Primary Material</span><span>{{ primary_material }}</span></div>
+            <div class="row"><span>Primary Finish</span><span>{{ primary_finish }}</span></div>
+            <div class="row"><span>Secondary Material</span><span>{{ secondary_material }}</span></div>
+            <div class="row"><span>Secondary Finish</span><span>{{ secondary_finish }}</span></div>
+            <div class="row"><span>Fabric</span><span>{{ fabric }}</span></div>
+            <div class="row"><span>Fabric Composition</span><span>{{ fabric_composition }}</span></div>
+            <div class="row"><span>Seat Filling</span><span>{{ seat_filling }}</span></div>
+            <div class="row"><span>Back Filling</span><span>{{ back_filling }}</span></div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">PRODUCT USAGE</div>
+          <div class="table">
+            <div class="row"><span>Application</span><span>{{ application }}</span></div>
+            <div class="row"><span>Environment</span><span>{{ environment }}</span></div>
+            <div class="row"><span>Project</span><span>{{ project }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+        <div class="block">
+          <div class="block-title">KEY FACTS</div>
+          <div class="table">
+            <div class="row"><span>Warranty</span><span>{{ warranty }}</span></div>
+            <div class="row"><span>MOQ</span><span>{{ minimum_order_quantity }}</span></div>
+            <div class="row"><span>Lead Time</span><span>{{ lead_time }}</span></div>
+            <div class="row"><span>Price Tier</span><span>{{ price_tier }}</span></div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">MAINTENANCE & CARE</div>
+          <div class="text">{{ maintenance_&_care }}</div>
+        </div>
+
+        <div class="block">
+          <div class="block-title">NOTE</div>
+          <div class="text">{{ note }}</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-left">
+        <!-- LOGO SVG INLINE -->
+      </div>
+
+      <div class="footer-right">
+        <strong>BIGTREE FURNITURE LLC</strong><br />
+        sales@bigtree-group.com<br />
+        m: +971 56 656 4111<br />
+        t: +971 4 3413334<br />
+        www.bigtree-group.com
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

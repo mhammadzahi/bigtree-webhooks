@@ -1,61 +1,21 @@
-from docxtpl import DocxTemplate, InlineImage
-from docx.shared import Inches, Mm
-from docx import oxml
-import subprocess, re, os, requests, platform, shutil
+import os
+import re
+import base64
+import platform
+import requests
 from io import BytesIO
+from datetime import datetime
 from PIL import Image
+
+# Templating and PDF Generation
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from playwright.sync_api import sync_playwright
 from woocommerce import API
 
-# Try to import docx2pdf for better Mac/Windows conversion (optional, doesn't work on Linux)
-try:
-    from docx2pdf import convert as docx2pdf_convert
-    HAS_DOCX2PDF = True
-except ImportError:
-    HAS_DOCX2PDF = False
-
-
-
-def strip_html_tags(text):
-    """Remove HTML tags from text and clean up formatting"""
-    if not text:
-        return ''
-    # Remove HTML tags but preserve line breaks
-    clean = re.sub(r'<br\s*/?>', '\n', text)  # Convert <br> to newlines
-    clean = re.sub(r'</p>\s*<p>', '\n\n', clean)  # Convert paragraph breaks to double newlines
-    clean = re.sub(r'<[^>]+>', '', clean)  # Remove all other HTML tags
-    # Replace HTML entities
-    clean = clean.replace('&nbsp;', ' ')
-    clean = clean.replace('&amp;', '&')
-    clean = clean.replace('&lt;', '<')
-    clean = clean.replace('&gt;', '>')
-    # Clean up \r\n to just \n
-    clean = clean.replace('\\r\\n', '\n')
-    clean = clean.replace('\r\n', '\n')
-    clean = clean.replace('\\n', '\n')
-    # Clean up multiple spaces but preserve newlines
-    clean = re.sub(r' +', ' ', clean)
-    # Remove excessive newlines (more than 2 consecutive newlines)
-    clean = re.sub(r'\n{3,}', '\n\n', clean)
-    # Remove trailing newlines at the end of each line
-    clean = re.sub(r'\n\s*\n', '\n\n', clean)
-    # Remove leading/trailing whitespace on each line
-    lines = clean.split('\n')
-    lines = [line.strip() for line in lines]
-    # Remove empty lines at the start and end, keep max 1 blank line between content
-    cleaned_lines = []
-    prev_empty = False
-    for line in lines:
-        if not line:
-            if not prev_empty and cleaned_lines:  # Allow one blank line
-                cleaned_lines.append(line)
-            prev_empty = True
-        else:
-            cleaned_lines.append(line)
-            prev_empty = False
-    
-    # Join and strip final result
-    return '\n'.join(cleaned_lines).strip()
-
+# --- CONFIGURATION ---
+TEMPLATE_DIR = 'files'
+TEMP_DIR = 'files/temp'
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 # Global WooCommerce API instance
 wcapi = None
@@ -73,533 +33,305 @@ def init_woocommerce_api(url, consumer_key, consumer_secret):
         )
     return wcapi
 
-def get_root_parent_category(category_id):
-    """
-    Recursively find the root parent category by querying the WooCommerce API.
-    Returns the root category object.
-    """
-    global wcapi
+def strip_html_tags(text):
+    """Clean HTML tags but preserve basic line breaks for text rendering"""
+    if not text:
+        return ''
     
+    # 1. Convert structural breaks to newlines
+    clean = re.sub(r'<br\s*/?>', '\n', text)
+    clean = re.sub(r'</p>\s*<p>', '\n\n', clean)
+    clean = re.sub(r'<[^>]+>', '', clean)  # Strip remaining tags
+    
+    # 2. Decode entities
+    clean = clean.replace('&nbsp;', ' ')
+    clean = clean.replace('&amp;', '&')
+    clean = clean.replace('&lt;', '<')
+    clean = clean.replace('&gt;', '>')
+    
+    # 3. Normalize whitespace
+    clean = clean.replace('\r\n', '\n').replace('\r', '\n')
+    clean = re.sub(r' +', ' ', clean)       # Multiple spaces -> single space
+    clean = re.sub(r'\n{3,}', '\n\n', clean) # Max 2 newlines
+    
+    return clean.strip()
+
+def get_root_parent_category(category_id):
+    """Recursively find the root parent category via WooCommerce API"""
+    global wcapi
     if wcapi is None:
-        print("  ⚠️ WooCommerce API not initialized, cannot fetch parent category")
+        print("  ⚠️ WooCommerce API not initialized")
         return None
     
     try:
-        # Get category details from API
         response = wcapi.get(f"products/categories/{category_id}")
-        
         if response.status_code != 200:
-            print(f"  ❌ API error fetching category {category_id}: {response.status_code}")
             return None
             
         category = response.json()
         parent_id = category.get('parent', 0)
         
-        # If no parent, this IS the root category
         if parent_id == 0:
-            print(f"  ✓ Found root category: {category.get('name')} (ID: {category_id})")
+            print(f"  ✓ Found root category: {category.get('name')}")
             return category
         
-        # Otherwise, recursively check the parent
-        print(f"  → Category '{category.get('name')}' has parent ID {parent_id}, checking parent...")
         return get_root_parent_category(parent_id)
-        
     except Exception as e:
-        print(f"  ❌ Error fetching category {category_id}: {e}")
+        print(f"  ❌ Error fetching category hierarchy: {e}")
         return None
-
 
 def get_template_by_category(product, wc_url=None, wc_key=None, wc_secret=None):
     """
-    Determine which template to use based on product category.
-    Traverses the category hierarchy to find the root parent category.
-    Returns the template file path.
+    Selects the correct HTML template based on product category.
     """
-    # Initialize WooCommerce API if credentials provided
     if wc_url and wc_key and wc_secret:
         init_woocommerce_api(wc_url, wc_key, wc_secret)
     
-    print("\n=== TEMPLATE SELECTION DEBUG ===")
-    print(f"Product ID: {product.get('id', 'N/A')}")
-    print(f"Product Name: {product.get('name', 'N/A')}")
-    
     categories = product.get('categories', [])
-    print(f"Categories found: {len(categories)}")
+    
+    # Fallback default
+    default_template = 'specsheet-template__ALL.html'
     
     if not categories:
-        print("⚠️ No categories found - using ALL template")
-        return 'files/specsheet-template__ALL.docx'
-    
-    # Display all categories
-    categories_info = [(cat.get('name'), cat.get('id')) for cat in categories]
-    print(f"All categories: {categories_info}")
-    
-    # Map of known parent category names to template files
-    known_parent_categories = {
-        'fabric': 'files/specsheet-template__FABRIC.docx',
-        'leather': 'files/specsheet-template__LEATHER.docx',
-        'floor covering': 'files/specsheet-template__FLOOR_COVERING.docx',
-        'wallcovering': 'files/specsheet-template__WALL_COVERING.docx',
-        'wall covering': 'files/specsheet-template__WALL_COVERING.docx',
-        'fine art': 'files/specsheet-template__FINE_ART.docx',
-        'lighting': 'files/specsheet-template__LIGHTING.docx',
-        'objects': 'files/specsheet-template__OBJECTS.docx',
-        'furniture': None,  # Special handling below
+        return default_template
+
+    # Known mappings (Root Category Name -> Filename)
+    # Ensure these files exist in the 'files/' directory
+    known_templates = {
+        'fabric': 'specsheet-template__FABRIC.html',
+        'leather': 'specsheet-template__LEATHER.html',
+        'floor covering': 'specsheet-template__FLOOR_COVERING.html',
+        'wallcovering': 'specsheet-template__WALL_COVERING.html',
+        'wall covering': 'specsheet-template__WALL_COVERING.html',
+        'fine art': 'specsheet-template__FINE_ART.html',
+        'lighting': 'specsheet-template__LIGHTING.html',
+        'objects': 'specsheet-template__OBJECTS.html',
+        # Furniture is handled dynamically below
     }
-    
-    # Use API to find the root parent category
-    print("\nFinding root parent category via API...")
-    first_category_id = categories[0].get('id')
-    print(f"Starting with category ID: {first_category_id} ({categories[0].get('name')})")
-    
-    root_category = get_root_parent_category(first_category_id)
+
+    # 1. Find Root Category
+    first_cat_id = categories[0].get('id')
+    root_category = get_root_parent_category(first_cat_id)
     
     if not root_category:
-        print("⚠️ Could not determine root category via API - using ALL template")
-        return 'files/specsheet-template__ALL.docx'
-    
+        return default_template
+        
     root_name = root_category.get('name', '').lower()
-    print(f"\n✓ Root parent category: {root_category.get('name')}")
     
-    # Check for Furniture (needs special subcategory handling)
+    # 2. Special Logic for Furniture
     if root_name == 'furniture':
-        print("✓ Furniture category detected, checking subcategories...")
-        # Check all product categories for seating-related ones
+        # Check subcategories for specific furniture types
         for cat in categories:
             cat_name = cat.get('name', '').lower()
             cat_slug = cat.get('slug', '').lower()
-            if any(keyword in cat_name or keyword in cat_slug for keyword in ['seating', 'chair', 'sofa']):
-                print(f"  ✓ Found seating subcategory: {cat.get('name')}")
-                print("✓ Using FURNITURE_SEATING template")
-                return 'files/specsheet-template__FURNITURE_SEATING.docx'
-        print("✓ Using FURNITURE_OTHERS template")
-        return 'files/specsheet-template__FURNITURE_OTHERS.docx'
-    
-    # Check if root category matches known categories
-    if root_name in known_parent_categories and known_parent_categories[root_name]:
-        template = known_parent_categories[root_name]
-        print(f"✓ Match found! {root_category.get('name')} → {template}")
-        return template
-    
-    # Default template if no match found
-    print("⚠️ No matching template found - using ALL template")
-    return 'files/specsheet-template__ALL.docx'
+            if any(k in cat_name or k in cat_slug for k in ['seating', 'chair', 'sofa', 'bench', 'stool']):
+                return 'specsheet-template__FURNITURE_SEATING.html'
+        return 'specsheet-template__FURNITURE_OTHERS.html'
 
+    # 3. Check Standard Mappings
+    if root_name in known_templates:
+        return known_templates[root_name]
 
-def convert_docx_to_pdf_best_method(docx_path, pdf_path):
+    return default_template
+
+def process_image_to_base64(image_url):
     """
-    Convert DOCX to PDF using the best available method for each platform.
-    
-    Priority:
-    - Linux/Ubuntu: LibreOffice (fast, reliable, no dependencies)
-    - macOS/Windows: docx2pdf (uses native Word) > LibreOffice
-    
-    Returns: True if successful, False otherwise
+    Downloads image, resizes if too large, and converts to Base64 string.
+    Returns: HTML <img> tag string or empty string.
     """
-    system = platform.system()
-    print(f"Attempting PDF conversion using best available method...")
-    
-    # On Linux/Ubuntu: Use LibreOffice directly (most reliable)
-    if system == 'Linux':
-        print("→ Using LibreOffice (optimized for Ubuntu)...")
-        soffice_paths = [
-            '/usr/bin/soffice',
-            '/usr/bin/libreoffice',
-            'soffice',
-            'libreoffice'
-        ]
-        
-        soffice_path = None
-        for path in soffice_paths:
-            if os.path.isfile(path) or shutil.which(path):
-                soffice_path = path
-                break
-        
-        if not soffice_path:
-            raise RuntimeError(
-                "❌ LibreOffice not found!\n"
-                "Please install: sudo apt-get install libreoffice-writer"
-            )
-        
-        abs_docx = os.path.abspath(docx_path)
-        abs_outdir = os.path.abspath(os.path.dirname(pdf_path))
-        
-        try:
-            result = subprocess.run([
-                soffice_path,
-                '--headless',
-                '--invisible',
-                '--nocrashreport',
-                '--nodefault',
-                '--nofirststartwizard',
-                '--nolockcheck',
-                '--nologo',
-                '--norestore',
-                '--convert-to', 'pdf:writer_pdf_Export',
-                '--outdir', abs_outdir,
-                abs_docx
-            ], check=True, capture_output=True, timeout=45, env={**os.environ, 'HOME': os.path.expanduser('~')})
-            
-            if os.path.exists(pdf_path):
-                print("✓ PDF conversion successful using LibreOffice")
-                if result.stdout:
-                    output_text = result.stdout.decode().strip()
-                    if output_text:
-                        print(f"  {output_text}")
-                return True
-                
-        except subprocess.TimeoutExpired:
-            print("❌ LibreOffice conversion timed out after 45 seconds")
-            raise RuntimeError("PDF conversion took too long")
-        except subprocess.CalledProcessError as e:
-            print(f"❌ LibreOffice conversion failed: {e}")
-            if e.stderr:
-                stderr = e.stderr.decode().strip()
-                if stderr:
-                    print(f"  Error: {stderr}")
-            raise
-    
-    # On macOS/Windows: Try docx2pdf first (uses native Word)
-    if HAS_DOCX2PDF and system in ['Darwin', 'Windows']:
-        try:
-            print("→ Using docx2pdf (Microsoft Word native converter)...")
-            docx2pdf_convert(docx_path, pdf_path)
-            if os.path.exists(pdf_path):
-                print("✓ PDF conversion successful using docx2pdf (Word)")
-                return True
-        except Exception as e:
-            print(f"⚠️ docx2pdf failed: {e}")
-            print("  Falling back to LibreOffice...")
-    
-    # Fallback: LibreOffice for macOS/Windows
-    if system == 'Darwin':  # macOS
-        soffice_paths = [
-            '/Applications/LibreOffice.app/Contents/MacOS/soffice',
-            '/usr/local/bin/soffice'
-        ]
-    elif system == 'Windows':
-        soffice_paths = ['soffice', 'soffice.exe']
-    else:
-        soffice_paths = ['soffice', 'libreoffice']
-    
-    # Find LibreOffice executable
-    soffice_path = None
-    for path in soffice_paths:
-        if os.path.isfile(path) or shutil.which(path):
-            soffice_path = path
-            break
-    
-    if not soffice_path:
-        raise RuntimeError(
-            "❌ No PDF conversion tool found!\n"
-            "Please install LibreOffice:\n"
-            "  Ubuntu: sudo apt-get install libreoffice-writer\n"
-            "  macOS: brew install --cask libreoffice\n"
-            "  Windows: Download from https://www.libreoffice.org/"
-        )
-    
-    abs_docx = os.path.abspath(docx_path)
-    abs_outdir = os.path.abspath(os.path.dirname(pdf_path))
-    
+    if not image_url:
+        return ""
+
     try:
-        print(f"→ Using LibreOffice: {soffice_path}")
+        print(f"  Processing image: {image_url}")
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
         
-        result = subprocess.run([
-            soffice_path,
-            '--headless',
-            '--invisible',
-            '--nocrashreport',
-            '--nodefault',
-            '--nofirststartwizard',
-            '--nolockcheck',
-            '--nologo',
-            '--norestore',
-            '--convert-to', 'pdf:writer_pdf_Export',
-            '--outdir', abs_outdir,
-            abs_docx
-        ], check=True, capture_output=True, timeout=45, env={**os.environ, 'HOME': os.path.expanduser('~')})
+        img = Image.open(BytesIO(response.content))
         
-        if os.path.exists(pdf_path):
-            print("✓ PDF conversion successful using LibreOffice")
-            if result.stdout:
-                output_text = result.stdout.decode().strip()
-                if output_text:
-                    print(f"  {output_text}")
-            return True
-            
-    except subprocess.TimeoutExpired:
-        print("❌ LibreOffice conversion timed out after 45 seconds")
-        raise RuntimeError("PDF conversion took too long - the file may be too complex")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ LibreOffice conversion failed: {e}")
-        if e.stderr:
-            stderr = e.stderr.decode().strip()
-            if stderr:
-                print(f"  Error details: {stderr}")
-        raise
-    
-    return False
+        # Convert to RGB to avoid mode issues (e.g. CMYK/RGBA)
+        if img.mode not in ('RGB', 'L'):
+            img = img.convert('RGB')
 
+        # Limit max dimensions to reduce PDF size (e.g., max 1000px height)
+        # The CSS in the template handles the display size, this is just for optimization
+        max_dimension = 1500
+        if img.height > max_dimension or img.width > max_dimension:
+            img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+
+        # Save to buffer as JPEG
+        buffered = BytesIO()
+        img.save(buffered, format="JPEG", quality=85)
+        
+        # Encode
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        
+        # Return full HTML tag with styling to ensure it fits the container
+        # utilizing object-fit: contain to keep aspect ratio inside the box
+        return f'<img src="data:image/jpeg;base64,{img_str}" style="width: 100%; height: 100%; object-fit: contain;" alt="Product Image" />'
+
+    except Exception as e:
+        print(f"  ❌ Image processing failed: {e}")
+        return ""
 
 def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
     print("\n" + "="*50)
-    print("STARTING SPECSHEET PDF GENERATION")
+    print(f"STARTING PDF GENERATION (Playwright): {product.get('name')}")
     print("="*50)
-    
-    # Select template based on product category
-    template_path = get_template_by_category(product, wc_url, wc_key, wc_secret)
-    output_docx = f'files/temp/{product["id"]}_specsheet.docx'
-    output_pdf = f'files/temp/{product["id"]}_specsheet.pdf'
-    
-    print(f"\nSelected template: {template_path}")
-    print(f"Output DOCX: {output_docx}")
-    print(f"Output PDF: {output_pdf}")
 
-    # Helper function to extract meta data by key
-    def get_meta_value(meta_data, key, clean_html=False):
-        for item in meta_data:
-            if item.get('key') == key:
-                value = item.get('value', '')
-                # Return the value as-is, even if it's "n/a"
-                result = value if value else 'N/A'
-                # Clean HTML if requested
-                if clean_html and result != 'N/A':
-                    result = strip_html_tags(result)
-                return result
-        return 'N/A'
-    
-    # Helper function to extract attribute options
-    def get_attribute_options(attributes, attr_name):
-        for attr in attributes:
-            if attr.get('name') == attr_name or attr.get('slug') == attr_name:
-                options = attr.get('options', [])
-                return ', '.join(options) if options else 'n/a'
-        return 'n/a'
+    # 1. Determine Template
+    template_filename = get_template_by_category(product, wc_url, wc_key, wc_secret)
+    print(f"Selected Template: {template_filename}")
 
-    # Extract meta data
+    # 2. Prepare Data Context
     meta_data = product.get('meta_data', [])
-    attributes = product.get('attributes', [])
     categories = product.get('categories', [])
     brands = product.get('brands', [])
     images = product.get('images', [])
-    
-    print(f"\n=== PRODUCT DATA EXTRACTION ===")
-    print(f"Meta data items: {len(meta_data)}")
-    print(f"Attributes: {len(attributes)}")
-    print(f"Categories: {len(categories)}")
-    print(f"Brands: {len(brands)}")
-    print(f"Images: {len(images)}")
-    
-    # Load the template to create InlineImage
-    print(f"\nLoading template: {template_path}")
-    doc = DocxTemplate(template_path)
-    print("✓ Template loaded successfully")
-    
-    # Download and prepare image
-    print(f"\n=== IMAGE PROCESSING ===")
-    image_placeholder = None
-    if images and images[0].get('src'):
-        try:
-            image_url = images[0].get('src')
-            print(f"Downloading image from: {image_url}")
-            response = requests.get(image_url, timeout=10, verify=True)
-            response.raise_for_status()
-            
-            # Create InlineImage from downloaded image with height limit
-            image_stream = BytesIO(response.content)
-            
-            # Open image to get dimensions and validate format
-            img = Image.open(image_stream)
-            img_width, img_height = img.size
-            print(f"Image dimensions: {img_width}x{img_height} pixels")
-            print(f"Image mode: {img.mode}")
-            
-            # Convert image to RGB if necessary (handles RGBA, P, L, etc.)
-            if img.mode not in ('RGB', 'L'):
-                print(f"Converting image from {img.mode} to RGB")
-                img = img.convert('RGB')
-            
-            # Calculate dimensions to limit height to 300px while maintaining aspect ratio
-            max_height_px = 342.42519685
-            if img_height > max_height_px:
-                # Scale down proportionally
-                scale_factor = max_height_px / img_height
-                new_height_px = max_height_px
-                print(f"Scaling image down: {img_height}px → {new_height_px}px (scale: {scale_factor:.2f})")
-            else:
-                # Use original size if already smaller than 300px
-                new_height_px = img_height
-                print(f"Image size OK: {img_height}px (no scaling needed)")
-            
-            # Convert pixels to inches (96 DPI standard)
-            new_height_inches = new_height_px / 96
-            print(f"Final image height: {new_height_inches:.2f} inches")
-            
-            # Convert image to a format supported by docx (JPEG)
-            converted_stream = BytesIO()
-            img.save(converted_stream, format='JPEG', quality=95)
-            converted_stream.seek(0)
-            
-            # Create InlineImage with calculated height (using height parameter maintains aspect ratio)
-            image_placeholder = InlineImage(doc, converted_stream, height=Inches(new_height_inches))
-            print("✓ Image downloaded and processed successfully")
 
-        except Exception as e:
-            print(f"❌ Error processing image (attempt 1): {e}")
-            # Try without SSL verification as fallback
-            print("Retrying without SSL verification...")
-            try:
-                response = requests.get(image_url, timeout=10, verify=False)
-                response.raise_for_status()
-                image_stream = BytesIO(response.content)
-                
-                # Open image to get dimensions and validate format
-                img = Image.open(image_stream)
-                img_width, img_height = img.size
-                
-                # Convert image to RGB if necessary
-                if img.mode not in ('RGB', 'L'):
-                    img = img.convert('RGB')
-                
-                # Calculate dimensions to limit height to 342.42519685px while maintaining aspect ratio
-                max_height_px = 342.42519685
-                if img_height > max_height_px:
-                    new_height_px = max_height_px
-                else:
-                    new_height_px = img_height
-                
-                # Convert pixels to inches
-                new_height_inches = new_height_px / 96
-                
-                # Convert image to JPEG format
-                converted_stream = BytesIO()
-                img.save(converted_stream, format='JPEG', quality=95)
-                converted_stream.seek(0)
-                
-                image_placeholder = InlineImage(doc, converted_stream, height=Inches(new_height_inches))
-                print("✓ Image processed successfully (without SSL verification)")
-            except Exception as e2:
-                print(f"❌ Image processing failed completely: {e2}")
-                image_placeholder = ""  # Empty string instead of text
-    else:
-        print("⚠️ No images found for product")
-        image_placeholder = ""  # Empty string if no image
-    
-    # Build REQUEST_INQUIRY - provide both URL and display text separately
-    print(f"\n=== REQUEST_INQUIRY URL GENERATION ===")
-    product_slug = product.get('slug', '')
-    print(f"Product slug: {product_slug}")
-    print(f"WC Store URL: {wc_url}")
-    
-    if wc_url and product_slug:
-        # Remove trailing slash from wc_url if present
-        base_url = wc_url.rstrip('/')
-        request_inquiry_url = f"{base_url}/product/{product_slug}/"
-        request_inquiry_text = 'Request Inquiry'
-        print(f"✓ REQUEST_INQUIRY URL created: {request_inquiry_url}")
-        print(f"✓ Use in template: {{{{ REQUEST_INQUIRY_URL }}}} for URL or {{{{ REQUEST_INQUIRY_TEXT }}}} for text")
-    else:
-        request_inquiry_url = 'N/A'
-        request_inquiry_text = 'Request Inquiry'
-        print(f"⚠️ REQUEST_INQUIRY not generated - missing slug or wc_url")
-    
-    # Build comprehensive context data
-    context_data = {
-        # Basic Information (matching template placeholders)
+    def get_meta(key, default='N/A', clean=False):
+        for item in meta_data:
+            if item.get('key') == key:
+                val = item.get('value')
+                if val:
+                    return strip_html_tags(val) if clean else val
+        return default
+
+    # Handle Image
+    image_url = images[0].get('src') if images else None
+    image_html = process_image_to_base64(image_url)
+
+    # Handle Inquiry URL
+    req_url = 'N/A'
+    if wc_url and product.get('slug'):
+        base = wc_url.rstrip('/')
+        req_url = f"{base}/product/{product.get('slug')}/"
+
+    # Context Mapping (matches placeholders in your HTML)
+    context = {
+        # Core
         'prdct_name': product.get('name', 'N/A'),
-        'product_name': product.get('name', 'N/A'),
         'product_sku': product.get('sku', 'N/A'),
-        'product_price': product.get('price', 'N/A'),
-        'prdct_description': strip_html_tags(product.get('description', 'N/A')),
-        'product_description': strip_html_tags(product.get('description', 'N/A')),
-        'short_description': strip_html_tags(product.get('short_description', 'N/A')),
+        'prdct_description': strip_html_tags(product.get('description', '')),
         
-        # REQUEST_INQUIRY - URL and text separately (use URL for clickable link in Word)
-        'REQUEST_INQUIRY': request_inquiry_url,
-        'REQUEST_INQUIRY_URL': request_inquiry_url,
-        'REQUEST_INQUIRY_TEXT': request_inquiry_text,
-        
-        # Categories and Brand (matching template placeholders)
+        # Categories
         'prdct_category': categories[0].get('name', 'N/A') if categories else 'N/A',
-        'category': categories[0].get('name', 'N/A') if categories else 'N/A',
-        'brand': brands[0].get('name', 'N/A') if brands else get_meta_value(meta_data, 'brand'),
-        
-        # Product Specifications from meta_data - DETAIL section
-        'type': get_meta_value(meta_data, 'type'),
-        'width': get_meta_value(meta_data, 'width'),
-        'length': get_meta_value(meta_data, 'length'),
-        'size': get_meta_value(meta_data, 'size'),
-        'thickness': get_meta_value(meta_data, 'thickness'),
-        'weight': get_meta_value(meta_data, 'weight'),
-        'composition': get_meta_value(meta_data, 'composition'),
-        'backing': get_meta_value(meta_data, 'backing'),
-        'pattern': get_meta_value(meta_data, 'pattern'),
-        'repeat': get_meta_value(meta_data, 'repeat'),
-        'color': get_meta_value(meta_data, 'color'),
-        'origin': get_meta_value(meta_data, 'origin'),
-        
-        # Product Usage - PRODUCT USAGE section
-        'application': get_meta_value(meta_data, 'application'),
-        'environment': get_meta_value(meta_data, 'environment'),
-        'project': get_meta_value(meta_data, 'project', clean_html=True),
-        
-        # Performance & Durability - TECHNICAL DATA section
-        'durability': get_meta_value(meta_data, 'durability'),
-        'piling': get_meta_value(meta_data, 'piling'),
-        'color_resistance': get_meta_value(meta_data, 'color_resistance'),
-        'color_fastness': get_meta_value(meta_data, 'color_fastness', clean_html=True),
-        'seam_slippage': get_meta_value(meta_data, 'seam_slippage'),
-        'shrinkage_wet': get_meta_value(meta_data, 'shrinkage_wet'),
-        
-        # Certifications & Compliance
-        'flame_retardant': get_meta_value(meta_data, 'flame_retardant', clean_html=True),
-        'structural_compliance': get_meta_value(meta_data, 'structural_compliance'),
-        'thermal_resistance': get_meta_value(meta_data, 'thermal_resistance'),
-        'weather_resistance': get_meta_value(meta_data, 'weather_resistance'),
-        'antibacterial': get_meta_value(meta_data, 'antibacterial'),
-        'other_certifications': get_meta_value(meta_data, 'other_certifications'),
-        
-        # Care & Ordering - MAINTENANCE & CARE and KEY FACTS sections
-        'maintenance_care': get_meta_value(meta_data, 'maintenance_&_care', clean_html=True),
-        'warranty': get_meta_value(meta_data, 'warranty'),
-        'minimum_order_quantity': get_meta_value(meta_data, 'minimum_order_quantity'),
-        'lead_time': get_meta_value(meta_data, 'lead_time'),
-        'price_tier': get_meta_value(meta_data, 'price_tier'),
-        'note': get_meta_value(meta_data, 'note'),
-        
+        'brand': brands[0].get('name', 'N/A') if brands else get_meta('brand'),
+
         # Image
-        'product_image': images[0].get('src', '') if images else '',
-        'image_placeholder': image_placeholder,
+        'IMAGE_PLACEHOLDER': image_html,  # Injects the <img ...> tag
         
-        # Additional Info
-        'permalink': product.get('permalink', ''),
-        'date_created': product.get('date_created', 'N/A'),
+        # Links
+        'REQUEST_INQUIRY_URL': req_url,
+
+        # Product Specs (Meta)
+        'type': get_meta('type'),
+        'width': get_meta('width'),
+        'length': get_meta('length'),
+        'size': get_meta('size'),
+        'thickness': get_meta('thickness'),
+        'weight': get_meta('weight'),
+        'color': get_meta('color'),
+        'origin': get_meta('origin'),
+        'composition': get_meta('composition'),
+        'backing': get_meta('backing'),
+        'pattern': get_meta('pattern'),
+        'repeat': get_meta('repeat'),
+
+        # Furniture Specific
+        'armrest_height': get_meta('armrest_height'),
+        'seat_height': get_meta('seat_height'),
+        'seat_depth': get_meta('seat_depth'),
+        'primary_material': get_meta('primary_material'),
+        'primary_finish': get_meta('primary_finish'),
+        'secondary_material': get_meta('secondary_material'),
+        'secondary_finish': get_meta('secondary_finish'),
+        'fabric': get_meta('fabric'),
+        'fabric_composition': get_meta('fabric_composition'),
+        'seat_filling': get_meta('seat_filling'),
+        'back_filling': get_meta('back_filling'),
+        
+        # Usage
+        'application': get_meta('application'),
+        'environment': get_meta('environment'),
+        'project': get_meta('project', clean=True),
+        
+        # Technical
+        'durability': get_meta('durability'),
+        'piling': get_meta('piling'),
+        'color_resistance': get_meta('color_resistance'),
+        'color_fastness': get_meta('color_fastness', clean=True),
+        'seam_slippage': get_meta('seam_slippage'),
+        'shrinkage_wet': get_meta('shrinkage_wet'),
+        'flame_retardant': get_meta('flame_retardant', clean=True),
+        'structural_compliance': get_meta('structural_compliance'),
+        'thermal_resistance': get_meta('thermal_resistance'),
+        'weather_resistance': get_meta('weather_resistance'),
+        'antibacterial': get_meta('antibacterial'),
+        'other_certifications': get_meta('other_certifications'),
+        
+        # Care & Commercial
+        'maintenance__care': get_meta('maintenance_&_care', clean=True), # Note underscores for jinja
+        'warranty': get_meta('warranty'),
+        'minimum_order_quantity': get_meta('minimum_order_quantity'),
+        'lead_time': get_meta('lead_time'),
+        'price_tier': get_meta('price_tier'),
+        'note': get_meta('note'),
     }
 
-    # Render and save the document
-    print(f"\n=== DOCUMENT RENDERING ===")
-    print("Rendering template with context data...")
-    doc.render(context_data)
-    print(f"Saving DOCX to: {output_docx}")
-    doc.save(output_docx)
-    print("✓ DOCX file saved successfully")
+    # 3. Render HTML with Jinja2
+    try:
+        env = Environment(
+            loader=FileSystemLoader(TEMPLATE_DIR),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+        
+        # Custom filter to turn newlines into <br> for descriptions
+        def nl2br(value):
+            if not value: return ""
+            return value.replace('\n', '<br>\n')
+        
+        env.filters['nl2br'] = nl2br
+        
+        template = env.get_template(template_filename)
+        rendered_html = template.render(context)
+        print("✓ HTML Rendered successfully")
+
+    except Exception as e:
+        print(f"❌ Template Rendering Failed: {e}")
+        # Return None or raise logic here depending on preference
+        raise RuntimeError(f"Template rendering failed: {e}")
+
+    # 4. Generate PDF with Playwright
+    output_pdf = os.path.join(TEMP_DIR, f"{product['id']}_specsheet.pdf")
     
-    # Convert DOCX to PDF using best available method
-    print(f"\n=== PDF CONVERSION ===")
-    system = platform.system()
-    print(f"Detected OS: {system}")
-    
-    convert_docx_to_pdf_best_method(output_docx, output_pdf)
-    
-    # Clean up the temporary DOCX file
-    print(f"\n=== CLEANUP ===")
-    # OPTIONAL: Comment out the cleanup to keep DOCX for inspection
-    if os.path.exists(output_docx):
-        print(f"Removing temporary DOCX: {output_docx}")
-        os.remove(output_docx)
-        print("✓ Cleanup complete")
-    # To keep DOCX for debugging, comment out the above 4 lines
-    
-    print(f"\n✅ PDF generated successfully: {output_pdf}")
-    print("="*50 + "\n")
-    return output_pdf
+    try:
+        with sync_playwright() as p:
+            # Launch browser
+            # args=['--no-sandbox'] is crucial for running as root/headless on Linux
+            browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            page = browser.new_page()
+            
+            # Set content
+            page.set_content(rendered_html, wait_until="networkidle")
+            
+            # Generate PDF
+            # A4 dimensions are roughly 595px x 842px at 72dpi, but Playwright handles 'format="A4"' well
+            # print_background=True ensures CSS background colors/images are visible
+            page.pdf(
+                path=output_pdf,
+                format="A4",
+                print_background=True,
+                margin={"top": "0px", "right": "0px", "bottom": "0px", "left": "0px"}
+            )
+            
+            browser.close()
+            
+        print(f"✅ PDF Generated: {output_pdf}")
+        return output_pdf
+
+    except Exception as e:
+        print(f"❌ PDF Generation Failed: {e}")
+        raise RuntimeError(f"Playwright PDF generation failed: {e}")
+
+# Note: No cleanup of the PDF is done here; the calling function in app.py handles deletion.
