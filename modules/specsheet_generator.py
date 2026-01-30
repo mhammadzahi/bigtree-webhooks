@@ -271,7 +271,7 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
         'other_certifications': get_meta('other_certifications'),
         
         # Care & Commercial
-        'maintenance__care': get_meta('maintenance_&_care', clean=True), # Note underscores for jinja
+        'maintenance_and_care': get_meta('maintenance_&_care', clean=True),
         'warranty': get_meta('warranty'),
         'minimum_order_quantity': get_meta('minimum_order_quantity'),
         'lead_time': get_meta('lead_time'),
