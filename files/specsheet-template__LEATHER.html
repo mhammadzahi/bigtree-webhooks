@@ -70,24 +70,27 @@
         }
         dd { font-weight: 500; }
 
-        /* --- LAYOUT TABLE --- */
-        .main-table {
+        /* --- LAYOUT GRID --- */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 272px 272px;
+            column-gap: 11px;
+            padding: 0 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: calc(100% - 92px);
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        
-        .main-table td {
-            vertical-align: top;
-            padding: 20px;
-            width: 50%;
+            height: 100%;
+            pointer-events: none;
         }
 
         /* --- IMAGE PLACEHOLDER --- */
         .image-placeholder-area {
-            width: 100%;
-            height: 350px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 272px;
+            height: 272px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -95,8 +98,7 @@
             color: #555;
             font-size: 9px;
             font-weight: 700;
-            position: relative;
-            margin-bottom: 20px;
+            position: relative; 
         }
 
         /* --- WATERMARK LOGO --- */
@@ -112,10 +114,14 @@
 
         /* --- LEFT COLUMN --- */
         .col-left {
+            padding-top: 302px; 
+            pointer-events: auto;
         }
 
         /* --- RIGHT COLUMN --- */
         .col-right {
+            padding-top: 20px;
+            pointer-events: auto;
         }
         .col-right dl {
             grid-template-columns: 90px 1fr; 
