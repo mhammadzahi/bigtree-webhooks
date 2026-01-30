@@ -153,22 +153,21 @@ def process_image_to_base64(image_url):
         if img.mode not in ('RGB', 'L'):
             img = img.convert('RGB')
 
-        # Limit max dimensions to reduce PDF size (e.g., max 1000px height)
-        # The CSS in the template handles the display size, this is just for optimization
-        max_dimension = 1500
+        # Limit max dimensions to reduce PDF size (max 800px for better performance)
+        max_dimension = 800
         if img.height > max_dimension or img.width > max_dimension:
             img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
 
         # Save to buffer as JPEG
         buffered = BytesIO()
-        img.save(buffered, format="JPEG", quality=85)
+        img.save(buffered, format="JPEG", quality=80)
         
         # Encode
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
         
         # Return full HTML tag with styling to ensure it fits the container
         # utilizing object-fit: contain to keep aspect ratio inside the box
-        return f'<img src="data:image/jpeg;base64,{img_str}" style="width: 100%; height: 100%; object-fit: contain;" alt="Product Image" />'
+        return f'<img src="data:image/jpeg;base64,{img_str}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1;" alt="Product Image" />'
 
     except Exception as e:
         print(f"  ❌ Image processing failed: {e}")
