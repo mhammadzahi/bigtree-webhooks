@@ -1,0 +1,10 @@
+touch specsheet-template__ALL.html
+touch specsheet-template__FABRIC.html
+touch specsheet-template__FINE_ART.html
+touch specsheet-template__FLOOR_COVERING.html
+touch specsheet-template__FURNITURE_OTHERS.html
+touch specsheet-template__FURNITURE_SEATING.html
+touch specsheet-template__LEATHER.html
+touch specsheet-template__LIGHTING.html
+touch specsheet-template__OBJECTS.html
+touch specsheet-template__WALL_COVERING.html
