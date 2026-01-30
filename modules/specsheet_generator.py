@@ -9,7 +9,7 @@ from PIL import Image
 
 # Templating and PDF Generation
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 from woocommerce import API
 
 # --- CONFIGURATION ---
@@ -174,7 +174,7 @@ def process_image_to_base64(image_url):
         print(f"  ❌ Image processing failed: {e}")
         return ""
 
-def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
+async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
     print("\n" + "="*50)
     print(f"STARTING PDF GENERATION (Playwright): {product.get('name')}")
     print("="*50)
@@ -306,26 +306,26 @@ def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
     output_pdf = os.path.join(TEMP_DIR, f"{product['id']}_specsheet.pdf")
     
     try:
-        with sync_playwright() as p:
+        async with async_playwright() as p:
             # Launch browser
             # args=['--no-sandbox'] is crucial for running as root/headless on Linux
-            browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
-            page = browser.new_page()
+            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            page = await browser.new_page()
             
             # Set content
-            page.set_content(rendered_html, wait_until="networkidle")
+            await page.set_content(rendered_html, wait_until="networkidle")
             
             # Generate PDF
             # A4 dimensions are roughly 595px x 842px at 72dpi, but Playwright handles 'format="A4"' well
             # print_background=True ensures CSS background colors/images are visible
-            page.pdf(
+            await page.pdf(
                 path=output_pdf,
                 format="A4",
                 print_background=True,
                 margin={"top": "0px", "right": "0px", "bottom": "0px", "left": "0px"}
             )
             
-            browser.close()
+            await browser.close()
             
         print(f"✅ PDF Generated: {output_pdf}")
         return output_pdf
