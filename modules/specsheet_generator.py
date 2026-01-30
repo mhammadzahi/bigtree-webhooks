@@ -8,7 +8,7 @@ from datetime import datetime
 from PIL import Image
 
 # Templating and PDF Generation
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape, Markup
 from playwright.async_api import async_playwright
 from woocommerce import API
 
@@ -167,7 +167,7 @@ def process_image_to_base64(image_url):
         
         # Return full HTML tag with styling to ensure it fits the container
         # utilizing object-fit: contain to keep aspect ratio inside the box
-        return f'<img src="data:image/jpeg;base64,{img_str}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1;" alt="Product Image" />'
+        return Markup(f'<img src="data:image/jpeg;base64,{img_str}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1;" alt="Product Image" />')
 
     except Exception as e:
         print(f"  ❌ Image processing failed: {e}")
