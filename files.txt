@@ -8,3 +8,10 @@ touch specsheet-template__LEATHER.html
 touch specsheet-template__LIGHTING.html
 touch specsheet-template__OBJECTS.html
 touch specsheet-template__WALL_COVERING.html
+
+
+
+now: 
+template__LEATHER
+template__FLOOR_COVERING
+template__FABRIC
