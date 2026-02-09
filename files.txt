@@ -12,6 +12,4 @@ touch specsheet-template__WALL_COVERING.html
 
 
 now: 
-template__LEATHER
 template__FLOOR_COVERING
-template__FABRIC
