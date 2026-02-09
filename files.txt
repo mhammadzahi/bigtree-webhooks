@@ -13,3 +13,6 @@ touch specsheet-template__WALL_COVERING.html
 
 now: 
 template__FLOOR_COVERING
+
+https://shop.bigtree-group.com/wp-content/uploads/2026/02/BigTree_specsheet_Logo.png
+https://shop.bigtree-group.com/wp-content/uploads/2026/02/qr.png
