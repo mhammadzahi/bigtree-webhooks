@@ -9,11 +9,11 @@ SF_ENDPOINT = os.getenv("SF_ENDPOINT")
 SF_FIELD_PROJECT = os.getenv("SF_FIELD_PROJECT")
 SF_FIELD_NOTES = os.getenv("SF_FIELD_NOTES")
 
-print('SF_ORG_ID:', SF_ORG_ID)
-print('SF_RET_URL:', SF_RET_URL)
-print('SF_ENDPOINT:', SF_ENDPOINT)
-print('SF_FIELD_PROJECT:', SF_FIELD_PROJECT)
-print('SF_FIELD_NOTES:', SF_FIELD_NOTES)
+# print('SF_ORG_ID:', SF_ORG_ID)
+# print('SF_RET_URL:', SF_RET_URL)
+# print('SF_ENDPOINT:', SF_ENDPOINT)
+# print('SF_FIELD_PROJECT:', SF_FIELD_PROJECT)
+# print('SF_FIELD_NOTES:', SF_FIELD_NOTES)
 
 
 class SalesforceWebToLeadService:
