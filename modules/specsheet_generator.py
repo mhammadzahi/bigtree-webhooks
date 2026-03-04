@@ -174,11 +174,12 @@ def get_template_by_category(product, wc_url=None, wc_key=None, wc_secret=None):
 def process_image_to_base64(image_url):
     """
     Downloads image, resizes if too large, and converts to Base64 string.
-    Returns: HTML <img> tag string or empty string.
+    Returns: HTML <img> tag string or empty string if image unavailable.
+    Always returns safely without breaking the PDF generation.
     """
     print("[DEBUG] process_image_to_base64 called")
     if not image_url:
-        print("[DEBUG] No image URL provided")
+        print("[DEBUG] No image URL provided, returning empty string (will show fallback in template)")
         return ""
 
     try:
@@ -204,7 +205,7 @@ def process_image_to_base64(image_url):
 
         # Save to buffer as JPEG
         buffered = BytesIO()
-        img.save(buffered, format="JPEG", quality=80)
+        img.save(buffered, format="JPEG", quality=85)
         buffer_size = len(buffered.getvalue())
         print(f"[DEBUG] Image buffer size: {buffer_size} bytes ({buffer_size/1024:.2f} KB)")
         
@@ -212,14 +213,20 @@ def process_image_to_base64(image_url):
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
         print(f"[DEBUG] Base64 encoded string length: {len(img_str)} chars")
         
-        # Return full HTML tag with styling to ensure it fits the container
-        # utilizing object-fit: contain to keep aspect ratio inside the box
+        # Return full HTML tag with proper styling for PDF rendering
+        # Using absolute positioning to fill the container properly
+        html_img = Markup(
+            f'<img src="data:image/jpeg;base64,{img_str}" '
+            f'style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; '
+            f'object-fit: contain; z-index: 1;" alt="Product Image" />'
+        )
         print("[DEBUG] Returning Markup-wrapped image HTML")
-        return Markup(f'<img src="data:image/jpeg;base64,{img_str}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1;" alt="Product Image" />')
+        return html_img
 
     except Exception as e:
-        print(f"  ❌ Image processing failed: {e}")
+        print(f"  ⚠️ Image processing failed: {e}")
         print(f"[DEBUG] Exception type: {type(e).__name__}")
+        print(f"[DEBUG] PDF will render with empty image placeholder (template will show fallback text)")
         return ""
 
 async def _launch_browser_with_fallback(p):
@@ -476,26 +483,23 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
             print("[DEBUG] Creating new page")
             # Set viewport to A4 dimensions in pixels at 96dpi (standard screen DPI)
             # A4 = 210mm x 297mm = 794px x 1123px at 96dpi
-            page = await browser.new_page(viewport={"width": 794, "height": 1123})
-            print("[DEBUG] Page created with A4 viewport")
+            page = await browser.new_page(viewport={"width": 794, "height": int(1123 * 2)})
+            print("[DEBUG] Page created with A4-extended viewport for proper scaling")
             
             # Set content
             print("[DEBUG] Setting page content (waiting for networkidle)")
             await page.set_content(rendered_html, wait_until="networkidle")
             print("[DEBUG] Page content set, network idle")
             
-            # Generate PDF
-            # A4 dimensions: 210mm x 297mm = 8.27in x 11.69in
-            # print_background=True ensures CSS background colors/images are visible
-            # scale=1 ensures no scaling is applied
-            print("[DEBUG] Generating PDF (A4 format, with background)")
+            # Set A4 page size and margins for print
+            print("[DEBUG] Generating PDF (A4 format, with full background rendering)")
             await page.pdf(
                 path=output_pdf,
                 format="A4",
                 print_background=True,
                 margin={"top": "0mm", "right": "0mm", "bottom": "0mm", "left": "0mm"},
                 scale=1.0,
-                prefer_css_page_size=False
+                prefer_css_page_size=True
             )
             print("[DEBUG] PDF generated successfully")
             

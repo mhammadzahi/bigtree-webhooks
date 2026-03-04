@@ -6,18 +6,60 @@
     <title>Technical Specification Sheet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @page {
+            size: A4;
+            margin: 0;
+            padding: 0;
+        }
+
         @media print {
-            body { background-color: white !important; }
-            .shadow-2xl { box-shadow: none !important; }
-            .container-page { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
-            /* Force background colors and images to print */
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                -moz-print-color-adjust: exact !important;
+            }
+
+            body {
+                background-color: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 210mm;
+                height: 297mm;
+            }
+
+            .container-page {
+                max-width: 100% !important;
+                width: 210mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                page-break-after: always;
+            }
+
+            header, main, footer {
+                page-break-inside: avoid;
+            }
+
+            img {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container-page {
+            margin: 0;
+            padding: 0;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen py-8 flex justify-center text-[12px] text-black font-sans leading-relaxed">
+<body class="bg-gray-100 min-h-screen py-0 flex justify-center text-[12px] text-black font-sans leading-relaxed">
 
-    <div class="container-page bg-white w-full max-w-[850px] shadow-2xl relative flex flex-col min-h-[1100px]">
+    <div class="container-page bg-white w-screen max-w-[210mm] shadow-2xl relative flex flex-col min-h-[297mm]" style="width: 210mm; height: 297mm; margin: 0; padding: 0; box-sizing: border-box;">
         
         <header class="bg-[#562b45] text-white px-10 py-6 flex justify-between items-center h-[120px]">
             
@@ -37,7 +79,7 @@
 
         <div class="px-10 py-8 flex justify-between items-end relative z-10">
             <h1 class="text-[18px] font-bold uppercase tracking-wide">Technical Specification Sheet</h1>
-            <a href="{{ inquiry_link }}" class="text-[#562b45] font-bold underline uppercase text-[12px] hover:opacity-80 transition-opacity">Send Inquiry</a>
+            <a href="{{ REQUEST_INQUIRY_URL }}" class="text-[#562b45] font-bold underline uppercase text-[12px] hover:opacity-80 transition-opacity">Send Inquiry</a>
         </div>
 
         <main class="flex-grow px-10 pb-12 flex gap-12 relative">
@@ -47,8 +89,12 @@
             </div>
 
             <div class="w-[45%] flex flex-col gap-10 relative z-10">
-                <div class="h-[280px] w-full flex items-center justify-center text-gray-500 text-[11px]">
-                    {{ image_placeholder }}
+                <div class="h-[280px] w-full flex items-center justify-center text-gray-500 text-[11px] bg-gray-50 relative overflow-hidden">
+                    {% if IMAGE_PLACEHOLDER %}
+                        {{ IMAGE_PLACEHOLDER }}
+                    {% else %}
+                        <span>Product Image Not Available</span>
+                    {% endif %}
                 </div>
 
                 <div>
@@ -58,7 +104,7 @@
 
                 <div>
                     <h3 class="font-bold uppercase mb-1">Maintainance & Care</h3>
-                    <p>{{ maintenance_care }}</p>
+                    <p>{{ maintenance_and_care }}</p>
                 </div>
 
                 <div>
