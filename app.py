@@ -9,7 +9,7 @@ from modules.specsheet_generator import generate_specsheet_pdf
 from modules.google_sheet_service import append_row
 from modules.woocommerce_service import get_product
 from modules.salesforce_service import SalesforceWebToLeadService
-from modules.gmail_service import send_single_product_specsheet_email, send_product_enquiry_email, send_request_sample_email, send_account_creation_email
+from modules import gmail_service
 
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
@@ -123,11 +123,11 @@ def process_request_sample(first_name, last_name, email, phone, company, project
 
         # 4. Send request sample email
         # if pdf_specsheet_files:
-        #     send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
+        #     gmail_service.send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 5. Send account creation email if password provided
         # if account_password:
-        #     send_account_creation_email(email, account_password)
+        #     gmail_service.send_account_creation_email(email, account_password)
 
         # 6. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
@@ -204,11 +204,11 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
 
         # 4. Send enquiry email
         # if pdf_specsheet_files:
-        #     send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
+        #     gmail_service.send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 5. Send account creation email if password provided
         # if account_password:
-        #     send_account_creation_email(email, account_password)
+        #     gmail_service.send_account_creation_email(email, account_password)
 
         # 6. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
@@ -218,7 +218,7 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
                 print(f"Failed to remove file {file_path}: {e}")
 
     except Exception as e:
-        print(f"Error processing product enquiry for {email}: {e}")
+        print(f"Error processing product enquiry for {email}: {e}"}
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def product_enquiry_webhook(request: Request, background_tasks: BackgroundTasks):
@@ -257,7 +257,7 @@ def process_specsheet(name, email, product_id, file_path):
     try:
         row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "specsheets", row)
-        send_single_product_specsheet_email(email, file_path)
+        gmail_service.send_single_product_specsheet_email(email, file_path)
         try:
             os.remove(file_path)
 
