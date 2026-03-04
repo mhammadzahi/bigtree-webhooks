@@ -3,6 +3,8 @@ import re
 import base64
 import platform
 import requests
+import subprocess
+import stat
 from io import BytesIO
 from datetime import datetime
 from PIL import Image
@@ -220,6 +222,93 @@ def process_image_to_base64(image_url):
         print(f"[DEBUG] Exception type: {type(e).__name__}")
         return ""
 
+async def _launch_browser_with_fallback(p):
+    """
+    Launch Chromium browser with fallback handling for permission issues.
+    Takes Playwright instance as parameter.
+    Attempts to:
+    1. Fix permissions on Playwright's Chromium binary
+    2. Use system Chromium if available
+    3. Launch with various flag combinations
+    """
+    browser = None
+    last_error = None
+    
+    # Try 1: Standard launch with no-sandbox
+    try:
+        print("[DEBUG] Attempt 1: Launching Chromium with --no-sandbox")
+        browser = await p.chromium.launch(
+            headless=True, 
+            args=['--no-sandbox', '--disable-setuid-sandbox']
+        )
+        print("[DEBUG] Browser launched successfully on attempt 1")
+        return browser
+    except Exception as e:
+        last_error = e
+        print(f"[DEBUG] Attempt 1 failed: {type(e).__name__}")
+    
+    # Try 2: Fix Playwright binary permissions and retry
+    if "EACCES" in str(last_error) or "spawn" in str(last_error):
+        try:
+            print("[DEBUG] Attempt 2: Fixing Playwright binary permissions")
+            playwright_cache = os.path.expanduser("~/.cache/ms-playwright")
+            if os.path.exists(playwright_cache):
+                # Find and fix permissions on chrome-headless-shell binaries
+                for root, dirs, files in os.walk(playwright_cache):
+                    for file in files:
+                        if 'chrome-headless-shell' in file:
+                            filepath = os.path.join(root, file)
+                            try:
+                                st = os.stat(filepath)
+                                # Add execute permission
+                                os.chmod(filepath, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                                print(f"[DEBUG] Fixed permissions on {filepath}")
+                            except Exception as perm_error:
+                                print(f"[DEBUG] Could not fix permissions on {filepath}: {perm_error}")
+            
+            # Retry launch after fixing permissions
+            browser = await p.chromium.launch(
+                headless=True,
+                args=['--no-sandbox', '--disable-setuid-sandbox']
+            )
+            print("[DEBUG] Browser launched successfully on attempt 2 (after fixing permissions)")
+            return browser
+        except Exception as e:
+            last_error = e
+            print(f"[DEBUG] Attempt 2 failed: {type(e).__name__}")
+    
+    # Try 3: Use system Chromium if installed (on Linux)
+    if platform.system() == "Linux":
+        try:
+            print("[DEBUG] Attempt 3: Launching with system Chromium")
+            browser = await p.chromium.launch(
+                headless=True,
+                executable_path="/usr/bin/chromium-browser",
+                args=['--no-sandbox', '--disable-setuid-sandbox']
+            )
+            print("[DEBUG] Browser launched successfully with system Chromium")
+            return browser
+        except Exception as e:
+            print(f"[DEBUG] Attempt 3 failed (system Chromium not found or not executable)")
+            last_error = e
+    
+    # Try 4: Minimal args
+    try:
+        print("[DEBUG] Attempt 4: Launching with minimal arguments")
+        browser = await p.chromium.launch(headless=True)
+        print("[DEBUG] Browser launched successfully with minimal args")
+        return browser
+    except Exception as e:
+        last_error = e
+        print(f"[DEBUG] Attempt 4 failed: {type(e).__name__}")
+    
+    # All attempts failed
+    raise RuntimeError(
+        f"Failed to launch Chromium browser after 4 attempts. "
+        f"Last error: {last_error}\n"
+        f"SOLUTION: Run 'python -m playwright install --with-deps chromium' on the server."
+    )
+
 async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=None):
     print("\n" + "="*50)
     print(f"STARTING PDF GENERATION (Playwright): {product.get('name')}")
@@ -379,10 +468,9 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
     try:
         print("[DEBUG] Starting Playwright async context")
         async with async_playwright() as p:
-            # Launch browser
-            # args=['--no-sandbox'] is crucial for running as root/headless on Linux
-            print("[DEBUG] Launching Chromium browser (headless)")
-            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            # Launch browser with fallback handling for permission issues
+            print("[DEBUG] Launching Chromium browser (with fallback support)")
+            browser = await _launch_browser_with_fallback(p)
             print("[DEBUG] Browser launched successfully")
             
             print("[DEBUG] Creating new page")
