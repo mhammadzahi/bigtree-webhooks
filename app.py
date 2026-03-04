@@ -218,7 +218,7 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
                 print(f"Failed to remove file {file_path}: {e}")
 
     except Exception as e:
-        print(f"Error processing product enquiry for {email}: {e}"}
+        print(f"Error processing product enquiry for {email}: {e}")
 
 @app.post("/bt-send-product-enquiry-webhook-v2-1")#3. Product Enquiry -- Done -- [multiple products in cart]
 async def product_enquiry_webhook(request: Request, background_tasks: BackgroundTasks):
