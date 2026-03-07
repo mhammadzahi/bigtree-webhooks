@@ -85,6 +85,8 @@ def send_product_enquiry_email(full_name, email, pdf_files, cc):
     body_message = create_message(email, "Product Enquiry", html_body, pdf_files, attachments=True, cc=cc)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
+        # print(message)
+        time.sleep(3)
         return True
 
     except Exception as e:
@@ -99,6 +101,8 @@ def send_account_creation_email(email, password, cc=None):
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
+        # print(message)
+        time.sleep(3)
         return True
 
     except Exception as e:
@@ -113,6 +117,8 @@ def send_single_product_specsheet_email(to, file_path, cc=None):
     body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True, cc=cc)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
+        # print(message)
+        time.sleep(3)
         return True
 
     except Exception as e:
@@ -128,6 +134,8 @@ def send_request_sample_email(email, pdf_files, cc=None):
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
+        # print(message)
+        time.sleep(3)
         return True
 
     except Exception as e:

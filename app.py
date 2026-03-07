@@ -203,17 +203,18 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
                 pdf_specsheet_files.append(file_path)
 
         # 4. Send enquiry email
-        # if pdf_specsheet_files:
-        #     gmail_service.send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
+        if pdf_specsheet_files:
+            gmail_service.send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 5. Send account creation email if password provided
-        # if account_password:
-        #     gmail_service.send_account_creation_email(email, account_password)
+        if account_password:
+            gmail_service.send_account_creation_email(email, account_password)
 
         # 6. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
             try:
                 os.remove(file_path)
+
             except Exception as e:
                 print(f"Failed to remove file {file_path}: {e}")
 
