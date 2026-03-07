@@ -11,6 +11,11 @@ touch specsheet-template__WALL_COVERING.html
 
 
 
+
+----!!! SALES_EMAIL=mohamedzahi33@gmail.com !!!---
+
+
+
 now: 
 template__FLOOR_COVERING: 90
 
@@ -21,9 +26,8 @@ https://shop.bigtree-group.com/wp-content/uploads/2026/02/qr.png
 
 Seam Slippage, Shrinkage Wet :: Removed
 
-Logo bigger
+Logo bigger: Done
 
-TECHNICAL SPECIFICATION SHEET SEND INQUIRY (bigger + spacing bellow)
-
+TECHNICAL SPECIFICATION SHEET SEND INQUIRY (bigger + spacing bellow): Done
 
 
