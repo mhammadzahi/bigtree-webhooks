@@ -102,7 +102,7 @@ class RequestSample(BaseModel):
     qte: str
     message: str | None = None
 
-def process_request_sample(first_name, last_name, email, phone, company, project, country, quantity, message, product_ids, account_password):
+async def process_request_sample(first_name, last_name, email, phone, company, project, country, quantity, message, product_ids, account_password):
     try:
         # 1. Append to Google Sheet
         row = [first_name, last_name, phone, email, company, project, country, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
@@ -118,16 +118,16 @@ def process_request_sample(first_name, last_name, email, phone, company, project
         for product_id in product_ids:
             product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
             if product:
-                file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+                file_path = await generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
                 pdf_specsheet_files.append(file_path)
 
         # 4. Send request sample email
-        # if pdf_specsheet_files:
-        #     gmail_service.send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
+        if pdf_specsheet_files:
+            gmail_service.send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 5. Send account creation email if password provided
-        # if account_password:
-        #     gmail_service.send_account_creation_email(email, account_password)
+        if account_password:
+            gmail_service.send_account_creation_email(email, account_password)
 
         # 6. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
@@ -184,7 +184,7 @@ class ProductEnquiry(BaseModel):
     cart_items: List[CartItem]
     account_password: str | None = None
 
-def process_enquiry(name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password):
+async def process_enquiry(name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password):
     try:
         # 1. Append to Google Sheet
         row = [name, email, phone, company, project, country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
@@ -199,7 +199,7 @@ def process_enquiry(name, email, phone, company, project, country, message, req_
         for product_id in product_ids:
             product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
             if product:
-                file_path = generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+                file_path = await generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
                 pdf_specsheet_files.append(file_path)
 
         # 4. Send enquiry email
