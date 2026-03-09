@@ -117,7 +117,7 @@ def send_single_product_specsheet_email(to, file_path, cc=None):
     body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True, cc=cc)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
-        print('-------', message, '--------------')
+        # print('-------', message, '--------------')
         time.sleep(3)
         return True
 
