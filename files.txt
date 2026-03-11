@@ -28,8 +28,8 @@ https://shop.bigtree-group.com/wp-content/uploads/2026/02/qr.png
 Basil:
 
 - change font family to Inter or calibri : Done
-- make font more bigger
-- Spacing between "Tenchnical ..." and the img
+- make font more bigger : Done
+- Spacing between "Tenchnical ..." and the img : Error!
 - move to center
 
 
