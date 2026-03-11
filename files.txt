@@ -24,9 +24,21 @@ https://shop.bigtree-group.com/wp-content/uploads/2026/02/qr.png
 
 
 
-Seam Slippage, Shrinkage Wet :: Removed
 
-Logo bigger: Done
+Basil:
 
-TECHNICAL SPECIFICATION SHEET SEND INQUIRY (bigger + spacing bellow): Done
+change font family to Inter or calibri
+make font more bigger
+Spacing between "Tenchnical ..." and the img
+move to center
 
+
+Shipment 1  --> UAE Shipment
+
+
+
+shafiq:
+
+Cart : align to left, local shipping -> transport , continue shopping same level as proceed checkout
+
+Checkout: static square  , phone,
