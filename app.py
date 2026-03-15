@@ -56,7 +56,7 @@ def process_contact_request(fname, lname, email, phone, company, project, projec
     try:
         row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "contact", row)
-        # sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
+        sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
 
     except Exception as e:
         print(f"Error processing contact request for {email}: {e}")
@@ -110,7 +110,7 @@ async def process_request_sample(first_name, last_name, email, phone, company, p
         
         # 2. Insert into Salesforce
         other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
-        # sf_result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
+        sf_result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
         # print("Salesforce Response:", sf_result)
 
         # 3. Generate PDFs
@@ -192,7 +192,7 @@ async def process_enquiry(name, email, phone, company, project, country, message
 
         # 2. Insert into Salesforce
         combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
-        # sf_result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
+        sf_result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
 
         # 3. Generate PDFs
         pdf_specsheet_files = []
@@ -333,7 +333,7 @@ async def unsubscribe(email_id: str, request: Request):
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
-    return {"app": "BT Webhooks", "version": "1.2.2", "status": "running"}
+    return {"app": "BT Webhooks", "version": "1.3.0", "status": "running"}
 
 
 if __name__ == "__main__":
