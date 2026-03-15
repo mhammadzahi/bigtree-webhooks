@@ -10,10 +10,7 @@ touch specsheet-template__OBJECTS.html
 touch specsheet-template__WALL_COVERING.html
 
 
-
-
 ----!!! SALES_EMAIL=mohamedzahi33@gmail.com !!!---
-
 
 
 now: 
@@ -27,18 +24,10 @@ https://shop.bigtree-group.com/wp-content/uploads/2026/02/qr.png
 
 Basil:
 
-- change font family to Inter or calibri : Done
-- make font more bigger : Done
-- Spacing between "Tenchnical ..." and the img : Error!
-- move to center
-
-
-Shipment 1  --> UAE Shipment
-
+check pdf
 
 
 shafiq:
 
-Cart : align to left, local shipping -> transport , continue shopping same level as proceed checkout
-
-Checkout: static square  , phone,
+- Cart : align to left, local shipping -> transport , continue shopping same level as proceed checkout
+- Checkout : static square  , phone,
