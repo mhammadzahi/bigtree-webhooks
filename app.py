@@ -323,8 +323,19 @@ async def newsletter_webhook(request: Request, background_tasks: BackgroundTasks
 
 
 
+def process_unsubscribe(email_id):
+    email_id = email_id.replace("email=", "")
+    try:
+        with open("unsubscribed_emails.txt", "a") as f:
+            f.write(f"{email_id}\n")
+
+    except Exception as e:
+        print(f"Error processing unsubscribe for {email_id}: {e}")
+
+
 @app.get("/unsubscribe/{email_id}")
-async def unsubscribe(email_id: str, request: Request):
+async def unsubscribe(email_id: str, request: Request, background_tasks: BackgroundTasks):
+    background_tasks.add_task(process_unsubscribe, email_id)
     with open("email_templates/unsubscribe.html", "r") as f:
         html_content = f.read()
 
