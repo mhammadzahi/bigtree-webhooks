@@ -1,0 +1,5 @@
+I have a problem with specsheet generation, in case of product have too much data it goes two pages but the header and footer not repeated in second page!
+see attached screenshot, html templates are located in files/ folder and the python scripr is @beautifulMention
+
+Task: I wanna repeat header and footer in second page.
+Note: Do not test anything just execute task and I will test by myself!
