@@ -30,3 +30,27 @@ def get_product(store_url: str, consumer_key: str, consumer_secret: str, product
     return product
 
 
+
+
+
+from urllib.parse import urlencode
+def generate_woo_external_cart_url(domain: str, product_id: int, quantity: int = 1) -> str:
+    params = {
+        'ext_add_cart': product_id,
+        'qty': quantity
+    }
+    
+    query_string = urlencode(params)
+    return f"{domain.rstrip('/')}/?{query_string}"
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+    import os
+    load_dotenv()
+    
+    store_url = os.getenv("WC_STORE_URL")
+    target_product_id = 59222
+
+    checkout_link = generate_woo_external_cart_url(store_url, target_product_id)
+    print(f"Generated WooCommerce External Cart URL: {checkout_link}")
