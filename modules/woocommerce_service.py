@@ -44,13 +44,13 @@ def generate_woo_external_cart_url(domain: str, product_id: int, quantity: int =
     return f"{domain.rstrip('/')}/?{query_string}"
 
 
-if __name__ == "__main__":
-    from dotenv import load_dotenv
-    import os
-    load_dotenv()
+# if __name__ == "__main__":
+#     from dotenv import load_dotenv
+#     import os
+#     load_dotenv()
     
-    store_url = os.getenv("WC_STORE_URL")
-    target_product_id = 59222
+#     store_url = os.getenv("WC_STORE_URL")
+#     target_product_id = 59222
 
-    checkout_link = generate_woo_external_cart_url(store_url, target_product_id)
-    print(f"Generated WooCommerce External Cart URL: {checkout_link}")
+#     checkout_link = generate_woo_external_cart_url(store_url, target_product_id)
+#     print(f"Generated WooCommerce External Cart URL: {checkout_link}")
