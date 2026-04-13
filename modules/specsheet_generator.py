@@ -14,6 +14,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 from playwright.async_api import async_playwright
 from woocommerce import API
+from modules.woocommerce_service import generate_woo_external_cart_url
 
 # --- CONFIGURATION ---
 TEMPLATE_DIR = 'files'
@@ -356,12 +357,11 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
 
     # Handle Inquiry URL
     req_url = 'N/A'
-    if wc_url and product.get('slug'):
-        base = wc_url.rstrip('/')
-        req_url = f"{base}/product/{product.get('slug')}/"
+    if wc_url and product.get('id'):
+        req_url = generate_woo_external_cart_url(wc_url, product.get('id'))
         print(f"[DEBUG] Request URL: {req_url}")
     else:
-        print("[DEBUG] No WC URL or slug, using default request URL")
+        print("[DEBUG] No WC URL or product ID, using default request URL")
 
     # Context Mapping (matches placeholders in your HTML)
     context = {
