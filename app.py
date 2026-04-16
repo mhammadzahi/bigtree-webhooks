@@ -55,7 +55,7 @@ class ContactRequest(BaseModel):
 def process_contact_request(fname, lname, email, phone, company, project, project_location, message, src):
     try:
         row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-        append_row(SHEET_ID, "contact", row)
+        append_row(SHEET_ID, "Contact", row)
         sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
 
     except Exception as e:
@@ -106,7 +106,7 @@ async def process_request_sample(first_name, last_name, email, phone, company, p
     try:
         # 1. Append to Google Sheet
         row = [first_name, last_name, phone, email, company, project, country, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-        append_row(SHEET_ID, "sample_requests", row)
+        append_row(SHEET_ID, "Sample Request", row)
         
         # 2. Insert into Salesforce
         other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
@@ -188,7 +188,7 @@ async def process_enquiry(name, email, phone, company, project, country, message
     try:
         # 1. Append to Google Sheet
         row = [name, email, phone, company, project, country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-        append_row(SHEET_ID, "enquiries", row)
+        append_row(SHEET_ID, "Inquiries", row)
 
         # 2. Insert into Salesforce
         combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
@@ -257,7 +257,7 @@ class SpecSheetWebhook(BaseModel):
 def process_specsheet(name, email, product_id, file_path):
     try:
         row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-        append_row(SHEET_ID, "specsheets", row)
+        append_row(SHEET_ID, "Specsheet Download", row)
         gmail_service.send_single_product_specsheet_email(email, file_path)
         try:
             os.remove(file_path)
@@ -302,7 +302,7 @@ class NewsletterWebhook(BaseModel):
 def process_newsletter(name, email):
     try:
         row = [name, email, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
-        append_row(SHEET_ID, "subscribers", row)
+        append_row(SHEET_ID, "Subscribers", row)
 
     except Exception as e:
         print(f"Error processing newsletter subscription for {email}: {e}")
