@@ -363,12 +363,38 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
     else:
         print("[DEBUG] No WC URL or product ID, using default request URL")
 
+    # Build product full URL for 'more info' links
+    product_slug = product.get('slug', '')
+    domain = wc_url.rstrip('/') if wc_url else ''
+    product_full_url = f"{domain}/{product_slug}" if domain and product_slug else ''
+    print(f"[DEBUG] Product full URL: {product_full_url}")
+
+    _more_info_link = (
+        f' <a href="{product_full_url}" '
+        f'style="color: #562b45; font-weight: bold; text-decoration: underline;">. . . more info.</a>'
+        if product_full_url else ' . . . more info.'
+    )
+
+    # Truncate Description (500 chars max)
+    _raw_description = strip_html_tags(product.get('description', ''))
+    if len(_raw_description) > 500:
+        _raw_description = _raw_description[:500] + _more_info_link
+        print(f"[DEBUG] Description truncated to 500 chars + link")
+    prdct_description = Markup(_raw_description)
+
+    # Truncate Maintenance & Care (530 chars max)
+    _raw_maintenance = get_meta('maintenance_&_care', default='', clean=True)
+    if len(_raw_maintenance) > 530:
+        _raw_maintenance = _raw_maintenance[:530] + _more_info_link
+        print(f"[DEBUG] Maintenance & Care truncated to 530 chars + link")
+    maintenance_and_care = Markup(_raw_maintenance)
+
     # Context Mapping (matches placeholders in your HTML)
     context = {
         # Core
         'prdct_name': product.get('name', 'N/A'),
         'product_sku': product.get('sku', 'N/A'),
-        'prdct_description': strip_html_tags(product.get('description', '')),
+        'prdct_description': prdct_description,
         
         # Categories
         'prdct_category': categories[0].get('name', 'N/A') if categories else 'N/A',
@@ -427,7 +453,7 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
         'other_certifications': get_meta('other_certifications'),
         
         # Care & Commercial
-        'maintenance_and_care': get_meta('maintenance_&_care', clean=True),
+        'maintenance_and_care': maintenance_and_care,
         'warranty': get_meta('warranty'),
         'minimum_order_quantity': get_meta('minimum_order_quantity'),
         'lead_time': get_meta('lead_time'),
