@@ -375,19 +375,60 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
         if product_full_url else ' . . . more info.'
     )
 
-    # Truncate Description (500 chars max)
-    _raw_description = strip_html_tags(product.get('description', ''))
-    if len(_raw_description) > 500:
-        _raw_description = _raw_description[:500] + _more_info_link
-        print(f"[DEBUG] Description truncated to 500 chars + link")
-    prdct_description = Markup(_raw_description)
+    def smart_truncate(text, base_limit, tolerance=10):
+        """
+        Soft-cut truncation that avoids splitting words mid-way.
 
-    # Truncate Maintenance & Care (530 chars max)
+        Steps:
+          1. Return the full string unchanged if it fits within base_limit.
+          2. Search forward up to `tolerance` characters past base_limit for
+             the first space — truncate there (completing the current word).
+          3. If no space exists in the forward buffer, search backwards from
+             base_limit for the last space — truncate there instead.
+          4. Append the more-info hyperlink to whichever cut point is chosen.
+
+        Args:
+            text (str):       Clean (HTML-stripped) input string.
+            base_limit (int): Preferred maximum character count.
+            tolerance (int):  Extra characters to scan forward for a word boundary.
+
+        Returns:
+            str: Truncated string with appended hyperlink, or original string.
+        """
+        if len(text) <= base_limit:
+            return text
+
+        # --- Forward scan: look for a space in [base_limit, base_limit + tolerance] ---
+        forward_window = text[base_limit : base_limit + tolerance]  # safe even if text is short
+        space_forward = forward_window.find(' ')
+
+        if space_forward != -1:
+            # Found a space in the forward buffer — cut right after the completed word
+            cut_index = base_limit + space_forward
+        else:
+            # --- Backward scan: find the last space before base_limit ---
+            space_backward = text.rfind(' ', 0, base_limit)
+            if space_backward != -1:
+                cut_index = space_backward
+            else:
+                # No spaces at all — fall back to a hard cut at base_limit
+                cut_index = base_limit
+
+        return text[:cut_index] + _more_info_link
+
+    # Truncate Description (base 500, tolerance +10)
+    _raw_description = strip_html_tags(product.get('description', ''))
+    _truncated_description = smart_truncate(_raw_description, base_limit=500, tolerance=10)
+    if _truncated_description is not _raw_description:
+        print(f"[DEBUG] Description soft-truncated at word boundary (original: {len(_raw_description)} chars)")
+    prdct_description = Markup(_truncated_description)
+
+    # Truncate Maintenance & Care (base 530, tolerance +10)
     _raw_maintenance = get_meta('maintenance_&_care', default='', clean=True)
-    if len(_raw_maintenance) > 530:
-        _raw_maintenance = _raw_maintenance[:530] + _more_info_link
-        print(f"[DEBUG] Maintenance & Care truncated to 530 chars + link")
-    maintenance_and_care = Markup(_raw_maintenance)
+    _truncated_maintenance = smart_truncate(_raw_maintenance, base_limit=530, tolerance=10)
+    if _truncated_maintenance is not _raw_maintenance:
+        print(f"[DEBUG] Maintenance & Care soft-truncated at word boundary (original: {len(_raw_maintenance)} chars)")
+    maintenance_and_care = Markup(_truncated_maintenance)
 
     # Context Mapping (matches placeholders in your HTML)
     context = {
