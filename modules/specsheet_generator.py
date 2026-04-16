@@ -61,6 +61,8 @@ def strip_html_tags(text):
     clean = clean.replace('&amp;', '&')
     clean = clean.replace('&lt;', '<')
     clean = clean.replace('&gt;', '>')
+    clean = clean.replace('&quot;', '"')
+    clean = clean.replace('&apos;', "'")
     
     # 3. Normalize whitespace
     clean = clean.replace('\r\n', '\n').replace('\r', '\n')
@@ -433,13 +435,13 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
     # Context Mapping (matches placeholders in your HTML)
     context = {
         # Core
-        'prdct_name': product.get('name', 'N/A'),
+        'prdct_name': Markup(strip_html_tags(product.get('name', 'N/A'))),
         'product_sku': product.get('sku', 'N/A'),
         'prdct_description': prdct_description,
         
         # Categories
-        'prdct_category': categories[0].get('name', 'N/A') if categories else 'N/A',
-        'brand': brands[0].get('name', 'N/A') if brands else get_meta('brand'),
+        'prdct_category': Markup(strip_html_tags(categories[0].get('name', 'N/A') if categories else 'N/A')),
+        'brand': Markup(strip_html_tags(brands[0].get('name', 'N/A') if brands else get_meta('brand'))),
 
         # Image
         'IMAGE_PLACEHOLDER': image_html,  # Injects the <img ...> tag
