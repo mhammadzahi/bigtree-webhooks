@@ -55,7 +55,7 @@ class ContactRequest(BaseModel):
 
 def process_contact_request(fname, lname, email, phone, company, role, project, project_location, message, src):
     try:
-        row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"), role]
+        row = [fname, lname, email, phone, company, role, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Contact", row)
         
         sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, role=role, country_code=project_location, project=project, general_notes=message)
