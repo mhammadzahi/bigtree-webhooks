@@ -347,7 +347,7 @@ async def unsubscribe(email_id: str, request: Request, background_tasks: Backgro
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
-    return {"app": "BT Webhooks", "version": "1.3.0", "status": "running"}
+    return {"app": "BT Webhooks", "version": "3.3.0", "status": "running"}
 
 
 if __name__ == "__main__":
