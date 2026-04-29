@@ -54,6 +54,7 @@ class ContactRequest(BaseModel):
     src: str | None = None
 
 def process_contact_request(fname, lname, email, phone, company, role, project, project_location, message, src):
+    print("Processing contact request for", email)
     try:
         row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"), role]
         append_row(SHEET_ID, "Contact", row)
