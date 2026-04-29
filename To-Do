@@ -1,0 +1,28 @@
+new trunstile config only done for:
+1- inquiry form
+2- request sample form
+3- 
+4-
+
+
+Prompt:
+**Role:** Senior WordPress Developer
+**Task:** Implement Explicit Cloudflare Turnstile rendering to fix cache/AJAX disappearance.
+
+
+Refactor the Cloudflare Turnstile implementation to use **Explicit Rendering**. 
+This must bypass WP Super Cache static HTML issues and WooCommerce AJAX fragments.
+
+### Requirements:
+1. **PHP Enqueue:** - Use `wp_enqueue_script` for `https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=renderTurnstile`.
+   - Use `wp_localize_script` to pass the Turnstile `site_key` from PHP to JS.
+
+2. **JavaScript Logic:**
+   - Define `window.renderTurnstile`. 
+   - It must query all `.cf-turnstile` elements lacking a `data-rendered` attribute.
+   - Initialize them using `turnstile.render()`.
+   - Set `data-rendered="true"` on the element after successful initialization.
+
+3. **WooCommerce Integration:**
+   - Listen for `updated_checkout` and `updated_cart_totals` jQuery events.
+   - Re-run `renderTurnstile()` on these events to ensure the widget appears after AJAX refreshes.

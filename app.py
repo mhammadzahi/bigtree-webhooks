@@ -47,16 +47,17 @@ class ContactRequest(BaseModel):
     email: EmailStr
     phone: str
     company: str
+    role: str
     project: str
     project_location: str
     message: str | None = None
     src: str | None = None
 
-def process_contact_request(fname, lname, email, phone, company, project, project_location, message, src):
+def process_contact_request(fname, lname, email, phone, company, role, project, project_location, message, src):
     try:
-        row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"), role]
         append_row(SHEET_ID, "Contact", row)
-        sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, country_code=project_location, project=project, general_notes=message)
+        sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, role=role, project=project, project_location=project_location, message=message, src=src)
 
     except Exception as e:
         print(f"Error processing contact request for {email}: {e}")
@@ -68,6 +69,7 @@ async def contact_request_webhook(request: Request, background_tasks: Background
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
     payload = await request.json()
+    print("- -- PAYLOAD: \n", json.dumps(payload, indent=2))
     try:
         validated_data = ContactRequest.model_validate(payload)
         fname = validated_data.fname
@@ -75,6 +77,7 @@ async def contact_request_webhook(request: Request, background_tasks: Background
         email = validated_data.email
         phone = validated_data.phone
         company = validated_data.company
+        role = validated_data.role
         project = validated_data.project
         project_location = validated_data.project_location
         message = validated_data.message
@@ -84,7 +87,7 @@ async def contact_request_webhook(request: Request, background_tasks: Background
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
 
-    background_tasks.add_task(process_contact_request, fname, lname, email, phone, company, project, project_location, message, src)
+    background_tasks.add_task(process_contact_request, fname, lname, email, phone, company, role, project, project_location, message, src)
     return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
 
