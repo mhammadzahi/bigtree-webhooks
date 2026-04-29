@@ -57,7 +57,7 @@ def process_contact_request(fname, lname, email, phone, company, role, project, 
     try:
         row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"), role]
         append_row(SHEET_ID, "Contact", row)
-        sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, role=role, project=project, project_location=project_location, message=message, src=src)
+        # sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, role=role, project=project, project_location=project_location, message=message, src=src)
 
     except Exception as e:
         print(f"Error processing contact request for {email}: {e}")
