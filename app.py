@@ -57,7 +57,7 @@ def process_contact_request(fname, lname, email, phone, company, role, project, 
     try:
         row = [fname, lname, email, phone, company, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S"), role]
         append_row(SHEET_ID, "Contact", row)
-        # sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, role=role, project=project, project_location=project_location, message=message, src=src)
+        sf_result = sf.insert_contact_form(first_name=fname, last_name=lname, email=email, mobile=phone, company=company, role=role, project=project, project_location=project_location, message=message, src=src)
 
     except Exception as e:
         print(f"Error processing contact request for {email}: {e}")
@@ -69,7 +69,7 @@ async def contact_request_webhook(request: Request, background_tasks: Background
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
     payload = await request.json()
-    print("- -- PAYLOAD: \n", json.dumps(payload, indent=2))
+    # print("PAYLOAD: \n", json.dumps(payload, indent=2))
     try:
         validated_data = ContactRequest.model_validate(payload)
         fname = validated_data.fname
