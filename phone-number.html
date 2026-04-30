@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessible Phone Input (Pure CSS & Formatting)</title>
+    <style>
+        /* --- CSS Reset & Variables --- */
+        :root {
+            --color-bg-body: #f9fafb;
+            --color-bg-surface: #ffffff;
+            --color-bg-subtle: #f3f4f6;
+            --color-bg-hover: #eff6ff;
+            --color-border: #d1d5db;
+            --color-border-light: #e5e7eb;
+            --color-text-main: #111827;
+            --color-text-label: #374151;
+            --color-text-muted: #6b7280;
+            --color-primary: #2563eb;
+            --color-primary-hover: #1d4ed8;
+            --color-error: #ef4444;
+
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--color-bg-body);
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* --- Layout & Typography --- */
+        .card {
+            width: 100%;
+            max-width: 384px;
+            background-color: var(--color-bg-surface);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border-light);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-main);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .required {
+            color: var(--color-error);
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            margin-top: 2px;
+        }
+
+        /* --- Unified Input Group --- */
+        .input-group {
+            display: flex;
+            position: relative;
+            background-color: var(--color-bg-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        /* --- Country Toggle Button --- */
+        .country-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 12px;
+            background-color: var(--color-bg-body);
+            border: none;
+            border-right: 1px solid var(--color-border);
+            border-radius: var(--radius-md) 0 0 var(--radius-md);
+            color: var(--color-text-label);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+
+        .country-toggle:hover,
+        .country-toggle:focus {
+            background-color: var(--color-border-light);
+            outline: none;
+        }
+
+        .country-toggle .flag {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .country-toggle .code {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .country-toggle svg {
+            width: 16px;
+            height: 16px;
+            color: var(--color-text-muted);
+        }
+
+        /* --- Phone Input --- */
+        .phone-input {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 10px 12px;
+            font-size: 16px;
+            color: var(--color-text-main);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+
+        .phone-input:focus {
+            outline: none;
+        }
+
+        .phone-input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* --- Submit Button --- */
+        .submit-btn {
+            margin-top: 24px;
+            width: 100%;
+            background-color: var(--color-primary);
+            color: white;
+            font-weight: 500;
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 16px;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        .submit-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-primary);
+        }
+
+        /* --- Custom Dropdown --- */
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 280px;
+            background-color: var(--color-bg-surface);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 50;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .dropdown.open {
+            display: flex;
+        }
+
+        .dropdown-search-wrapper {
+            padding: 8px;
+            border-bottom: 1px solid var(--color-bg-subtle);
+            background-color: var(--color-bg-body);
+        }
+
+        .dropdown-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .dropdown-search:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .country-list {
+            list-style: none;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .country-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .country-list::-webkit-scrollbar-track {
+            background: var(--color-bg-body);
+        }
+
+        .country-list::-webkit-scrollbar-thumb {
+            background: var(--color-border);
+            border-radius: 4px;
+        }
+
+        .country-list::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .country-item {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: var(--color-text-label);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 6px;
+            transition: background-color 0.1s;
+        }
+
+        .country-item:hover {
+            background-color: var(--color-bg-hover);
+            color: var(--color-primary-hover);
+        }
+
+        .country-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .country-item-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .country-item-code {
+            color: var(--color-text-muted);
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .no-results {
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--color-text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <form action="#" method="POST">
+
+            <div class="form-group">
+                <label for="phone-input" class="input-label">
+                    <span>Phone Number</span>
+                </label>
+
+                <div class="input-group">
+
+                    <button type="button" id="country-selector-btn" class="country-toggle"
+                        aria-label="Select country code, currently United Arab Emirates +971" aria-haspopup="listbox"
+                        aria-expanded="false">
+                        <span id="selected-flag" class="flag" aria-hidden="true">🇦🇪</span>
+                        <span id="selected-code" class="code">+971</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
+                    </button>
+
+                    <input type="hidden" name="country_code" id="hidden-country-code" value="+971">
+
+                    <input type="tel" id="phone-input" name="phone" autocomplete="tel-national"
+                        placeholder="50 123 4567" class="phone-input" aria-describedby="phone-helper" required>
+
+                    <div id="country-dropdown" class="dropdown">
+                        <div class="dropdown-search-wrapper">
+                            <input type="text" id="country-search" class="dropdown-search"
+                                placeholder="Search countries..." autocomplete="off">
+                        </div>
+                        <ul id="country-list" class="country-list" role="listbox"></ul>
+                    </div>
+
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        // --- 1. Country Data & Dropdown Logic ---
+        const countries = [
+            { name: "Afghanistan", code: "+93", flag: "🇦🇫" }, { name: "Albania", code: "+355", flag: "🇦🇱" }, { name: "Algeria", code: "+213", flag: "🇩🇿" }, { name: "Andorra", code: "+376", flag: "🇦🇩" }, { name: "Angola", code: "+244", flag: "🇦🇴" }, { name: "Antigua and Barbuda", code: "+1268", flag: "🇦🇬" }, { name: "Argentina", code: "+54", flag: "🇦🇷" }, { name: "Armenia", code: "+374", flag: "🇦🇲" }, { name: "Australia", code: "+61", flag: "🇦🇺" }, { name: "Austria", code: "+43", flag: "🇦🇹" }, { name: "Azerbaijan", code: "+994", flag: "🇦🇿" }, { name: "Bahamas", code: "+1242", flag: "🇧🇸" }, { name: "Bahrain", code: "+973", flag: "🇧🇭" }, { name: "Bangladesh", code: "+880", flag: "🇧🇩" }, { name: "Barbados", code: "+1246", flag: "🇧🇧" }, { name: "Belarus", code: "+375", flag: "🇧🇾" }, { name: "Belgium", code: "+32", flag: "🇧🇪" }, { name: "Belize", code: "+501", flag: "🇧🇿" }, { name: "Benin", code: "+229", flag: "🇧🇯" }, { name: "Bhutan", code: "+975", flag: "🇧🇹" }, { name: "Bolivia", code: "+591", flag: "🇧🇴" }, { name: "Bosnia and Herzegovina", code: "+387", flag: "🇧🇦" }, { name: "Botswana", code: "+267", flag: "🇧🇼" }, { name: "Brazil", code: "+55", flag: "🇧🇷" }, { name: "Brunei Darussalam", code: "+673", flag: "🇧🇳" }, { name: "Bulgaria", code: "+359", flag: "🇧🇬" }, { name: "Burkina Faso", code: "+226", flag: "🇧🇫" }, { name: "Burundi", code: "+257", flag: "🇧🇮" }, { name: "Cambodia", code: "+855", flag: "🇰🇭" }, { name: "Cameroon", code: "+237", flag: "🇨🇲" }, { name: "Canada", code: "+1", flag: "🇨🇦" }, { name: "Cape Verde", code: "+238", flag: "🇨🇻" }, { name: "Central African Republic", code: "+236", flag: "🇨🇫" }, { name: "Chad", code: "+235", flag: "🇹🇩" }, { name: "Chile", code: "+56", flag: "🇨🇱" }, { name: "China", code: "+86", flag: "🇨🇳" }, { name: "Colombia", code: "+57", flag: "🇨🇴" }, { name: "Comoros", code: "+269", flag: "🇰🇲" }, { name: "Congo", code: "+242", flag: "🇨🇬" }, { name: "Costa Rica", code: "+506", flag: "🇨🇷" }, { name: "Croatia", code: "+385", flag: "🇭🇷" }, { name: "Cuba", code: "+53", flag: "🇨🇺" }, { name: "Cyprus", code: "+357", flag: "🇨🇾" }, { name: "Czech Republic", code: "+420", flag: "🇨🇿" }, { name: "Denmark", code: "+45", flag: "🇩🇰" }, { name: "Djibouti", code: "+253", flag: "🇩🇯" }, { name: "Dominican Republic", code: "+1809", flag: "🇩🇴" }, { name: "Ecuador", code: "+593", flag: "🇪🇨" }, { name: "Egypt", code: "+20", flag: "🇪🇬" }, { name: "El Salvador", code: "+503", flag: "🇸🇻" }, { name: "Estonia", code: "+372", flag: "🇪🇪" }, { name: "Ethiopia", code: "+251", flag: "🇪🇹" }, { name: "Fiji", code: "+679", flag: "🇫🇯" }, { name: "Finland", code: "+358", flag: "🇫🇮" }, { name: "France", code: "+33", flag: "🇫🇷" }, { name: "Georgia", code: "+995", flag: "🇬🇪" }, { name: "Germany", code: "+49", flag: "🇩🇪" }, { name: "Ghana", code: "+233", flag: "🇬🇭" }, { name: "Greece", code: "+30", flag: "🇬🇷" }, { name: "Guatemala", code: "+502", flag: "🇬🇹" }, { name: "Guinea", code: "+224", flag: "🇬🇳" }, { name: "Haiti", code: "+509", flag: "🇭🇹" }, { name: "Honduras", code: "+504", flag: "🇭🇳" }, { name: "Hong Kong", code: "+852", flag: "🇭🇰" }, { name: "Hungary", code: "+36", flag: "🇭🇺" }, { name: "Iceland", code: "+354", flag: "🇮🇸" }, { name: "India", code: "+91", flag: "🇮🇳" }, { name: "Indonesia", code: "+62", flag: "🇮🇩" }, { name: "Iran", code: "+98", flag: "🇮🇷" }, { name: "Iraq", code: "+964", flag: "🇮🇶" }, { name: "Ireland", code: "+353", flag: "🇮🇪" }, { name: "Israel", code: "+972", flag: "🇮🇱" }, { name: "Italy", code: "+39", flag: "🇮🇹" }, { name: "Jamaica", code: "+1876", flag: "🇯🇲" }, { name: "Japan", code: "+81", flag: "🇯🇵" }, { name: "Jordan", code: "+962", flag: "🇯🇴" }, { name: "Kazakhstan", code: "+7", flag: "🇰🇿" }, { name: "Kenya", code: "+254", flag: "🇰🇪" }, { name: "Kuwait", code: "+965", flag: "🇰🇼" }, { name: "Lebanon", code: "+961", flag: "🇱🇧" }, { name: "Libya", code: "+218", flag: "🇱🇾" }, { name: "Malaysia", code: "+60", flag: "🇲🇾" }, { name: "Maldives", code: "+960", flag: "🇲🇻" }, { name: "Mexico", code: "+52", flag: "🇲🇽" }, { name: "Monaco", code: "+377", flag: "🇲🇨" }, { name: "Morocco", code: "+212", flag: "🇲🇦" }, { name: "Nepal", code: "+977", flag: "🇳🇵" }, { name: "Netherlands", code: "+31", flag: "🇳🇱" }, { name: "New Zealand", code: "+64", flag: "🇳🇿" }, { name: "Nigeria", code: "+234", flag: "🇳🇬" }, { name: "Norway", code: "+47", flag: "🇳🇴" }, { name: "Oman", code: "+968", flag: "🇴🇲" }, { name: "Pakistan", code: "+92", flag: "🇵🇰" }, { name: "Palestine", code: "+970", flag: "🇵🇸" }, { name: "Panama", code: "+507", flag: "🇵🇦" }, { name: "Peru", code: "+51", flag: "🇵🇪" }, { name: "Philippines", code: "+63", flag: "🇵🇭" }, { name: "Poland", code: "+48", flag: "🇵🇱" }, { name: "Portugal", code: "+351", flag: "🇵🇹" }, { name: "Qatar", code: "+974", flag: "🇶🇦" }, { name: "Romania", code: "+40", flag: "🇷🇴" }, { name: "Russia", code: "+7", flag: "🇷🇺" }, { name: "Saudi Arabia", code: "+966", flag: "🇸🇦" }, { name: "Senegal", code: "+221", flag: "🇸🇳" }, { name: "Serbia", code: "+381", flag: "🇷🇸" }, { name: "Singapore", code: "+65", flag: "🇸🇬" }, { name: "South Africa", code: "+27", flag: "🇿🇦" }, { name: "South Korea", code: "+82", flag: "🇰🇷" }, { name: "Spain", code: "+34", flag: "🇪🇸" }, { name: "Sri Lanka", code: "+94", flag: "🇱🇰" }, { name: "Sweden", code: "+46", flag: "🇸🇪" }, { name: "Switzerland", code: "+41", flag: "🇨🇭" }, { name: "Syria", code: "+963", flag: "🇸🇾" }, { name: "Taiwan", code: "+886", flag: "🇹🇼" }, { name: "Thailand", code: "+66", flag: "🇹🇭" }, { name: "Tunisia", code: "+216", flag: "🇹🇳" }, { name: "Turkey", code: "+90", flag: "🇹🇷" }, { name: "Uganda", code: "+256", flag: "🇺🇬" }, { name: "Ukraine", code: "+380", flag: "🇺🇦" }, { name: "United Arab Emirates", code: "+971", flag: "🇦🇪" }, { name: "United Kingdom", code: "+44", flag: "🇬🇧" }, { name: "United States", code: "+1", flag: "🇺🇸" }, { name: "Uruguay", code: "+598", flag: "🇺🇾" }, { name: "Venezuela", code: "+58", flag: "🇻🇪" }, { name: "Vietnam", code: "+84", flag: "🇻🇳" }, { name: "Yemen", code: "+967", flag: "🇾🇪" }, { name: "Zimbabwe", code: "+263", flag: "🇿🇼" }
+        ];
+
+        const selectorBtn = document.getElementById('country-selector-btn');
+        const dropdown = document.getElementById('country-dropdown');
+        const searchInput = document.getElementById('country-search');
+        const countryList = document.getElementById('country-list');
+        const selectedFlag = document.getElementById('selected-flag');
+        const selectedCode = document.getElementById('selected-code');
+        const hiddenInput = document.getElementById('hidden-country-code');
+        const phoneInput = document.getElementById('phone-input');
+
+        let isOpen = false;
+
+        function renderCountries(filterText = "") {
+            countryList.innerHTML = "";
+            const lowerFilter = filterText.toLowerCase();
+
+            const filtered = countries.filter(c =>
+                c.name.toLowerCase().includes(lowerFilter) ||
+                c.code.includes(lowerFilter)
+            );
+
+            if (filtered.length === 0) {
+                countryList.innerHTML = `<li class="no-results">No countries found</li>`;
+                return;
+            }
+
+            filtered.forEach(country => {
+                const li = document.createElement('li');
+                li.className = "country-item";
+                li.setAttribute('role', 'option');
+
+                li.innerHTML = `
+                    <span class="country-item-left">
+                        <span class="flag">${country.flag}</span>
+                        <span class="country-item-name">${country.name}</span>
+                    </span>
+                    <span class="country-item-code">${country.code}</span>
+                `;
+
+                li.addEventListener('click', () => {
+                    selectCountry(country);
+                });
+
+                countryList.appendChild(li);
+            });
+        }
+
+        function selectCountry(country) {
+            selectedFlag.textContent = country.flag;
+            selectedCode.textContent = country.code;
+            hiddenInput.value = country.code;
+            selectorBtn.setAttribute('aria-label', `Select country code, currently ${country.name} ${country.code}`);
+            closeDropdown();
+            phoneInput.focus();
+        }
+
+        function toggleDropdown() {
+            isOpen = !isOpen;
+            if (isOpen) {
+                dropdown.classList.add('open');
+                selectorBtn.setAttribute('aria-expanded', 'true');
+                renderCountries();
+                searchInput.value = "";
+                searchInput.focus();
+            } else {
+                closeDropdown();
+            }
+        }
+
+        function closeDropdown() {
+            isOpen = false;
+            dropdown.classList.remove('open');
+            selectorBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        selectorBtn.addEventListener('click', toggleDropdown);
+
+        searchInput.addEventListener('input', (e) => {
+            renderCountries(e.target.value);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!selectorBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        dropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        renderCountries();
+
+
+        // --- 2. Custom Phone Formatting (XX XXX XXXX) ---
+        phoneInput.addEventListener('input', function (e) {
+            // Strip all non-numeric characters
+            let cleaned = e.target.value.replace(/\D/g, '');
+            let parts = [];
+
+            // Break numbers into 2 digits, 3 digits, 4 digits groupings
+            if (cleaned.length > 0) {
+                parts.push(cleaned.substring(0, 2));
+            }
+            if (cleaned.length > 2) {
+                parts.push(cleaned.substring(2, 5));
+            }
+            if (cleaned.length > 5) {
+                parts.push(cleaned.substring(5, 9));
+            }
+            if (cleaned.length > 9) {
+                parts.push(cleaned.substring(9));    // Catch any overflow
+            }
+
+            // Rejoin with spaces
+            e.target.value = parts.join(' ').trim();
+        });
+
+        // Handle backspacing cleanly over the generated spaces
+        phoneInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace') {
+                const cursorPosition = e.target.selectionStart;
+                if (e.target.value.charAt(cursorPosition - 1) === ' ') {
+                    e.preventDefault();
+                    const val = e.target.value;
+                    e.target.value = val.substring(0, cursorPosition - 2) + val.substring(cursorPosition);
+                    e.target.setSelectionRange(cursorPosition - 2, cursorPosition - 2);
+                    e.target.dispatchEvent(new Event('input')); // Re-trigger format logic
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
