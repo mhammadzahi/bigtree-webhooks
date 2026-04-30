@@ -183,21 +183,22 @@ class ProductEnquiry(BaseModel):
     phone: str
     company: str
     project: str
+    project_type: str | None = None
     country: str
     message: str | None = None
     req_sample: str
     cart_items: List[CartItem]
     account_password: str | None = None
 
-async def process_enquiry(name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password):
+async def process_enquiry(name, email, phone, company, project, project_type, country, message, req_sample, cart_items, product_ids, account_password):
     try:
         # 1. Append to Google Sheet
-        row = [name, email, phone, company, project, country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        row = [name, email, phone, company, project, project_type or '', country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Inquiries", row)
 
         # 2. Insert into Salesforce
         combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
-        sf_result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
+        sf_result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, project_type=project_type, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
 
         # 3. Generate PDFs
         pdf_specsheet_files = []
@@ -240,6 +241,7 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
         phone = validated_data.phone
         company = validated_data.company
         project = validated_data.project
+        project_type = validated_data.project_type
         country = validated_data.country
         message = validated_data.message
         account_password = validated_data.account_password
@@ -250,7 +252,7 @@ async def product_enquiry_webhook(request: Request, background_tasks: Background
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
 
-    background_tasks.add_task(process_enquiry, name, email, phone, company, project, country, message, req_sample, cart_items, product_ids, account_password)
+    background_tasks.add_task(process_enquiry, name, email, phone, company, project, project_type, country, message, req_sample, cart_items, product_ids, account_password)
     return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
 

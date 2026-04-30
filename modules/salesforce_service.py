@@ -91,7 +91,7 @@ class SalesforceWebToLeadService:
     # ======================================================================
     # 2. Product Inquiries (Mapped to available Web-to-Lead fields)
     # ======================================================================
-    def insert_product_inquiry(self, full_name: str, email: str, phone: str, company_name: str, project: Optional[str], country: str, message: Optional[str], products: List[str]) -> Dict:
+    def insert_product_inquiry(self, full_name: str, email: str, phone: str, company_name: str, project: Optional[str], project_type: Optional[str], country: str, message: Optional[str], products: List[str]) -> Dict:
         
         # Web-to-Lead expects first/last split. We try to split logic here.
         names = full_name.split(" ", 1)
@@ -102,6 +102,11 @@ class SalesforceWebToLeadService:
         product_str = ", ".join(products)
         project_details = f"{project} - Interested in: {product_str}" if project else f"Interested in: {product_str}"
 
+        # Append project_type to notes if provided
+        notes = message or ""
+        if project_type:
+            notes = f"Project Type: {project_type}\n{notes}" if notes else f"Project Type: {project_type}"
+
         payload = {
             "first_name": first_name,
             "last_name": last_name,
@@ -110,7 +115,7 @@ class SalesforceWebToLeadService:
             "company": company_name,
             "country_code": country,
             self.FIELD_PROJECT: project_details,
-            self.FIELD_NOTES: message
+            self.FIELD_NOTES: notes
             # Note: 'LeadSource' is not usually a standard hidden input in basic Web-to-Lead unless added as a custom field or hidden input.
             # You can add "lead_source": "Product Inquiry" if your SF configuration allows it via Web-to-Lead.
         }
