@@ -53,7 +53,7 @@
                 fname: document.getElementById('fname').value.trim(),
                 lname: document.getElementById('lname').value.trim(),
                 email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
+                phone: (document.getElementById('phone-hidden-code')?.value || '') + ' ' + document.getElementById('phone').value.trim(),
                 company: document.getElementById('company').value.trim(),
                 role: roleSelect.value === 'other' ? roleOther.value.trim() : roleSelect.value,
                 project: document.getElementById('project').value.trim(),
