@@ -131,6 +131,7 @@ def get_template_by_category(product, wc_url=None, wc_key=None, wc_secret=None):
         'fabric': 'specsheet-template__FABRIC.html',
         'leather': 'specsheet-template__LEATHER.html',
         'floor covering': 'specsheet-template__FLOOR_COVERING.html',
+        'floor coverings': 'specsheet-template__FLOOR_COVERING.html',
         'wallcovering': 'specsheet-template__WALL_COVERING.html',
         'wall covering': 'specsheet-template__WALL_COVERING.html',
         'fine art': 'specsheet-template__FINE_ART.html',
