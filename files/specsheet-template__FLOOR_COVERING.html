@@ -6,208 +6,501 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Technical Specification Sheet</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
         @media print {
-            body {
-                background-color: white !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            .shadow-2xl {
-                box-shadow: none !important;
-            }
-
-            .container-page {
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
+            body { background: white !important; }
+            .page { box-shadow: none !important; }
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
+        }
 
-            main {
-                padding-bottom: 8px !important;
-            }
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            font-size: 10.5px;
+            color: #111;
+            background: #e8e8e8;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            line-height: 1.45;
+        }
 
-            header {
-                padding-top: 12px !important;
-                padding-bottom: 12px !important;
-            }
+        .page {
+            background: #fff;
+            width: 794px;
+            min-height: 1123px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+        }
+
+        /* ─── HEADER ─── */
+        header {
+            background: #562b45;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 28px;
+            min-height: 88px;
+        }
+
+        header .logo {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+            object-position: left center;
+        }
+
+        header .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        header .company-info {
+            text-align: right;
+            line-height: 1.55;
+        }
+
+        header .company-info h2 {
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            margin-bottom: 2px;
+        }
+
+        header .company-info p {
+            font-size: 10px;
+            opacity: 0.88;
+        }
+
+        header .qr {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        /* ─── TITLE BAR ─── */
+        .title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 28px 6px;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 0;
+        }
+
+        .title-bar h1 {
+            font-size: 19px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.01em;
+            color: #111;
+        }
+
+        .title-bar .send-inquiry {
+            font-size: 13.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #562b45;
+            text-decoration: underline;
+            letter-spacing: 0.04em;
+        }
+
+        /* ─── TOP PRODUCT SECTION (image left | name+desc+specs right) ─── */
+        .top-section {
+            display: flex;
+            gap: 0;
+            padding: 14px 28px 0;
+            align-items: flex-start;
+        }
+
+        /* IMAGE COLUMN */
+        .image-col {
+            flex-shrink: 0;
+            width: 195px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            margin-right: 20px;
+        }
+
+        .image-wrap {
+            position: relative;
+            width: 195px;
+            height: 255px;
+            background: #f0ede8;
+            overflow: hidden;
+        }
+
+        .image-wrap img.product-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .image-wrap .no-img {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .image-wrap .watermark {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 110px;
+            object-fit: contain;
+            opacity: 0.06;
+            filter: brightness(0);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Outdoor vertical tag */
+        .outdoor-tag {
+            position: absolute;
+            top: 0;
+            left: -18px;
+            width: 18px;
+            height: 255px;
+            background: #562b45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .outdoor-tag span {
+            color: #fff;
+            font-size: 7.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+        }
+
+        /* RIGHT CONTENT COLUMN */
+        .info-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .product-name-block {
+            margin-bottom: 8px;
+        }
+
+        .product-name-block h2 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .product-name-block p {
+            font-size: 11.5px;
+            color: #333;
+        }
+
+        /* Description block */
+        .desc-block {
+            margin-bottom: 8px;
+        }
+
+        .desc-block h3 {
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 3px;
+            color: #111;
+        }
+
+        .desc-block p {
+            font-size: 10px;
+            color: #222;
+            line-height: 1.55;
+        }
+
+        /* Two-column specs under description */
+        .specs-two-col {
+            display: flex;
+            gap: 18px;
+            margin-top: 4px;
+        }
+
+        .specs-two-col .specs-left,
+        .specs-two-col .specs-right {
+            flex: 1;
+        }
+
+        .specs-section-title {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+            color: #111;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 2px 4px;
+            font-size: 9.8px;
+        }
+
+        .specs-grid .label {
+            font-weight: 600;
+            color: #111;
+        }
+
+        .specs-grid .value {
+            color: #222;
+        }
+
+        /* ─── DIVIDER ─── */
+        .section-divider {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 10px 28px;
+        }
+
+        /* ─── FULL-WIDTH SECTIONS (below the top block) ─── */
+        .full-sections {
+            padding: 0 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .fw-section {
+            margin-bottom: 8px;
+        }
+
+        .fw-section-title {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+            color: #111;
+        }
+
+        .fw-grid {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 2px 4px;
+            font-size: 9.8px;
+        }
+
+        .fw-grid .label {
+            font-weight: 600;
+            color: #111;
+        }
+
+        .fw-grid .value {
+            color: #222;
+        }
+
+        .fw-text {
+            font-size: 9.8px;
+            color: #222;
+            line-height: 1.55;
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            background: #562b45;
+            height: 26px;
+            margin-top: auto;
+            flex-shrink: 0;
         }
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen py-8 flex justify-center text-[13.8px] text-black font-sans leading-relaxed">
+<body>
+<div class="page">
 
-    <div class="container-page bg-white w-full max-w-[850px] shadow-2xl relative flex flex-col">
-
-        <header class="bg-[#562b45] text-white px-10 py-2 flex justify-between items-center h-auto">
-
-            <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/BigTree_specsheet_Logo.png"
-                alt="Big Tree Logo" class="h-[110px] w-auto object-contain object-left">
-
-            <div class="flex items-center gap-4">
-                <div class="text-right leading-[1.2] text-[11.5px]">
-                    <h2 class="font-bold text-[12.6px] tracking-wide mb-0.5">BIG TREE FURNITURE LLC</h2>
-                    <p class="opacity-90">www.bigtree-group.com</p>
-                    <p class="opacity-90">sales@bigtree-group.com</p>
-                    <p class="opacity-90">tel: +971 4 341 3334</p>
-                </div>
-
-                <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/qr.png" alt="QR Code"
-                    class="w-[75px] h-[75px] object-contain flex-shrink-0">
+    <!-- HEADER -->
+    <header>
+        <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/BigTree_specsheet_Logo.png"
+             alt="Big Tree Logo" class="logo">
+        <div class="header-right">
+            <div class="company-info">
+                <h2>BIG TREE FURNITURE LLC</h2>
+                <p>www.bigtree-group.com</p>
+                <p>sales@bigtree-group.com</p>
+                <p>tel: +971 4 341 3334</p>
             </div>
-        </header>
-
-        <div class="px-10 py-1 flex justify-between items-end relative z-10 mb-2">
-            <h1 class="text-[23.1px] font-bold uppercase tracking-wide">Technical Specification Sheet</h1>
-            <a href="{{ REQUEST_INQUIRY_URL }}"
-                class="text-[#562b45] font-bold underline uppercase text-[16.4px] hover:opacity-80 transition-opacity">Send
-                Inquiry</a>
+            <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/qr.png" alt="QR Code" class="qr">
         </div>
+    </header>
 
-        <main class="flex-grow px-10 pb-4 flex gap-8 relative">
-
-            <div class="w-[50%] flex flex-col gap-5 relative z-10">
-                <div
-                    class="h-[220px] w-full flex items-center justify-center text-gray-500 text-[11.5px] bg-gray-50 relative">
-                    <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/BigTree_specsheet_Logo.png"
-                        alt="Watermark"
-                        class="absolute bottom-[-60px] right-[-60px] w-[150px] object-contain opacity-[0.05] filter brightness-0 pointer-events-none">
-                    {% if IMAGE_PLACEHOLDER %}
-                    {{ IMAGE_PLACEHOLDER }}
-                    {% else %}
-                    <span>Product Image Not Available</span>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <h3 class="font-bold uppercase -mb-px text-[11.5px]">Description</h3>
-                    <p class="text-[11.5px]">{{ prdct_description }}</p>
-                </div>
-
-                <div>
-                    <h3 class="font-bold uppercase -mb-px text-[11.5px]">Maintainance & Care</h3>
-                    <p class="text-[11.5px]">{{ maintenance_and_care }}</p>
-                </div>
-
-                <div>
-                    <h3 class="font-bold uppercase -mb-px text-[11.5px]">Note</h3>
-                    <p class="text-[11.5px]">{{ note }}</p>
-                </div>
-            </div>
-
-            <div class="w-[50%] flex flex-col relative z-10 text-[11.5px]">
-
-                <div class="mb-3">
-                    <h2 class="font-bold text-[13.8px]">Name: {{ prdct_name }}</h2>
-                    <p class="text-[13.8px]">Collection: {{ prdct_category }}</p>
-                </div>
-
-                <div class="mb-3">
-                    <h3 class="font-bold uppercase -mb-px text-[11.5px]">Product Detail</h3>
-                    <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
-                        <div class="font-bold">Type</div>
-                        <div>{{ type }}</div>
-                        <div class="font-bold">Size</div>
-                        <div>{{ size }}</div>
-                        <div class="font-bold">Thickness</div>
-                        <div>{{ thickness }}</div>
-                        <div class="font-bold">Weight</div>
-                        <div>{{ weight }}</div>
-                        <div class="font-bold">Composition</div>
-                        <div>{{ composition }}</div>
-                        <div class="font-bold">Backing</div>
-                        <div>{{ backing }}</div>
-                        <div class="font-bold">Color</div>
-                        <div>{{ color }}</div>
-                        <div class="font-bold">Origin</div>
-                        <div>{{ origin }}</div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <h3 class="font-bold uppercase -mb-px text-[11.5px]">Product Usage</h3>
-                    <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
-                        <div class="font-bold">Application</div>
-                        <div>{{ application }}</div>
-                        <div class="font-bold">Environment</div>
-                        <div>{{ environment }}</div>
-                        <div class="font-bold">Project</div>
-                        <div>{{ project }}</div>
-                    </div>
-                </div>
-
-                <div class="mb-2">
-                    <h3 class="font-bold uppercase -mb-px text-[11.5px]">Key Facts</h3>
-                    <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
-                        <div class="font-bold">Warranty</div>
-                        <div>{{ warranty }}</div>
-                        <div class="font-bold">MOQ</div>
-                        <div>{{ minimum_order_quantity }}</div>
-                        <div class="font-bold">Lead Time</div>
-                        <div>{{ lead_time }}</div>
-                        <div class="font-bold">Price Tier</div>
-                        <div>{{ price_tier }}</div>
-                    </div>
-                </div>
-
-                <hr class="border-gray-300 mb-2">
-
-                <div>
-                    <h3 class="font-bold uppercase -mb-px text-[11.5px]">Technical Data</h3>
-
-                    <div class="flex flex-col gap-1 text-[10.3px]">
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Durability</span>
-                            <span>{{ durability }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Color Fastness</span>
-                            <span>{{ color_fastness }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Flame Retardant</span>
-                            <span>{{ flame_retardant }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Weather Resistance</span>
-                            <span>{{ weather_resistance }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Antibacterial</span>
-                            <span>{{ antibacterial }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Other Certifications</span>
-                            <span>{{ other_certifications }}</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </main>
-
-        <footer class="bg-[#562b45] h-[30px] w-full mt-auto"></footer>
-
+    <!-- TITLE BAR -->
+    <div class="title-bar">
+        <h1>Technical Specification Sheet</h1>
+        <a href="{{ REQUEST_INQUIRY_URL }}" class="send-inquiry">Send Inquiry</a>
     </div>
 
-</body>
+    <!-- TOP SECTION: Image | Info -->
+    <div class="top-section">
 
+        <!-- Image column (with outdoor tag + watermark) -->
+        <div class="image-col">
+            <div class="outdoor-tag">
+                <span>+ Outdoor</span>
+            </div>
+            <div class="image-wrap">
+                {% if IMAGE_PLACEHOLDER %}
+                {{ IMAGE_PLACEHOLDER }}
+                {% else %}
+                <span class="no-img">Product Image<br>Not Available</span>
+                {% endif %}
+                <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/BigTree_specsheet_Logo.png"
+                     alt="Watermark" class="watermark">
+            </div>
+        </div>
+
+        <!-- Info column -->
+        <div class="info-col">
+
+            <!-- Name + Collection -->
+            <div class="product-name-block">
+                <h2>Name: {{ prdct_name }}</h2>
+                <p>Collection: {{ prdct_category }}</p>
+            </div>
+
+            <!-- Description -->
+            <div class="desc-block">
+                <h3>Description</h3>
+                <p>{{ prdct_description }}</p>
+            </div>
+
+            <!-- Two-column: Product Detail | Technical Data -->
+            <div class="specs-two-col">
+
+                <!-- Left: Product Detail -->
+                <div class="specs-left">
+                    <div class="specs-section-title">Product Detail</div>
+                    <div class="specs-grid">
+                        <span class="label">Type</span>
+                        <span class="value">{{ type }}</span>
+                        <span class="label">Size</span>
+                        <span class="value">{{ size }}</span>
+                        <span class="label">Thickness</span>
+                        <span class="value">{{ thickness }}</span>
+                        <span class="label">Weight</span>
+                        <span class="value">{{ weight }}</span>
+                        <span class="label">Composition</span>
+                        <span class="value">{{ composition }}</span>
+                        <span class="label">Backing</span>
+                        <span class="value">{{ backing }}</span>
+                        <span class="label">Color</span>
+                        <span class="value">{{ color }}</span>
+                        <span class="label">Origin</span>
+                        <span class="value">{{ origin }}</span>
+                    </div>
+                </div>
+
+                <!-- Right: Technical Data -->
+                <div class="specs-right">
+                    <div class="specs-section-title">Technical Data:</div>
+                    <div class="specs-grid">
+                        <span class="label">Durability</span>
+                        <span class="value">{{ durability }}</span>
+                        <span class="label">Color Fastness</span>
+                        <span class="value">{{ color_fastness }}</span>
+                        <span class="label">Flame Retardant</span>
+                        <span class="value">{{ flame_retardant }}</span>
+                        <span class="label">Weather Resistance</span>
+                        <span class="value">{{ weather_resistance }}</span>
+                        <span class="label">Antibacterial</span>
+                        <span class="value">{{ antibacterial }}</span>
+                        <span class="label">Additional Info.</span>
+                        <span class="value">{{ other_certifications }}</span>
+                    </div>
+                </div>
+
+            </div><!-- /specs-two-col -->
+
+        </div><!-- /info-col -->
+
+    </div><!-- /top-section -->
+
+    <hr class="section-divider">
+
+    <!-- FULL-WIDTH SECTIONS -->
+    <div class="full-sections">
+
+        <!-- Product Usage -->
+        <div class="fw-section">
+            <div class="fw-section-title">Product Usage</div>
+            <div class="fw-grid">
+                <span class="label">Application</span>
+                <span class="value">{{ application }}</span>
+                <span class="label">Environment</span>
+                <span class="value">{{ environment }}</span>
+                <span class="label">Project</span>
+                <span class="value">{{ project }}</span>
+            </div>
+        </div>
+
+        <!-- Key Facts -->
+        <div class="fw-section">
+            <div class="fw-section-title">Key Facts</div>
+            <div class="fw-grid">
+                <span class="label">Warranty</span>
+                <span class="value">{{ warranty }}</span>
+                <span class="label">MOQ</span>
+                <span class="value">{{ minimum_order_quantity }}</span>
+                <span class="label">Lead Time</span>
+                <span class="value">{{ lead_time }}</span>
+                <span class="label">Price Tier</span>
+                <span class="value">{{ price_tier }}</span>
+            </div>
+        </div>
+
+        <!-- Note -->
+        <div class="fw-section">
+            <div class="fw-section-title">Note</div>
+            <p class="fw-text">{{ note }}</p>
+        </div>
+
+        <!-- Maintenance & Care -->
+        <div class="fw-section">
+            <div class="fw-section-title">Maintainance &amp; Care</div>
+            <p class="fw-text">{{ maintenance_and_care }}</p>
+        </div>
+
+    </div><!-- /full-sections -->
+
+    <!-- FOOTER -->
+    <footer></footer>
+
+</div>
+</body>
 </html>
