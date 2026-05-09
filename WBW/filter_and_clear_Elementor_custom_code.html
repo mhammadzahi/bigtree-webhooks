@@ -1,0 +1,111 @@
+<style>
+    /* 1. Prevent WooBeWoo from locking the UI when it attempts to load */
+    .wpfMainWrapper,
+    .wpfFilterWrapper,
+    .wpfFilterContent,
+    .wpfLiLabel {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+    }
+
+    /* 2. Hide WooBeWoo loading spinners completely */
+    .wpfLoaderLayout,
+    .wpfPreviewLoader,
+    .woobewoo-filter-loader {
+        display: none !important;
+    }
+</style>
+
+<script type="text/javascript">
+    console.log("----------------");
+    jQuery(document).ready(function ($) {
+
+        /* -------------------------------------------------------
+         * 1. KILL WOO-BE-WOO AUTO-LOAD
+         * Abort the plugin's AJAX request before it reaches the server.
+         * ------------------------------------------------------- */
+        $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+            var dataStr = (options.data && typeof options.data === 'string') ? options.data : '';
+            var urlStr = options.url || '';
+
+            // If the request originates from WooBeWoo, terminate it.
+            if (dataStr.includes('action=wpf') || urlStr.includes('wpf_')) {
+                jqXHR.abort();
+
+                // Failsafe: Remove any visual locks the plugin tried to apply
+                setTimeout(function () {
+                    $('.wpfMainWrapper, .wpfFilterWrapper, .wpfFilterContent').css({
+                        'pointer-events': 'auto',
+                        'opacity': '1'
+                    });
+                }, 10);
+            }
+        });
+
+        /* -------------------------------------------------------
+         * 2. ELEMENTOR "APPLY FILTERS" BUTTON (#filter_button)
+         * ------------------------------------------------------- */
+        $(document).on('click', '#filter_button', function (e) {
+            e.preventDefault();
+
+            var url = new URL(window.location.href.split('?')[0]);
+            var currentParams = new URLSearchParams(window.location.search);
+            var newParams = new URLSearchParams();
+
+            // Pass through native WordPress parameters (e.g., search term `?s=`, pagination)
+            currentParams.forEach(function (val, key) {
+                if (!key.startsWith('wpf') && !key.startsWith('product_tag') && key !== 'orderby') {
+                    newParams.append(key, val);
+                }
+            });
+
+            // Scan the DOM for checked items and build the WooBeWoo URL schema
+            $('.wpfFilterWrapper').each(function () {
+                var getAttr = $(this).attr('data-get-attribute');
+                if (!getAttr) return;
+
+                var checkedSlugs = [];
+                $(this).find('input[type="checkbox"]:checked, input[type="radio"]:checked').each(function () {
+                    var li = $(this).closest('li');
+                    var slug = li.attr('data-term-slug') || li.attr('data-term-id');
+                    if (slug) checkedSlugs.push(slug);
+                });
+
+                if (checkedSlugs.length > 0) {
+                    newParams.append(getAttr, checkedSlugs.join(','));
+                }
+            });
+
+            // Add WooBeWoo's required processing flag if filters exist
+            var hasFilters = Array.from(newParams.keys()).some(k => k.startsWith('wpf') || k.startsWith('product_tag') || k === 'orderby');
+            if (hasFilters) {
+                newParams.append('wpf_fbv', '1');
+            }
+
+            url.search = newParams.toString();
+            window.location.href = url.toString();
+        });
+
+        /* -------------------------------------------------------
+         * 3. ELEMENTOR "CLEAR" BUTTON (#clear_filter_button)
+         * ------------------------------------------------------- */
+        $(document).on('click', '#clear_filter_button', function (e) {
+            e.preventDefault();
+
+            var clearUrl = new URL(window.location.href.split('?')[0]);
+            var currParams = new URLSearchParams(window.location.search);
+            var cleanParams = new URLSearchParams();
+
+            // Retain native parameters, strip all filter-related parameters
+            currParams.forEach(function (val, key) {
+                if (!key.startsWith('wpf') && !key.startsWith('product_tag') && key !== 'orderby') {
+                    cleanParams.append(key, val);
+                }
+            });
+
+            clearUrl.search = cleanParams.toString();
+            window.location.href = clearUrl.toString();
+        });
+
+    });
+</script>
