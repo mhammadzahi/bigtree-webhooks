@@ -351,10 +351,11 @@ async def unsubscribe(email_id: str, request: Request, background_tasks: Backgro
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
-    return {"app": "BT Webhooks", "version": "3.3.1", "status": "running"}
+    return {"app": "BT Webhooks", "version": "3.3.2", "status": "running"}
 
 
 if __name__ == "__main__":
-    # uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=True) # Dev
-    uvicorn.run(app, host="0.0.0.0", port=8001) # Prod
-
+    host = "127.0.0.1"
+    port = 8001
+    # uvicorn.run("app:app", host=host, port=port, reload=True) # Dev
+    uvicorn.run(app, host=host, port=port) # Prod
