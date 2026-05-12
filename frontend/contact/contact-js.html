@@ -1,0 +1,146 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Route to WordPress AJAX proxy instead of Python directly
+        const API_ENDPOINT = bt_contact_vars.ajax_url + '?action=bt_process_contact_proxy';
+        const form = document.getElementById('enquiryForm');
+
+        if (!form) return;
+
+        const submitBtn = form.querySelector('.submit-btn');
+        const originalBtnText = submitBtn ? submitBtn.textContent : 'Submit';
+
+        // Initialize Toast Mixin
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // 1. Browser Native Validation
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // 2. Extract Turnstile Token
+            const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+            if (!turnstileToken) {
+                Toast.fire({
+                    icon: 'warning',
+                    title: 'Security Check Required',
+                    text: 'Please complete the Cloudflare verification.'
+                });
+                return;
+            }
+
+            // 3. Prepare Data
+            const roleSelect = document.getElementById('role');
+            const roleOther = document.getElementById('role_other');
+            const payload = {
+                fname: document.getElementById('fname').value.trim(),
+                lname: document.getElementById('lname').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: (document.getElementById('phone-hidden-code')?.value || '') + ' ' + document.getElementById('phone').value.trim(),
+                company: document.getElementById('company').value.trim(),
+                role: roleSelect.value === 'other' ? roleOther.value.trim() : roleSelect.value,
+                project: document.getElementById('project').value.trim(),
+                project_location: document.getElementById('loc-hidden-value')?.value || '',
+                message: document.getElementById('message').value.trim() || null,
+                src: 'bt',
+                cf_turnstile_response: turnstileToken
+            };
+
+            // 4. UI Loading State
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Sending...';
+                submitBtn.style.opacity = '0.7';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+
+            Toast.fire({
+                icon: 'info',
+                title: 'Processing request...',
+                timer: 0,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // 5. Send Request to WordPress Proxy
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-API-Key': window.MySiteSettings.apiKey,
+                        'X-WP-Nonce': bt_contact_vars.nonce
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                // 6. Handle Response
+                if (response.ok && (result.success === true || !result.hasOwnProperty('success'))) {
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Request Sent Successfully!',
+                        text: 'We will be in touch shortly.'
+                    });
+                    form.reset();
+                    if (typeof turnstile !== 'undefined') turnstile.reset();
+                } else {
+                    console.error('API Error:', result);
+                    let errorMessage = 'Something went wrong.';
+
+                    // Handle WP wp_send_json_error format or Python detail format
+                    if (result.data && result.data.detail) {
+                        errorMessage = result.data.detail;
+                    } else if (result.detail) {
+                        errorMessage = result.detail;
+                    }
+
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Submission Failed',
+                        text: errorMessage
+                    });
+                    if (typeof turnstile !== 'undefined') turnstile.reset();
+                }
+
+            } catch (error) {
+                console.error('Network Error:', error);
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Unable to reach the server. Please check your connection.'
+                });
+                if (typeof turnstile !== 'undefined') turnstile.reset();
+
+            } finally {
+                // 7. Reset UI
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+            }
+        });
+    });
+</script>

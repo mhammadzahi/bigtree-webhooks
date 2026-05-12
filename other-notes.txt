@@ -32,3 +32,52 @@ This must bypass WP Super Cache static HTML issues and WooCommerce AJAX fragment
 3. **WooCommerce Integration:**
    - Listen for `updated_checkout` and `updated_cart_totals` jQuery events.
    - Re-run `renderTurnstile()` on these events to ensure the widget appears after AJAX refreshes.
+
+
+
+-------
+
+
+
+Skill: 
+
+bigtree-webhooks/SKILL.md
+
+
+
+Task: create a new form in /frontend/supplier see screenshoot (provid 2 js and html files, I have php already) 
+
+"""
+Type of Product (Dropdown Check-box, Multiple selection):
+Furniture
+Leathers
+Fabrics
+Wallcoverings
+Floor Coverings
+Objects
+Lighting
+Art
+
+-
+
+Partnership Type (dropdown, Single selection):
+Authorized Dealership (Exclusive)
+Authorized Dealership (Open)
+White-Label / OEM
+Project-Based
+GPO (Group Purchasing Organization)
+Other
+"""
+
+"""
+- Platform/Marketplace is a text
+- The mandatory fields are:
+    - All of Basic info
+    - Types of Products
+    - Website/Catalogue
+    - Country
+    - Partnership
+"""
+
+
+get inspired by files in /frontend/contact/
