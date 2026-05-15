@@ -35,17 +35,10 @@ This must bypass WP Super Cache static HTML issues and WooCommerce AJAX fragment
 
 
 
--------
+-------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-Skill: 
-
-bigtree-webhooks/SKILL.md
-
-
-
-Task: create a new form in /frontend/supplier see screenshoot (provid 2 js and html files, I have php already) 
+Task: create a new form in see screenshoot (provid 3 files, html, js, and php) 
 
 """
 Type of Product (Dropdown Check-box, Multiple selection):
@@ -80,4 +73,4 @@ Other
 """
 
 
-get inspired by files in /frontend/contact/
+provid same structure and designs in attached files

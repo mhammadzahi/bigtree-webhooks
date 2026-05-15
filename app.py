@@ -39,6 +39,56 @@ app.add_middleware(
 sf = SalesforceWebToLeadService(debug_mode=True, debug_email=DEVELOPER_EMAIL)
 
 
+class SupplierRequest(BaseModel):
+    fname: str
+    lname: str
+    company: str
+    country: str
+    email: EmailStr
+    message: str | None = None
+    partnership: str
+    phone: str
+    platform: str | None = None
+    products: list[str]
+    website: str
+
+def process_supplier_request(company, country, email, fname, lname, message, partnership, phone, platform, products, website):
+    try:
+        products_str = ", ".join(products) if products else ""
+        row = [company, country, email, fname, lname, message, partnership, phone, platform, products_str, website, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        append_row(SHEET_ID, "Supplier", row)
+        
+    except Exception as e:
+        print(f"Error processing supplier request for {email}: {e}")
+
+@app.post("/bt-supplier-webhook-v2-1")
+async def supplier_webhook(request: Request, background_tasks: BackgroundTasks):
+    api_key = request.headers.get("X-API-Key")
+    if not api_key or api_key != API_KEY:
+        return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
+    
+    payload = await request.json()
+    print("SUPPLIER PAYLOAD: \n", json.dumps(payload, indent=2))
+    try:
+        validated_data = SupplierRequest.model_validate(payload)
+        fname = validated_data.fname
+        lname = validated_data.lname
+        company = validated_data.company
+        country = validated_data.country
+        email = validated_data.email
+        message = validated_data.message
+        partnership = validated_data.partnership
+        phone = validated_data.phone
+        platform = validated_data.platform
+        products = validated_data.products
+        website = validated_data.website
+        
+    except ValidationError as e:
+        return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
+    
+    background_tasks.add_task(process_supplier_request, company, country, email, fname, lname, message, partnership, phone, platform, products, website)
+    return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
+
 
 
 class ContactRequest(BaseModel):
