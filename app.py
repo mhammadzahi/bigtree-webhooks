@@ -55,9 +55,9 @@ class SupplierRequest(BaseModel):
 def process_supplier_request(company, country, email, fname, lname, message, partnership, phone, platform, products, website):
     try:
         products_str = ", ".join(products) if products else ""
-        row = [company, country, email, fname, lname, message, partnership, phone, platform, products_str, website, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        row = [fname, lname, company, email, phone, products_str, website, country, platform, partnership, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Supplier", row)
-        
+
     except Exception as e:
         print(f"Error processing supplier request for {email}: {e}")
 
@@ -69,6 +69,7 @@ async def supplier_webhook(request: Request, background_tasks: BackgroundTasks):
     
     payload = await request.json()
     print("SUPPLIER PAYLOAD: \n", json.dumps(payload, indent=2))
+
     try:
         validated_data = SupplierRequest.model_validate(payload)
         fname = validated_data.fname
