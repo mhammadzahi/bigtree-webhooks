@@ -46,16 +46,14 @@ class SupplierRequest(BaseModel):
     country: str
     email: EmailStr
     message: str | None = None
-    partnership: str
     phone: str
-    platform: str | None = None
     products: list[str]
     website: str
 
-def process_supplier_request(company, country, email, fname, lname, message, partnership, phone, platform, products, website):
+def process_supplier_request(company, country, email, fname, lname, message, phone, products, website):
     try:
         products_str = ", ".join(products) if products else ""
-        row = [fname, lname, company, email, phone, products_str, website, country, platform, partnership, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        row = [fname, lname, company, email, phone, products_str, website, country, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Supplier", row)
 
     except Exception as e:
@@ -78,16 +76,14 @@ async def supplier_webhook(request: Request, background_tasks: BackgroundTasks):
         country = validated_data.country
         email = validated_data.email
         message = validated_data.message
-        partnership = validated_data.partnership
         phone = validated_data.phone
-        platform = validated_data.platform
         products = validated_data.products
         website = validated_data.website
         
     except ValidationError as e:
         return JSONResponse(status_code=422, content={"status": "fail", "detail": "Invalid Data"})
     
-    background_tasks.add_task(process_supplier_request, company, country, email, fname, lname, message, partnership, phone, platform, products, website)
+    background_tasks.add_task(process_supplier_request, company, country, email, fname, lname, message, phone, products, website)
     return JSONResponse(status_code=200, content={"status": "success", "message": "Processing your request"})
 
 
@@ -402,7 +398,7 @@ async def unsubscribe(email_id: str, request: Request, background_tasks: Backgro
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
-    return {"App": "BT Webhooks", "Version": "3.3.2", "Status": "running"}
+    return {"App": "BT Webhooks", "Version": "3.3.3", "Status": "running"}
 
 
 if __name__ == "__main__":
