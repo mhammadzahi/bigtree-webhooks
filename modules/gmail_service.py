@@ -78,6 +78,19 @@ def create_message(to, subject, html_body, pdf_files=None, attachments=False, cc
 
 
 # ------- Send Emails ------- #
+def send_welcome_supplier_email(email, full_name, cc):
+    service = get_gmail_service()
+    html_body = load_email_template("welcome_supplier.html").replace("{{full_name}}", full_name)
+    body_message = create_message(email, "Welcome to BigTree Group", html_body, attachments=False, cc=cc)
+    try:
+        message = service.users().messages().send(userId="me", body=body_message).execute()
+        return True
+        
+    except Exception as e:
+        print(f"An error occurred in [send_welcome_supplier_email]: {e}")
+        return False
+
+
 def send_product_enquiry_email(full_name, email, pdf_files, cc):
     service = get_gmail_service()
     html_body = load_email_template("product_enquiry.html").replace("{{full_name}}", full_name)
@@ -86,7 +99,6 @@ def send_product_enquiry_email(full_name, email, pdf_files, cc):
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         # print(message)
-        time.sleep(3)
         return True
 
     except Exception as e:
@@ -102,7 +114,6 @@ def send_account_creation_email(email, password, cc=None):
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         # print(message)
-        time.sleep(3)
         return True
 
     except Exception as e:

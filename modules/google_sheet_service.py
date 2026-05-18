@@ -1,4 +1,4 @@
-import os
+import os, time
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -65,7 +65,7 @@ def append_row(sheet_id: str, sheet_name: str, row_data: list) -> bool:
 
         # updated_rows = result.get("updates", {}).get("updatedRows", 0)
         # print(f"{updated_rows} rows appended.")
-        
+        time.sleep(3)
         return True
 
     except HttpError as e:

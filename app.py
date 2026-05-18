@@ -52,9 +52,13 @@ class SupplierRequest(BaseModel):
 
 def process_supplier_request(company, country, email, fname, lname, message, phone, products, website):
     try:
+        # 1. Append to Google Sheet
         products_str = ", ".join(products) if products else ""
         row = [fname, lname, company, email, phone, products_str, website, country, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Supplier", row)
+
+        # 2. Send email
+        gmail_service.send_welcome_supplier_email(email, f"{fname} {lname}", SALES_EMAIL)
 
     except Exception as e:
         print(f"Error processing supplier request for {email}: {e}")
