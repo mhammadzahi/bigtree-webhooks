@@ -432,7 +432,7 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
     _truncated_maintenance = smart_truncate(_raw_maintenance, base_limit=530, tolerance=10)
     if _truncated_maintenance is not _raw_maintenance:
         print(f"[DEBUG] Maintenance & Care soft-truncated at word boundary (original: {len(_raw_maintenance)} chars)")
-    maintenance_and_care = Markup(_truncated_maintenance.replace('\n', '<br>'))
+    maintenance_and_care = Markup(re.sub(r'\n+', '<br>', _truncated_maintenance))
 
     # Context Mapping (matches placeholders in your HTML)
     context = {
