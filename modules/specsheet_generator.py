@@ -419,9 +419,9 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
 
         return text[:cut_index] + _more_info_link
 
-    # Truncate Description (base 380, tolerance +10)
+    # Truncate Description (base 435, tolerance +10)
     _raw_description = strip_html_tags(product.get('description', ''))
-    _truncated_description = smart_truncate(_raw_description, base_limit=380, tolerance=10)
+    _truncated_description = smart_truncate(_raw_description, base_limit=435, tolerance=10)
     if _truncated_description is not _raw_description:
         print(f"[DEBUG] Description soft-truncated at word boundary (original: {len(_raw_description)} chars)")
     prdct_description = Markup(_truncated_description)
