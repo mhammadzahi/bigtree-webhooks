@@ -374,7 +374,7 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
 
     _more_info_link = (
         f' <a href="{product_full_url}" '
-        f'style="color: #562b45; font-weight: bold; text-decoration: underline;">. . . more info.</a>'
+        f'style="color: #F65C0D; font-weight: bold; text-decoration: underline;">. . . more info.</a>'
         if product_full_url else ' . . . more info.'
     )
 
