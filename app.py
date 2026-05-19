@@ -70,7 +70,7 @@ async def supplier_webhook(request: Request, background_tasks: BackgroundTasks):
         return JSONResponse(status_code=401, content={"status": "fail", "detail": "Unauthorized"})
     
     payload = await request.json()
-    print("SUPPLIER PAYLOAD: \n", json.dumps(payload, indent=2))
+    # print("SUPPLIER PAYLOAD: \n", json.dumps(payload, indent=2))
 
     try:
         validated_data = SupplierRequest.model_validate(payload)
