@@ -82,119 +82,127 @@
                 Inquiry</a>
         </div>
 
-        <main class="flex-grow px-10 pb-4 flex gap-8 relative">
+        <main class="flex-grow px-10 pb-4 flex flex-col relative">
 
-            <div class="w-[50%] flex flex-col gap-5 relative z-10">
-                <div
-                    class="h-[220px] w-full flex items-center justify-center text-gray-500 text-[11.5px] bg-gray-50 relative">
-                    <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/BigTree_specsheet_Logo.png"
-                        alt="Watermark"
-                        class="absolute bottom-[-60px] right-[-60px] w-[150px] object-contain opacity-[0.05] filter brightness-0 pointer-events-none">
-                    {% if IMAGE_PLACEHOLDER %}
-                    {{ IMAGE_PLACEHOLDER }}
-                    {% else %}
-                    <span>Product Image Not Available</span>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Product Detail</h3>
-                    <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
-                        <div class="font-bold">Type</div>
-                        <div>{{ type }}</div>
-                        <div class="font-bold">Size</div>
-                        <div>{{ size }}</div>
-                        <div class="font-bold">Thickness</div>
-                        <div>{{ thickness }}</div>
-                        <div class="font-bold">Weight</div>
-                        <div>{{ weight }}</div>
-                        <div class="font-bold">Composition</div>
-                        <div>{{ composition }}</div>
-                        <div class="font-bold">Backing</div>
-                        <div>{{ backing }}</div>
-                        <div class="font-bold">Color</div>
-                        <div>{{ color }}</div>
-                        <div class="font-bold">Origin</div>
-                        <div>{{ origin }}</div>
+            <!-- TOP ROW: Image (left) + Name / Collection / Description (right) -->
+            <div class="flex gap-8 mb-5 relative z-10">
+                <div class="w-[50%]">
+                    <div
+                        class="h-[220px] w-full flex items-center justify-center text-gray-500 text-[11.5px] bg-gray-50 relative">
+                        <img src="https://shop.bigtree-group.com/wp-content/uploads/2026/02/BigTree_specsheet_Logo.png"
+                            alt="Watermark"
+                            class="absolute bottom-[-60px] right-[-60px] w-[150px] object-contain opacity-[0.05] filter brightness-0 pointer-events-none">
+                        {% if IMAGE_PLACEHOLDER %}
+                        {{ IMAGE_PLACEHOLDER }}
+                        {% else %}
+                        <span>Product Image Not Available</span>
+                        {% endif %}
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Maintainance & Care</h3>
-                    <p class="text-[11.5px]">{{ maintenance_and_care }}</p>
-                </div>
-
-                <div>
-                    <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Note</h3>
-                    <p class="text-[11.5px]">{{ note }}</p>
+                <div class="w-[50%] text-[11.5px]">
+                    <div class="mb-3">
+                        <h2 class="font-bold text-[13.8px]">Name: {{ prdct_name }}</h2>
+                        <p class="text-[13.8px]">Collection: {{ prdct_category }}</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Description</h3>
+                        <p class="text-[11.5px]">{{ prdct_description }}</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="w-[50%] flex flex-col relative z-10 text-[11.5px]">
+            <!-- BOTTOM SECTION: Product Detail (left) + Product Usage / Key Facts / Technical Data (right) -->
+            <div class="flex gap-8 flex-grow relative z-10">
 
-                <div class="mb-3">
-                    <h2 class="font-bold text-[13.8px]">Name: {{ prdct_name }}</h2>
-                    <p class="text-[13.8px]">Collection: {{ prdct_category }}</p>
-                </div>
+                <div class="w-[50%] flex flex-col gap-5">
+                    <div>
+                        <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Product Detail</h3>
+                        <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="font-bold">Type</div>
+                            <div>{{ type }}</div>
+                            <div class="font-bold">Size</div>
+                            <div>{{ size }}</div>
+                            <div class="font-bold">Thickness</div>
+                            <div>{{ thickness }}</div>
+                            <div class="font-bold">Weight</div>
+                            <div>{{ weight }}</div>
+                            <div class="font-bold">Composition</div>
+                            <div>{{ composition }}</div>
+                            <div class="font-bold">Backing</div>
+                            <div>{{ backing }}</div>
+                            <div class="font-bold">Color</div>
+                            <div>{{ color }}</div>
+                            <div class="font-bold">Origin</div>
+                            <div>{{ origin }}</div>
+                        </div>
+                    </div>
 
-                <div class="mb-3">
-                    <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Description</h3>
-                    <p class="text-[11.5px]">{{ prdct_description }}</p>
-                </div>
+                    <div>
+                        <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Maintainance & Care</h3>
+                        <p class="text-[11.5px]">{{ maintenance_and_care }}</p>
+                    </div>
 
-                <div class="mb-3">
-                    <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Product Usage</h3>
-                    <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
-                        <div class="font-bold">Application</div>
-                        <div>{{ application }}</div>
-                        <div class="font-bold">Environment</div>
-                        <div>{{ environment }}</div>
-                        <div class="font-bold">Project</div>
-                        <div>{{ project }}</div>
+                    <div>
+                        <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Note</h3>
+                        <p class="text-[11.5px]">{{ note }}</p>
                     </div>
                 </div>
 
-                <div class="mb-2">
-                    <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Key Facts</h3>
-                    <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
-                        <div class="font-bold">Warranty</div>
-                        <div>{{ warranty }}</div>
-                        <div class="font-bold">MOQ</div>
-                        <div>{{ minimum_order_quantity }}</div>
-                        <div class="font-bold">Lead Time</div>
-                        <div>{{ lead_time }}</div>
-                        <div class="font-bold">Price Tier</div>
-                        <div>{{ price_tier }}</div>
+                <div class="w-[50%] flex flex-col gap-5 text-[11.5px]">
+                    <div>
+                        <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Product Usage</h3>
+                        <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="font-bold">Application</div>
+                            <div>{{ application }}</div>
+                            <div class="font-bold">Environment</div>
+                            <div>{{ environment }}</div>
+                            <div class="font-bold">Project</div>
+                            <div>{{ project }}</div>
+                        </div>
                     </div>
-                </div>
 
-                <div>
-                    <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Technical Data</h3>
+                    <div>
+                        <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Key Facts</h3>
+                        <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="font-bold">Warranty</div>
+                            <div>{{ warranty }}</div>
+                            <div class="font-bold">MOQ</div>
+                            <div>{{ minimum_order_quantity }}</div>
+                            <div class="font-bold">Lead Time</div>
+                            <div>{{ lead_time }}</div>
+                            <div class="font-bold">Price Tier</div>
+                            <div>{{ price_tier }}</div>
+                        </div>
+                    </div>
 
-                    <div class="flex flex-col gap-1 text-[10.3px]">
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Durability</span>
-                            <span>{{ durability }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Color Fastness</span>
-                            <span>{{ color_fastness }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Flame Retardant</span>
-                            <span>{{ flame_retardant }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Weather Resistance</span>
-                            <span>{{ weather_resistance }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Antibacterial</span>
-                            <span>{{ antibacterial }}</span>
-                        </div>
-                        <div>
-                            <span class="font-bold block text-[10.3px]">Other Certifications</span>
-                            <span>{{ other_certifications }}</span>
+                    <div>
+                        <h3 class="font-bold uppercase border-b border-gray-300 pb-0.5 mb-1 text-[11.5px]">Technical Data</h3>
+                        <div class="flex flex-col gap-1 text-[10.3px]">
+                            <div>
+                                <span class="font-bold block text-[10.3px]">Durability</span>
+                                <span>{{ durability }}</span>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-[10.3px]">Color Fastness</span>
+                                <span>{{ color_fastness }}</span>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-[10.3px]">Flame Retardant</span>
+                                <span>{{ flame_retardant }}</span>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-[10.3px]">Weather Resistance</span>
+                                <span>{{ weather_resistance }}</span>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-[10.3px]">Antibacterial</span>
+                                <span>{{ antibacterial }}</span>
+                            </div>
+                            <div>
+                                <span class="font-bold block text-[10.3px]">Other Certifications</span>
+                                <span>{{ other_certifications }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
