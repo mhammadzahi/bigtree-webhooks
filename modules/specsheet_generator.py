@@ -426,8 +426,10 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
         print(f"[DEBUG] Description soft-truncated at word boundary (original: {len(_raw_description)} chars)")
     prdct_description = Markup(_truncated_description)
 
-    # Maintenance & Care - preserve raw HTML to match website display
-    maintenance_and_care = Markup(get_meta('maintenance_&_care', default=''))
+    # Maintenance & Care - strip HTML to plain text then restore line breaks as <br>
+    # strip_html_tags converts <br>/<p> to \n; we then re-emit those as <br> for PDF rendering
+    _raw_maintenance = get_meta('maintenance_&_care', default='', clean=True)
+    maintenance_and_care = Markup(_raw_maintenance.replace('\n', '<br>\n'))
 
     # Context Mapping (matches placeholders in your HTML)
     context = {
