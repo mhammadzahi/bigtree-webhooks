@@ -419,19 +419,15 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
 
         return text[:cut_index] + _more_info_link
 
-    # Truncate Description (base 435, tolerance +10)
+    # Truncate Description (base 380, tolerance +10)
     _raw_description = strip_html_tags(product.get('description', ''))
-    _truncated_description = smart_truncate(_raw_description, base_limit=435, tolerance=10)
+    _truncated_description = smart_truncate(_raw_description, base_limit=380, tolerance=10)
     if _truncated_description is not _raw_description:
         print(f"[DEBUG] Description soft-truncated at word boundary (original: {len(_raw_description)} chars)")
     prdct_description = Markup(_truncated_description)
 
-    # Truncate Maintenance & Care (base 530, tolerance +10)
-    _raw_maintenance = get_meta('maintenance_&_care', default='', clean=True)
-    _truncated_maintenance = smart_truncate(_raw_maintenance, base_limit=530, tolerance=10)
-    if _truncated_maintenance is not _raw_maintenance:
-        print(f"[DEBUG] Maintenance & Care soft-truncated at word boundary (original: {len(_raw_maintenance)} chars)")
-    maintenance_and_care = Markup(_truncated_maintenance)
+    # Maintenance & Care - preserve raw HTML to match website display
+    maintenance_and_care = Markup(get_meta('maintenance_&_care', default=''))
 
     # Context Mapping (matches placeholders in your HTML)
     context = {
