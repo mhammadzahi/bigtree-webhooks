@@ -316,7 +316,7 @@ def process_specsheet(name, email, product_id, file_path):
     try:
         row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Specsheet Download", row)
-        gmail_service.send_single_product_specsheet_email(email, file_path)
+        # gmail_service.send_single_product_specsheet_email(email, file_path)
         try:
             os.remove(file_path)
 

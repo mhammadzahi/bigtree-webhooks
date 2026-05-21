@@ -129,7 +129,9 @@ def get_template_by_category(product, wc_url=None, wc_key=None, wc_secret=None):
     # Ensure these files exist in the 'files/' directory
     known_templates = {
         'fabric': 'specsheet-template__FABRIC.html',
+        'fabrics': 'specsheet-template__FABRIC.html',
         'leather': 'specsheet-template__LEATHER.html',
+        'leathers': 'specsheet-template__LEATHER.html',
         'floor covering': 'specsheet-template__FLOOR_COVERING.html',
         'floor coverings': 'specsheet-template__FLOOR_COVERING.html',
         'wallcovering': 'specsheet-template__WALL_COVERING.html',
