@@ -20,6 +20,10 @@ load_dotenv()
 SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/spreadsheets"]
 FROM = "BigTree Group <" + os.getenv("WEB_EMAIL") + ">"
 
+# Default CC lists (comma-separated) from environment
+PROCUREMENT_EMAILS = os.getenv("PROCUREMENT_EMAILS")
+SALES_INQUIRY_EMAILS = os.getenv("SALES_INQUIRY_EMAILS")
+
 
 def load_email_template(template_name):
     template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "email_templates", template_name)
@@ -77,11 +81,28 @@ def create_message(to, subject, html_body, pdf_files=None, attachments=False, cc
     return {"raw": base64.urlsafe_b64encode(message.as_bytes()).decode()}
 
 
+def merge_cc(cc, extra):
+    """Merge existing cc string with extra (both comma-separated). Return None if empty."""
+    parts = []
+    if cc:
+        parts.extend([s.strip() for s in cc.split(",") if s.strip()])
+    if extra:
+        parts.extend([s.strip() for s in extra.split(",") if s.strip()])
+    seen = set()
+    out = []
+    for p in parts:
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return ",".join(out) if out else None
+
+
 # ------- Send Emails ------- #
 def send_welcome_supplier_email(email, full_name, cc):
     service = get_gmail_service()
     html_body = load_email_template("welcome_supplier.html").replace("{{full_name}}", full_name)
-    body_message = create_message(email, "Welcome to BigTree Group", html_body, attachments=False, cc=cc)
+    cc_final = merge_cc(cc, PROCUREMENT_EMAILS)
+    body_message = create_message(email, "Welcome to BigTree Group", html_body, attachments=False, cc=cc_final)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         return True
@@ -94,8 +115,8 @@ def send_welcome_supplier_email(email, full_name, cc):
 def send_product_enquiry_email(full_name, email, pdf_files, cc):
     service = get_gmail_service()
     html_body = load_email_template("product_enquiry.html").replace("{{full_name}}", full_name)
-    
-    body_message = create_message(email, "Product Enquiry", html_body, pdf_files, attachments=True, cc=cc)
+    cc_final = merge_cc(cc, SALES_INQUIRY_EMAILS)
+    body_message = create_message(email, "Product Enquiry", html_body, pdf_files, attachments=True, cc=cc_final)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         # print(message)
@@ -125,7 +146,8 @@ def send_account_creation_email(email, password, cc=None):
 def send_single_product_specsheet_email(to, file_path, cc=None):
     service = get_gmail_service()
     html_body = load_email_template("single_product_Specsheet.html")
-    body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True, cc=cc)
+    cc_final = merge_cc(cc, SALES_INQUIRY_EMAILS)
+    body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True, cc=cc_final)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         # print('-------', message, '--------------')
@@ -141,7 +163,8 @@ def send_single_product_specsheet_email(to, file_path, cc=None):
 def send_request_sample_email(email, pdf_files, cc=None):
     service = get_gmail_service()
     request_sample_html = load_email_template("request_sample.html")
-    body_message = create_message(email, "Request Sample", request_sample_html, pdf_files, attachments=True, cc=cc)
+    cc_final = merge_cc(cc, SALES_INQUIRY_EMAILS)
+    body_message = create_message(email, "Request Sample", request_sample_html, pdf_files, attachments=True, cc=cc_final)
     
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
