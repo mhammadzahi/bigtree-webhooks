@@ -523,6 +523,8 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
         # Custom filter to turn newlines into <br> for descriptions
         def nl2br(value):
             if not value: return ""
+            import re
+            value = re.sub(r'\n{2,}', '\n', value)
             return value.replace('\n', '<br>\n')
         
         env.filters['nl2br'] = nl2br
