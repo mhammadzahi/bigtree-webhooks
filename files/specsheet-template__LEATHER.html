@@ -174,23 +174,15 @@
                 <div class="w-[50%] flex flex-col gap-5 text-[11.5px]">
                     <div>
                         <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Technical Data</h3>
-                        <div class="flex flex-col gap-1 text-[10.3px]">
-                            <div>
-                                <span class="font-bold block text-[10.3px]">Durability</span>
-                                <span>{{ durability | nl2br | safe }}</span>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-[10.3px]">Color Fastness</span>
-                                <span>{{ color_fastness | nl2br | safe }}</span>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-[10.3px]">Flame Retardant</span>
-                                <span>{{ flame_retardant | nl2br | safe }}</span>
-                            </div>
-                            <div>
-                                <span class="font-bold block text-[10.3px]">Additional Info</span>
-                                <span>{{ other_certifications | nl2br | safe }}</span>
-                            </div>
+                        <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="font-bold">Durability</div>
+                            <div>{{ durability | nl2br | safe }}</div>
+                            <div class="font-bold">Color Fastness</div>
+                            <div>{{ color_fastness | nl2br | safe }}</div>
+                            <div class="font-bold">Flame Retardant</div>
+                            <div>{{ flame_retardant | nl2br | safe }}</div>
+                            <div class="font-bold">Additional Info.</div>
+                            <div>{{ other_certifications | nl2br | safe }}</div>
                         </div>
                     </div>
                 </div>
