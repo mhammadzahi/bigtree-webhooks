@@ -1,2 +1,11 @@
 floor-covering template: more-info-7
 Fabric, Leather and Wall Covering: more-info-8
+
+
+fine art same template as object
+
+prompt
+@SKILL.md 
+Update all HTML specsheet templates,
+
+ 
