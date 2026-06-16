@@ -146,8 +146,7 @@ def send_account_creation_email(email, password, cc=None):
 def send_single_product_specsheet_email(to, file_path, cc=None):
     service = get_gmail_service()
     html_body = load_email_template("single_product_Specsheet.html")
-    cc_final = merge_cc(cc, SALES_INQUIRY_EMAILS)
-    body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True, cc=cc_final)
+    body_message = create_message(to, "Product Specsheet", html_body, [file_path], attachments=True)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         # print('-------', message, '--------------')
