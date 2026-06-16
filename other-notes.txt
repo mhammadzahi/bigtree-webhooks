@@ -80,4 +80,13 @@ provid same structure and designs in attached files
 fine art same template as objects
 
 
- 
+ remove : Seat Heigh, Seat Dept, Durability
+Flame Retardant
+Weather Resistance
+Filling
+
+Remove n/a
+
+character limit for notes.
+
+
