@@ -158,17 +158,8 @@ def get_template_by_category(product, wc_url=None, wc_key=None, wc_secret=None):
     
     # 2. Special Logic for Furniture
     if root_name == 'furniture':
-        print("[DEBUG] Root category is 'furniture', checking subcategories")
-        # Check subcategories for specific furniture types
-        for cat in categories:
-            cat_name = cat.get('name', '').lower()
-            cat_slug = cat.get('slug', '').lower()
-            print(f"[DEBUG] Checking subcategory: {cat_name} (slug: {cat_slug})")
-            if any(k in cat_name or k in cat_slug for k in ['seating', 'chair', 'sofa', 'bench', 'stool']):
-                print("[DEBUG] Matched seating furniture, returning FURNITURE_SEATING template")
-                return 'specsheet-template__FURNITURE_SEATING.html'
-        print("[DEBUG] No seating match, returning FURNITURE_OTHERS template")
-        return 'specsheet-template__FURNITURE_OTHERS.html'
+        print("[DEBUG] Root category is 'furniture', returning merged FURNITURE template")
+        return 'specsheet-template__FURNITURE.html'
 
     # 3. Check Standard Mappings
     if root_name in known_templates:
