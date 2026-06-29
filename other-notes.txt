@@ -96,7 +96,7 @@ script3: alt img maker
 
 
 
-- 1 product for each category and sub-category - 
-- Export all types of Orders in both shop & website - need tests 
-- Export users - done
-- share Leads Googlesheet - done
+- 1 product sample for each category and sub-category - done
+- Export all types of Orders in both shop & website - done
+- Export wp users - done
+- shared Leads Googlesheet - done
