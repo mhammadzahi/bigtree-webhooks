@@ -100,3 +100,17 @@ script3: alt img maker
 - Export all types of Orders in both shop & website - done
 - Export wp users - done
 - shared Leads Googlesheet - done
+
+
+
+
+1- Website: NotFair SEO (and made two PDF reports)
+2- Website: image Alt generator python script to increase SEO score
+3- Website & Shop: Update robots.txt & sitemap.xml in search console
+4- Website: PDF Specsheet generation -> multiple HTML templates, All done
+5- Website & Shop: Worked on increasing speed by adding custom codes and server settings (cache, nginx settings, etc...)
+6- Website & Shop: prepared Danish salesforce integration requirements 
+7- Website: Worked on Google Search Console (read & fix indexing issues)
+8- Website: fix page redirection indexing problem Google Search Console using python script
+9- Website: Migrate some php codes from Code Snippets to 'wp-content/mu-plugins' to increase the speed
+10- Website: php code snippet to Disable & Remove RSS feed links 
