@@ -15,6 +15,7 @@ from markupsafe import Markup
 from playwright.async_api import async_playwright
 from woocommerce import API
 from modules.woocommerce_service import generate_woo_external_cart_url
+from modules.utm import build_template_utm, inject_utm_into_html
 
 # --- CONFIGURATION ---
 TEMPLATE_DIR = 'files'
@@ -527,6 +528,17 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
         rendered_html = template.render(context)
         print(f"[DEBUG] HTML rendered successfully, length: {len(rendered_html)} chars")
         print("✓ HTML Rendered successfully")
+
+        # Category-specific UTM tagging: append utm_* params to every
+        # bigtree-group.com link (footer, inquiry/add-to-cart, product "more info")
+        # so GA4 can attribute PDF-driven traffic to this product category.
+        utm = build_template_utm(template_filename)
+        if utm:
+            rendered_html, utm_count, utm_sample = inject_utm_into_html(rendered_html, utm)
+            print(f"[UTM] Tagged {utm_count} bigtree-group.com link(s) "
+                  f"(campaign={utm['utm_campaign']}). Sample: {utm_sample}")
+        else:
+            print(f"[UTM] No UTM mapping for '{template_filename}', links left untagged")
 
     except Exception as e:
         print(f"❌ Template Rendering Failed: {e}")

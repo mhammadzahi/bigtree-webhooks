@@ -114,3 +114,8 @@ script3: alt img maker
 8- Website: fix page redirection indexing problem Google Search Console using python script
 9- Website: Migrate some php codes from Code Snippets to 'wp-content/mu-plugins' to increase the speed
 10- Website: php code snippet to Disable & Remove RSS feed links 
+
+
+
+
+last working branch: more-info-10
