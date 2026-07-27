@@ -400,6 +400,11 @@ async def unsubscribe(email_id: str, request: Request, background_tasks: Backgro
     return HTMLResponse(content=html_content, status_code=200)
 
 
+@app.get("/robots.txt")
+async def robots_txt():
+    return Response(content="User-agent: *\nDisallow: /", media_type="text/plain")
+
+
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
     return {"App": "BT Webhooks", "Version": "2.4.0", "Status": "running"}
