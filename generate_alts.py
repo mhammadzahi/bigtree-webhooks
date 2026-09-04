@@ -1,5 +1,5 @@
 import requests
-import time, os
+import time, os, html
 from dotenv import load_dotenv
 
 from requests.adapters import HTTPAdapter
@@ -9,9 +9,12 @@ from urllib3.util.retry import Retry
 # --- Configuration ---
 load_dotenv()  # Load environment variables from .env file
 
-SITE_URL = os.getenv("WC_STORE_URL")
-CONSUMER_KEY = os.getenv("WC_CONSUMER_KEY")
-CONSUMER_SECRET = os.getenv("WC_CONSUMER_SECRET")
+SITE_URL = os.getenv("SHOP_WC_STORE_URL")
+CONSUMER_KEY = os.getenv("SHOP_WC_CONSUMER_KEY")
+CONSUMER_SECRET = os.getenv("SHOP_WC_CONSUMER_SECRET")
+
+print(SITE_URL, CONSUMER_KEY, CONSUMER_SECRET)
+
 
 def create_resilient_session():
     """Configure a requests session with automatic retries and browser headers."""
@@ -76,14 +79,14 @@ def generate_image_alts():
                 
             for product in products:
                 product_id = product.get('id')
-                name = product.get('name', 'Product')
+                name = html.unescape(product.get('name', 'Product'))
                 categories = product.get('categories', [])
                 images = product.get('images', [])
-                
+
                 if not images:
                     continue
-                
-                primary_category = categories[0]['name'] if categories else "Uncategorized"
+
+                primary_category = html.unescape(categories[0]['name']) if categories else "Uncategorized"
                 target_alt_text = f"{name} | {primary_category}"
                 
                 updated_images = []

@@ -18,7 +18,7 @@ token_file = "token.json"
 load_dotenv()
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/spreadsheets"]
-FROM = "BigTree Group <" + os.getenv("WEB_EMAIL") + ">"
+FROM = "BigTree <" + os.getenv("WEB_EMAIL") + ">"
 
 # Default CC lists (comma-separated) from environment
 PROCUREMENT_EMAILS = os.getenv("PROCUREMENT_EMAILS")
@@ -102,7 +102,7 @@ def send_welcome_supplier_email(email, full_name, cc):
     service = get_gmail_service()
     html_body = load_email_template("welcome_supplier.html").replace("{{full_name}}", full_name)
     cc_final = merge_cc(cc, PROCUREMENT_EMAILS)
-    body_message = create_message(email, "Welcome to BigTree Group", html_body, attachments=False, cc=cc_final)
+    body_message = create_message(email, "Welcome to BigTree", html_body, attachments=False, cc=cc_final)
     try:
         message = service.users().messages().send(userId="me", body=body_message).execute()
         return True
