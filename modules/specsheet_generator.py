@@ -12,6 +12,7 @@ from PIL import Image
 # Templating and PDF Generation
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
+from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 from woocommerce import API
 from modules.woocommerce_service import generate_woo_external_cart_url
@@ -73,6 +74,42 @@ def strip_html_tags(text):
     result = clean.strip()
     print(f"[DEBUG] strip_html_tags: Output length: {len(result)} chars")
     return result
+
+def _is_blank_value(text):
+    """True if a rendered spec value is missing (empty or literal 'n/a')."""
+    normalized = text.strip().lower()
+    return normalized in ('', 'n/a', 'na')
+
+def prune_empty_specs(html):
+    """
+    Drops individual key/value rows (.spec-row) whose value(s) are 'n/a' or
+    empty, then drops whole sections (.spec-section, title included) that end
+    up with no remaining non-empty value. Relies on the markup convention in
+    the files/specsheet-template__*.html files: each section is wrapped in
+    '.spec-section' with an '.spec-section-title' heading, each label/value
+    grid pair is wrapped in '.spec-row', and every rendered value carries
+    '.spec-value'.
+    """
+    print("[DEBUG] prune_empty_specs: parsing rendered HTML")
+    soup = BeautifulSoup(html, 'html.parser')
+
+    removed_rows = 0
+    for row in soup.select('.spec-row'):
+        values = row.select('.spec-value')
+        if values and all(_is_blank_value(v.get_text()) for v in values):
+            row.decompose()
+            removed_rows += 1
+    print(f"[DEBUG] prune_empty_specs: removed {removed_rows} empty row(s)")
+
+    removed_sections = 0
+    for section in soup.select('.spec-section'):
+        values = section.select('.spec-value')
+        if not values or all(_is_blank_value(v.get_text()) for v in values):
+            section.decompose()
+            removed_sections += 1
+    print(f"[DEBUG] prune_empty_specs: removed {removed_sections} empty section(s)")
+
+    return str(soup)
 
 def get_root_parent_category(category_id):
     """Recursively find the root parent category via WooCommerce API"""
@@ -528,6 +565,10 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
         rendered_html = template.render(context)
         print(f"[DEBUG] HTML rendered successfully, length: {len(rendered_html)} chars")
         print("✓ HTML Rendered successfully")
+
+        # Drop 'n/a'/empty spec rows, and whole sections left with no data
+        rendered_html = prune_empty_specs(rendered_html)
+        print("✓ Empty spec rows/sections pruned")
 
         # Category-specific UTM tagging: append utm_* params to every
         # bigtree-group.com link (footer, inquiry/add-to-cart, product "more info")

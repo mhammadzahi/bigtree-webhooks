@@ -105,9 +105,9 @@
                         <h2 class="font-bold text-[13.8px]">Name: {{ prdct_name }}</h2>
                         <p class="text-[13.8px]">Collection: {{ prdct_category }}</p>
                     </div>
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Description</h3>
-                        <p class="text-[11.5px]">{{ prdct_description | nl2br | safe }}</p>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Description</h3>
+                        <p class="spec-value text-[11.5px]">{{ prdct_description | nl2br | safe }}</p>
                     </div>
                 </div>
             </div>
@@ -116,81 +116,117 @@
             <div class="flex gap-8 flex-grow relative z-10">
 
                 <div class="w-[50%] flex flex-col gap-5">
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Product Detail</h3>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Product Detail</h3>
                         <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="spec-row contents" data-key="type">
                             <div class="font-bold">Type</div>
-                            <div>{{ type }}</div>
+                            <div class="spec-value" data-key="type">{{ type }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="size">
                             <div class="font-bold">Size</div>
-                            <div>{{ size }}</div>
+                            <div class="spec-value" data-key="size">{{ size }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="weight">
                             <div class="font-bold">Weight</div>
-                            <div>{{ weight }}</div>
+                            <div class="spec-value" data-key="weight">{{ weight }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="color">
                             <div class="font-bold">Color</div>
-                            <div>{{ color }}</div>
+                            <div class="spec-value" data-key="color">{{ color }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="origin">
                             <div class="font-bold">Origin</div>
-                            <div>{{ origin }}</div>
+                            <div class="spec-value" data-key="origin">{{ origin }}</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Product Usage</h3>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Product Usage</h3>
                         <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="spec-row contents" data-key="environment">
                             <div class="font-bold">Environment</div>
-                            <div>{{ environment }}</div>
+                            <div class="spec-value" data-key="environment">{{ environment }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="project">
                             <div class="font-bold">Project</div>
-                            <div>{{ project }}</div>
+                            <div class="spec-value" data-key="project">{{ project }}</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Key Facts</h3>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Key Facts</h3>
                         <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="spec-row contents" data-key="warranty">
                             <div class="font-bold">Warranty</div>
-                            <div>{{ warranty }}</div>
+                            <div class="spec-value" data-key="warranty">{{ warranty }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="minimum_order_quantity">
                             <div class="font-bold">MOQ</div>
-                            <div>{{ minimum_order_quantity }}</div>
+                            <div class="spec-value" data-key="minimum_order_quantity">{{ minimum_order_quantity }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="lead_time">
                             <div class="font-bold">Lead Time</div>
-                            <div>{{ lead_time }}</div>
+                            <div class="spec-value" data-key="lead_time">{{ lead_time }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="price_tier">
                             <div class="font-bold">Price Tier</div>
-                            <div>{{ price_tier }}</div>
+                            <div class="spec-value" data-key="price_tier">{{ price_tier }}</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Note</h3>
-                        <p class="text-[11.5px]">{{ note | nl2br | safe }}</p>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Note</h3>
+                        <p class="spec-value text-[11.5px]">{{ note | nl2br | safe }}</p>
                     </div>
 
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Maintainance & Care</h3>
-                        <p class="text-[11.5px]">{{ maintenance_and_care | nl2br | safe }}</p>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Maintainance & Care</h3>
+                        <p class="spec-value text-[11.5px]">{{ maintenance_and_care | nl2br | safe }}</p>
                     </div>
                 </div>
 
                 <div class="w-[50%] flex flex-col gap-5 text-[11.5px]">
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Technical Data</h3>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Technical Data</h3>
                         <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="spec-row contents" data-key="lighting">
                             <div class="font-bold">Lighting</div>
-                            <div>{{ lighting | nl2br | safe }}</div>
+                            <div class="spec-value" data-key="lighting">{{ lighting | nl2br | safe }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="weather_resistance">
                             <div class="font-bold">Weather Resistance</div>
-                            <div>{{ weather_resistance | nl2br | safe }}</div>
+                            <div class="spec-value" data-key="weather_resistance">{{ weather_resistance | nl2br | safe }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="other_certifications">
                             <div class="font-bold">Additional Info.</div>
-                            <div>{{ other_certifications | nl2br | safe }}</div>
+                            <div class="spec-value" data-key="other_certifications">{{ other_certifications | nl2br | safe }}</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <h3 class="font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Material & Finishes</h3>
+                    <div class="spec-section">
+                        <h3 class="spec-section-title font-bold uppercase border-b border-[#B4AEA7] pb-0.5 mb-1 text-[11.5px]">Material & Finishes</h3>
                         <div class="grid grid-cols-[120px_1fr] gap-y-px text-[10.3px]">
+                            <div class="spec-row contents" data-key="primary_material">
                             <div class="font-bold">Primary Material</div>
-                            <div>{{ primary_material }}</div>
+                            <div class="spec-value" data-key="primary_material">{{ primary_material }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="primary_finish">
                             <div class="font-bold">Primary Finish</div>
-                            <div>{{ primary_finish }}</div>
+                            <div class="spec-value" data-key="primary_finish">{{ primary_finish }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="secondary_material">
                             <div class="font-bold">Secondary Material</div>
-                            <div>{{ secondary_material }}</div>
+                            <div class="spec-value" data-key="secondary_material">{{ secondary_material }}</div>
+                            </div>
+                            <div class="spec-row contents" data-key="secondary_finish">
                             <div class="font-bold">Secondary Finish</div>
-                            <div>{{ secondary_finish }}</div>
+                            <div class="spec-value" data-key="secondary_finish">{{ secondary_finish }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
