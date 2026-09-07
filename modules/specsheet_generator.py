@@ -23,6 +23,10 @@ TEMPLATE_DIR = 'files'
 TEMP_DIR = 'files/temp'
 os.makedirs(TEMP_DIR, exist_ok=True)
 
+# A4 page height in CSS px at 96dpi, minus a small rounding safety margin, used
+# as the single-page-fit target when shrinking slightly-overflowing specsheets.
+A4_PAGE_HEIGHT_PX = 1116
+
 # Global WooCommerce API instance
 wcapi = None
 
@@ -611,7 +615,28 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
             print("[DEBUG] Setting page content (waiting for networkidle)")
             await page.set_content(rendered_html, wait_until="networkidle")
             print("[DEBUG] Page content set, network idle")
-            
+
+            # Shrink-to-fit safety net: some products carry enough spec text
+            # (long certification lists, long care instructions, etc.) that the
+            # card is a few pixels taller than a single A4 page even after the
+            # print-mode min-height fix above, which would spill the footer
+            # onto an otherwise-blank second page. Measure the real print-mode
+            # height and, only if it overflows, apply a small uniform zoom so
+            # everything still fits on one page — proportions/design/content
+            # are unchanged, just scaled down by whatever tiny amount is needed.
+            print("[DEBUG] Checking rendered height for single-page fit")
+            await page.emulate_media(media="print")
+            content_height = await page.evaluate(
+                "document.querySelector('.container-page').getBoundingClientRect().height"
+            )
+            print(f"[DEBUG] Rendered content height (print mode): {content_height}px")
+            if content_height > A4_PAGE_HEIGHT_PX:
+                zoom = A4_PAGE_HEIGHT_PX / content_height
+                print(f"[DEBUG] Content exceeds one A4 page, applying zoom={zoom:.4f} to fit")
+                await page.evaluate(
+                    f"document.querySelector('.container-page').style.zoom = '{zoom}'"
+                )
+
             # Set A4 page size and margins for print
             print("[DEBUG] Generating PDF (A4 format, with full background rendering)")
             await page.pdf(
