@@ -422,7 +422,7 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
         print(f"[DEBUG] Description soft-truncated at word boundary (original: {len(_raw_description)} chars)")
     prdct_description = Markup(_truncated_description)
 
-    # Truncate Maintenance & Care (base 300, tolerance +10)
+    # Truncate Maintenance & Care (base 275, tolerance +10)
     _raw_maintenance = strip_html_tags(get_meta('maintenance_&_care', default='', clean=False))
     # print(_raw_maintenance)
     _truncated_maintenance = smart_truncate(_raw_maintenance, base_limit=275, tolerance=10)
