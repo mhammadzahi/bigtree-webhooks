@@ -9,9 +9,9 @@ from urllib3.util.retry import Retry
 # --- Configuration ---
 load_dotenv()  # Load environment variables from .env file
 
-SITE_URL = os.getenv("SHOP_WC_STORE_URL")
-CONSUMER_KEY = os.getenv("SHOP_WC_CONSUMER_KEY")
-CONSUMER_SECRET = os.getenv("SHOP_WC_CONSUMER_SECRET")
+SITE_URL = os.getenv("BT_WC_STORE_URL")
+CONSUMER_KEY = os.getenv("BT_WC_CONSUMER_KEY")
+CONSUMER_SECRET = os.getenv("BT_WC_CONSUMER_SECRET")
 
 print(SITE_URL, CONSUMER_KEY, CONSUMER_SECRET)
 
