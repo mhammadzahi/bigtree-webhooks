@@ -23,9 +23,11 @@ TEMPLATE_DIR = 'files'
 TEMP_DIR = 'files/temp'
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-# A4 page height in CSS px at 96dpi, minus a small rounding safety margin, used
-# as the single-page-fit target when shrinking slightly-overflowing specsheets.
-A4_PAGE_HEIGHT_PX = 1116
+# A4 page height in CSS px at 96dpi (210mm x 297mm at 96dpi = 794px x 1123px).
+# Used both as the browser viewport height (so `min-h-screen` in the templates
+# resolves to exactly one page) and as the single-page-fit target when
+# shrinking slightly-overflowing specsheets.
+A4_PAGE_HEIGHT_PX = 1123
 
 # Global WooCommerce API instance
 wcapi = None
@@ -606,35 +608,43 @@ async def generate_specsheet_pdf(product, wc_url=None, wc_key=None, wc_secret=No
             print("[DEBUG] Browser launched successfully")
             
             print("[DEBUG] Creating new page")
-            # Set viewport to A4 dimensions in pixels at 96dpi (standard screen DPI)
-            # A4 = 210mm x 297mm = 794px x 1123px at 96dpi
-            page = await browser.new_page(viewport={"width": 794, "height": int(1123 * 2)})
-            print("[DEBUG] Page created with A4-extended viewport for proper scaling")
-            
+            # Set viewport to exactly one A4 page in CSS px at 96dpi (standard
+            # screen DPI). A4 = 210mm x 297mm = 794px x 1123px at 96dpi. The
+            # template's `min-h-screen` on <body> resolves against this, so
+            # the card always fills exactly one page height (footer flush to
+            # the bottom) instead of stretching past it.
+            page = await browser.new_page(viewport={"width": 794, "height": A4_PAGE_HEIGHT_PX})
+            print("[DEBUG] Page created with single A4-page viewport")
+
             # Set content
             print("[DEBUG] Setting page content (waiting for networkidle)")
             await page.set_content(rendered_html, wait_until="networkidle")
             print("[DEBUG] Page content set, network idle")
 
             # Shrink-to-fit safety net: some products carry enough spec text
-            # (long certification lists, long care instructions, etc.) that the
-            # card is a few pixels taller than a single A4 page even after the
-            # print-mode min-height fix above, which would spill the footer
-            # onto an otherwise-blank second page. Measure the real print-mode
-            # height and, only if it overflows, apply a small uniform zoom so
-            # everything still fits on one page — proportions/design/content
-            # are unchanged, just scaled down by whatever tiny amount is needed.
+            # (long certification lists, long care instructions, etc.) that
+            # the card's natural height exceeds a single A4 page, which would
+            # spill the footer onto an otherwise-blank second page. Measure
+            # the real print-mode height and, only if it overflows, zoom down
+            # just the <main> spec content (never the header/logo/footer) by
+            # the minimal amount needed so the whole card still lands on
+            # exactly one page with the footer flush to the bottom.
             print("[DEBUG] Checking rendered height for single-page fit")
             await page.emulate_media(media="print")
-            content_height = await page.evaluate(
+            container_height = await page.evaluate(
                 "document.querySelector('.container-page').getBoundingClientRect().height"
             )
-            print(f"[DEBUG] Rendered content height (print mode): {content_height}px")
-            if content_height > A4_PAGE_HEIGHT_PX:
-                zoom = A4_PAGE_HEIGHT_PX / content_height
-                print(f"[DEBUG] Content exceeds one A4 page, applying zoom={zoom:.4f} to fit")
+            print(f"[DEBUG] Rendered container height (print mode): {container_height}px")
+            if container_height > A4_PAGE_HEIGHT_PX:
+                main_height = await page.evaluate(
+                    "document.querySelector('main').getBoundingClientRect().height"
+                )
+                fixed_overhead = container_height - main_height
+                target_main_height = (A4_PAGE_HEIGHT_PX - 1) - fixed_overhead
+                zoom = target_main_height / main_height
+                print(f"[DEBUG] Content exceeds one A4 page, zooming <main> by {zoom:.4f} to fit")
                 await page.evaluate(
-                    f"document.querySelector('.container-page').style.zoom = '{zoom}'"
+                    f"document.querySelector('main').style.zoom = '{zoom}'"
                 )
 
             # Set A4 page size and margins for print
