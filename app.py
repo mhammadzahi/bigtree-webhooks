@@ -261,8 +261,9 @@ async def process_enquiry(name, email, phone, company, project, project_type, co
                 products.append(product)
 
         # 2. Append to Google Sheet
-        product_urls = ", ".join(build_product_url(p) for p in products)
-        row = [name, email, phone, company, project, project_type or '', country, message, req_sample, product_urls, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        qty_by_product_id = {item.id: item.quantity for item in cart_items}
+        product_urls_qty = "{" + ", ".join(f"{build_product_url(p)}: {qty_by_product_id.get(p.get('id'), '')}" for p in products) + "}"
+        row = [name, email, phone, company, project, project_type or '', country, message, req_sample, product_urls_qty, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Inquiries", row)
 
         # 3. Insert into Salesforce
