@@ -38,6 +38,10 @@ app.add_middleware(
 
 sf = SalesforceWebToLeadService(debug_mode=True, debug_email=DEVELOPER_EMAIL)
 
+def build_product_url(product):
+    slug = product.get('slug', '') if product else ''
+    return f"{STORE_URL}/product/{slug}" if slug else ''
+
 
 class SupplierRequest(BaseModel):
     fname: str
@@ -160,32 +164,38 @@ class RequestSample(BaseModel):
 
 async def process_request_sample(first_name, last_name, email, phone, company, project, country, quantity, message, product_ids, account_password):
     try:
-        # 1. Append to Google Sheet
-        row = [first_name, last_name, phone, email, company, project, country, quantity, ", ".join(map(str, product_ids)), message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        # 1. Fetch products
+        products = []
+        for product_id in product_ids:
+            product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+            if product:
+                products.append(product)
+
+        # 2. Append to Google Sheet
+        product_urls = ", ".join(build_product_url(p) for p in products)
+        row = [first_name, last_name, phone, email, company, project, country, quantity, product_urls, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Sample Request", row)
-        
-        # 2. Insert into Salesforce
+
+        # 3. Insert into Salesforce
         other_product_interest = f"Product IDs: {', '.join([str(pid) for pid in product_ids])}. Message: {message}"
         sf_result = sf.insert_sample_request(first_name=first_name, last_name=last_name, email=email, company=company, mobile=phone, project=project, country=country, quantity=quantity, other_product_interest=other_product_interest)
         # print("Salesforce Response:", sf_result)
 
-        # 3. Generate PDFs
+        # 4. Generate PDFs
         pdf_specsheet_files = []
-        for product_id in product_ids:
-            product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-            if product:
-                file_path = await generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
-                pdf_specsheet_files.append(file_path)
+        for product in products:
+            file_path = await generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+            pdf_specsheet_files.append(file_path)
 
-        # 4. Send request sample email
+        # 5. Send request sample email
         if pdf_specsheet_files:
             gmail_service.send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
 
-        # 5. Send account creation email if password provided
+        # 6. Send account creation email if password provided
         if account_password:
             gmail_service.send_account_creation_email(email, account_password)
 
-        # 6. Clean up generated PDF files
+        # 7. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
             try:
                 os.remove(file_path)
@@ -243,32 +253,38 @@ class ProductEnquiry(BaseModel):
 
 async def process_enquiry(name, email, phone, company, project, project_type, country, message, req_sample, cart_items, product_ids, account_password):
     try:
-        # 1. Append to Google Sheet
-        row = [name, email, phone, company, project, project_type or '', country, message, req_sample, ", ".join(map(str, cart_items)), datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        # 1. Fetch products
+        products = []
+        for product_id in product_ids:
+            product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
+            if product:
+                products.append(product)
+
+        # 2. Append to Google Sheet
+        product_urls = ", ".join(build_product_url(p) for p in products)
+        row = [name, email, phone, company, project, project_type or '', country, message, req_sample, product_urls, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Inquiries", row)
 
-        # 2. Insert into Salesforce
+        # 3. Insert into Salesforce
         combined_message = f"Sample Request: {req_sample}. {message}" if message else f"Sample Request: {req_sample}"
         sf_result = sf.insert_product_inquiry(full_name=name, email=email, phone=phone, company_name=company, project=project, project_type=project_type, country=country, message=combined_message, products=[str(pid) for pid in product_ids])
         # print(sf_result)
 
-        # 3. Generate PDFs
+        # 4. Generate PDFs
         pdf_specsheet_files = []
-        for product_id in product_ids:
-            product = get_product(store_url=STORE_URL, consumer_key=CUNSUMER_KEY, consumer_secret=CUNSUMER_SECRET, product_id=product_id)
-            if product:
-                file_path = await generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
-                pdf_specsheet_files.append(file_path)
+        for product in products:
+            file_path = await generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
+            pdf_specsheet_files.append(file_path)
 
-        # 4. Send enquiry email
+        # 5. Send enquiry email
         if pdf_specsheet_files:
             gmail_service.send_product_enquiry_email(name, email, pdf_specsheet_files, cc=SALES_EMAIL)
 
-        # 5. Send account creation email if password provided
+        # 6. Send account creation email if password provided
         if account_password:
             gmail_service.send_account_creation_email(email, account_password)
 
-        # 6. Clean up generated PDF files
+        # 7. Clean up generated PDF files
         for file_path in pdf_specsheet_files:
             try:
                 os.remove(file_path)
@@ -313,9 +329,9 @@ class SpecSheetWebhook(BaseModel):
     product_id: int
     email: EmailStr
 
-def process_specsheet(name, email, product_id, file_path):
+def process_specsheet(name, email, product_url, file_path):
     try:
-        row = [name, email, product_id, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
+        row = [name, email, product_url, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Specsheet Download", row)
         gmail_service.send_single_product_specsheet_email(email, file_path)
         try:
@@ -347,7 +363,7 @@ async def specsheet_webhook(request: Request, background_tasks: BackgroundTasks)
         return JSONResponse(status_code=404, content={"status": "fail", "detail": "Product not found"})
 
     file_path = await generate_specsheet_pdf(product, wc_url=STORE_URL, wc_key=CUNSUMER_KEY, wc_secret=CUNSUMER_SECRET)
-    background_tasks.add_task(process_specsheet, name, email, product_id, file_path)
+    background_tasks.add_task(process_specsheet, name, email, build_product_url(product), file_path)
 
     response = FileResponse(path=file_path, media_type="application/pdf", filename=f"BigTree_{product['name']}_specsheet.pdf")
     response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
