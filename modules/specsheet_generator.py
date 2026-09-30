@@ -29,6 +29,10 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 # shrinking slightly-overflowing specsheets.
 A4_PAGE_HEIGHT_PX = 1123
 
+# Background used to flatten transparent PNGs before JPEG conversion (JPEG has
+# no alpha channel; without this, transparent areas turn black instead).
+PRODUCT_IMAGE_BG_COLOR = (0xF9, 0xFA, 0xFA)  # #F9FAFA
+
 # Global WooCommerce API instance
 wcapi = None
 
@@ -232,10 +236,21 @@ def process_image_to_base64(image_url):
         response.raise_for_status()
         
         img = Image.open(BytesIO(response.content))
-        print(f"[DEBUG] Image opened: {img.width}x{img.height}, mode: {img.mode}")
-        
-        # Convert to RGB to avoid mode issues (e.g. CMYK/RGBA)
-        if img.mode not in ('RGB', 'L'):
+        print(f"[DEBUG] Image opened: {img.width}x{img.height}, mode: {img.mode}, format: {img.format}")
+
+        # PNGs can carry transparency (RGBA/LA/P). Since we save as JPEG
+        # below (no alpha support), a plain convert('RGB') would discard the
+        # alpha channel and leave whatever raw color data sits underneath the
+        # transparent pixels (often black). Flatten onto a solid background
+        # instead so transparent areas render as #F9FAFA. Other formats
+        # (JPEG, WEBP, etc.) are left on their existing convert-to-RGB path.
+        if (img.format or '').upper() == 'PNG' and img.mode in ('RGBA', 'LA', 'P'):
+            print(f"[DEBUG] PNG with transparency detected (mode {img.mode}); flattening onto #F9FAFA background")
+            rgba_img = img.convert('RGBA')
+            background = Image.new('RGB', rgba_img.size, PRODUCT_IMAGE_BG_COLOR)
+            background.paste(rgba_img, mask=rgba_img.split()[3])
+            img = background
+        elif img.mode not in ('RGB', 'L'):
             print(f"[DEBUG] Converting image from {img.mode} to RGB")
             img = img.convert('RGB')
 
