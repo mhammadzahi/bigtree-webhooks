@@ -9,6 +9,7 @@ from modules.specsheet_generator import generate_specsheet_pdf
 from modules.google_sheet_service import append_row
 from modules.woocommerce_service import get_product
 from modules.salesforce_service import SalesforceWebToLeadService
+from modules.countries import get_country_name
 from modules import gmail_service
 
 from datetime import datetime, timezone, timedelta
@@ -56,6 +57,8 @@ class SupplierRequest(BaseModel):
 
 def process_supplier_request(company, country, email, fname, lname, message, phone, products, website):
     try:
+        country = get_country_name(country)  # Country Code -> Country Name
+
         # 1. Append to Google Sheet
         products_str = ", ".join(products) if products else ""
         row = [fname, lname, company, email, phone, products_str, website, country, message, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
@@ -110,6 +113,8 @@ class ContactRequest(BaseModel):
 
 def process_contact_request(fname, lname, email, phone, company, role, project, project_location, message, src):
     try:
+        project_location = get_country_name(project_location)  # Country Code -> Country Name
+
         row = [fname, lname, email, phone, company, role, project, project_location, message, src, datetime.now(timezone(timedelta(hours=4))).strftime("%Y-%m-%d %H:%M:%S")]
         append_row(SHEET_ID, "Contact", row)
         
@@ -164,6 +169,8 @@ class RequestSample(BaseModel):
 
 async def process_request_sample(first_name, last_name, email, phone, company, project, country, quantity, message, product_ids, account_password):
     try:
+        country = get_country_name(country)  # Country Code -> Country Name
+
         # 1. Fetch products
         products = []
         for product_id in product_ids:
@@ -253,6 +260,8 @@ class ProductEnquiry(BaseModel):
 
 async def process_enquiry(name, email, phone, company, project, project_type, country, message, req_sample, cart_items, product_ids, account_password):
     try:
+        country = get_country_name(country)  # Country Code -> Country Name
+
         # 1. Fetch products
         products = []
         for product_id in product_ids:

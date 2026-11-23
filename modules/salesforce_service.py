@@ -80,7 +80,7 @@ class SalesforceWebToLeadService:
             "email": email,
             "mobile": mobile,
             "company": company,
-            "country_code": country_code, # e.g. 'AE', 'SA'
+            "country": country_code, # Country Name, e.g. 'United Arab Emirates' (mapped from code in app.py)
             self.FIELD_PROJECT: project,
             self.FIELD_NOTES: general_notes + "\n" + "Role: " + role
         }
@@ -113,7 +113,7 @@ class SalesforceWebToLeadService:
             "email": email,
             "mobile": phone,
             "company": company_name,
-            "country_code": country,
+            "country": country, # Country Name (mapped from code in app.py)
             self.FIELD_PROJECT: project_details,
             self.FIELD_NOTES: notes
             # Note: 'LeadSource' is not usually a standard hidden input in basic Web-to-Lead unless added as a custom field or hidden input.
@@ -134,7 +134,7 @@ class SalesforceWebToLeadService:
             "email": email,
             "company": company,
             "mobile": mobile,
-            "country_code": country,
+            "country": country, # Country Name (mapped from code in app.py)
             "00NWS000006el81": project,  # Project
             "00NWS000006nIef": quantity,  # Quantity
             "00N4I00000EzMsr": other_product_interest  # Other Product Interest
