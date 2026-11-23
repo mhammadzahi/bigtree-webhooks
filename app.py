@@ -433,7 +433,7 @@ async def robots_txt():
 
 @app.get("/bigtree-webhooks-health-check")
 async def health_check():
-    return {"App": "BT Webhooks", "Version": "2.4.0", "Status": "running"}
+    return {"App": "BT Webhooks", "Version": "2.4.1", "Status": "running"}
 
 
 if __name__ == "__main__":
