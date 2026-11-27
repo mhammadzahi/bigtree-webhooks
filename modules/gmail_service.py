@@ -9,7 +9,7 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
-import os, time
+import os, time, html
 from dotenv import load_dotenv
 
 
@@ -159,9 +159,20 @@ def send_single_product_specsheet_email(to, file_path, cc=None):
 
 
 
-def send_request_sample_email(email, pdf_files, cc=None):
+def send_request_sample_email(email, full_name, items, pdf_files, cc=None):
+    """items: list of (product_name, product_url) tuples."""
     service = get_gmail_service()
-    request_sample_html = load_email_template("request_sample.html")
+    # Product names come from WooCommerce already HTML-encoded, so they are not escaped again.
+    items_html = "\n".join(
+        f'<li><a href="{url}">{name}</a></li>' if url else f"<li>{name}</li>"
+        for name, url in items
+    )
+    request_sample_html = (
+        load_email_template("request_sample.html")
+        .replace("{{full_name}}", html.escape(full_name))
+        .replace("{{email}}", html.escape(email))
+        .replace("{{items}}", items_html)
+    )
     cc_final = merge_cc(cc, SALES_INQUIRY_EMAILS)
     body_message = create_message(email, "Request Sample", request_sample_html, pdf_files, attachments=True, cc=cc_final)
     

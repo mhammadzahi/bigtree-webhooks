@@ -196,7 +196,8 @@ async def process_request_sample(first_name, last_name, email, phone, company, p
 
         # 5. Send request sample email
         if pdf_specsheet_files:
-            gmail_service.send_request_sample_email(email, pdf_specsheet_files, cc=SALES_EMAIL)
+            items = [(p.get('name', ''), build_product_url(p)) for p in products]
+            gmail_service.send_request_sample_email(email, f"{first_name} {last_name}", items, pdf_specsheet_files, cc=SALES_EMAIL)
 
         # 6. Send account creation email if password provided
         if account_password:
